@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Clear Button
     clearBtn.addEventListener("click", () => {
         contractTextarea.value = "";
-        docNameInput.value = "Custom Legal Agreement";
+        docNameInput.value = "";
         updateTextStats();
         resultsSection.classList.add("hidden");
         currentAuditReport = null;
@@ -341,6 +341,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Auto-load first sample
-    loadSample("predatory_saas_tos");
+    // Initial empty stats
+    updateTextStats();
 });
