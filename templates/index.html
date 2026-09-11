@@ -91,7 +91,7 @@
                     <button id="fetch-url-btn" class="btn btn-secondary btn-sm">Fetch Web Terms</button>
                 </div>
 
-                <!-- Document & Photo Upload Options -->
+                <!-- Document & Photo Upload Options (Direct Standalone Buttons) -->
                 <div class="upload-actions-bar">
                     <!-- Camera Direct Input (capture) -->
                     <input type="file" id="camera-capture-input" accept="image/*" capture="environment" style="display:none;">
@@ -100,30 +100,14 @@
                     <!-- PDF/Doc Input -->
                     <input type="file" id="pdf-upload-input" accept=".pdf,.txt,.md" style="display:none;">
                     
-                    <div class="photo-dropdown-wrapper">
-                        <button id="upload-photo-btn" class="btn btn-outline btn-sm">
-                            <span>📷</span> Upload / Scan Photo ▾
-                        </button>
-                        <div id="photo-choice-menu" class="photo-choice-menu hidden">
-                            <button type="button" id="btn-choice-camera" class="choice-item">
-                                <span class="choice-icon">📸</span>
-                                <div class="choice-text">
-                                    <strong>Take Photo with Camera</strong>
-                                    <small>Snap paper contract directly</small>
-                                </div>
-                            </button>
-                            <button type="button" id="btn-choice-gallery" class="choice-item">
-                                <span class="choice-icon">🖼️</span>
-                                <div class="choice-text">
-                                    <strong>Media / Gallery Picker</strong>
-                                    <small>Choose saved image or screenshot</small>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button id="upload-pdf-btn" class="btn btn-outline btn-sm">
-                        <span>📄</span> Upload PDF / File
+                    <button type="button" id="btn-camera-scan" class="btn btn-outline btn-sm" title="Take a picture using camera">
+                        <span>📸</span> Take Photo
+                    </button>
+                    <button type="button" id="btn-gallery-upload" class="btn btn-outline btn-sm" title="Choose photo from files or gallery">
+                        <span>🖼️</span> Upload Photo
+                    </button>
+                    <button type="button" id="upload-pdf-btn" class="btn btn-outline btn-sm" title="Upload PDF or text document">
+                        <span>📄</span> Upload PDF
                     </button>
                 </div>
             </div>

@@ -142,11 +142,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Photo OCR & File Upload Controls
-    const uploadPhotoBtn = document.getElementById("upload-photo-btn");
-    const photoChoiceMenu = document.getElementById("photo-choice-menu");
-    const btnChoiceCamera = document.getElementById("btn-choice-camera");
-    const btnChoiceGallery = document.getElementById("btn-choice-gallery");
+    // Photo OCR & File Upload Controls (Direct Standalone Buttons)
+    const btnCameraScan = document.getElementById("btn-camera-scan");
+    const btnGalleryUpload = document.getElementById("btn-gallery-upload");
     const cameraCaptureInput = document.getElementById("camera-capture-input");
     const galleryUploadInput = document.getElementById("gallery-upload-input");
 
@@ -161,25 +159,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const photoPreviewName = document.getElementById("photo-preview-name");
     const removePhotoBtn = document.getElementById("remove-photo-btn");
 
-    // Toggle Photo Choice Dropdown
-    if (uploadPhotoBtn && photoChoiceMenu) {
-        uploadPhotoBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            photoChoiceMenu.classList.toggle("hidden");
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener("click", (e) => {
-            if (!photoChoiceMenu.contains(e.target) && e.target !== uploadPhotoBtn) {
-                photoChoiceMenu.classList.add("hidden");
-            }
-        });
-    }
-
-    // Option 1: Take Photo with Camera
-    if (btnChoiceCamera && cameraCaptureInput) {
-        btnChoiceCamera.addEventListener("click", () => {
-            photoChoiceMenu.classList.add("hidden");
+    // Direct Button 1: Camera Scan
+    if (btnCameraScan && cameraCaptureInput) {
+        btnCameraScan.addEventListener("click", () => {
             cameraCaptureInput.click();
         });
 
@@ -190,10 +172,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Option 2: Choose from Media / Gallery
-    if (btnChoiceGallery && galleryUploadInput) {
-        btnChoiceGallery.addEventListener("click", () => {
-            photoChoiceMenu.classList.add("hidden");
+    // Direct Button 2: Media / Gallery Upload
+    if (btnGalleryUpload && galleryUploadInput) {
+        btnGalleryUpload.addEventListener("click", () => {
             galleryUploadInput.click();
         });
 
