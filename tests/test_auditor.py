@@ -33,6 +33,18 @@ class TestDocumentParser(unittest.TestCase):
         self.assertEqual(clauses[1].clause_number, "2")
         self.assertIn("Confidentiality", clauses[1].title)
 
+    def test_inline_clause_title_extraction(self):
+        sample = """
+        1. INDEMNIFICATION. Customer agrees to defend and indemnify Vendor against all third-party claims.
+        2. LIMITATION OF LIABILITY - In no event shall Company aggregate liability exceed fifty dollars ($50.00).
+        """
+        clauses = self.parser.parse(sample, "Inline Title Doc")
+        self.assertEqual(len(clauses), 2)
+        self.assertIn("INDEMNIFICATION", clauses[0].title)
+        self.assertIn("Customer agrees to defend", clauses[0].text)
+        self.assertIn("LIMITATION OF LIABILITY", clauses[1].title)
+        self.assertIn("In no event shall Company", clauses[1].text)
+
     def test_markdown_and_bold_headers(self):
         sample = """
         ### 1. Scope of Service
@@ -45,6 +57,29 @@ class TestDocumentParser(unittest.TestCase):
         self.assertEqual(len(clauses), 2)
         self.assertIn("Scope of Service", clauses[0].title)
         self.assertIn("Termination Rights", clauses[1].title)
+
+    def test_html_and_preamble_parsing(self):
+        sample = """
+        <p><b>TERMS OF SERVICE</b></p>
+        <p>Welcome to our platform. By using this service you agree to these terms.</p>
+        <p><b>1. User Conduct</b></p>
+        <p>You must not upload malicious files.</p>
+        """
+        clauses = self.parser.parse(sample, "HTML Scraped Doc")
+        self.assertGreaterEqual(len(clauses), 2)
+        self.assertIn("User Conduct", clauses[1].title)
+
+    def test_subitem_bullet_preservation(self):
+        sample = """
+        Section 3. Intellectual Property Rights
+        (a) Customer retains full ownership of customer data.
+        (b) Vendor receives a limited license to host data.
+        (c) Suggestions are voluntary.
+        """
+        clauses = self.parser.parse(sample, "Bullet Doc")
+        self.assertEqual(len(clauses), 1)
+        self.assertIn("Intellectual Property", clauses[0].title)
+        self.assertTrue(clauses[0].has_subsections)
 
     def test_sentence_abbreviation_preservation(self):
         text = "Vendor may terminate e.g. upon bankruptcy, i.e. insolvency et al. and Corp. failure or Pvt. Ltd. dissolution under Sec. 12."
@@ -159,7 +194,6 @@ class TestTrapDetector(unittest.TestCase):
             sentences=[fair_clause_text]
         )
         traps = self.detector.detect_traps_in_clause(clause)
-        # Should be filtered out by safeguards
         self.assertEqual(len(traps), 0)
 
 
