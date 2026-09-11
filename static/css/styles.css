@@ -1439,6 +1439,24 @@ input, button, textarea, select {
     color: var(--text-muted);
 }
 
+@media (min-width: 861px) {
+    .footer-accordion summary.footer-col-title {
+        pointer-events: none;
+        cursor: default;
+        padding: 0;
+        margin: 0 0 12px 0;
+    }
+    .footer-accordion summary.footer-col-title::-webkit-details-marker {
+        display: none;
+    }
+    .footer-accordion .accordion-arrow {
+        display: none !important;
+    }
+    .footer-accordion .footer-links-list {
+        display: flex !important;
+    }
+}
+
 @media (max-width: 860px) {
     .footer-accordion {
         background-color: var(--bg-subtle);
