@@ -1,5 +1,5 @@
 /**
- * LexiTrap Interactive 3D & Animation Controller
+ * LexiTrap Interactive Controller (Simplified English & Clear Typography)
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeFilter = "ALL";
 
     // -------------------------------------------------------------
-    // 1. Initialize Interactive Three.js 3D Holographic Geometry
+    // 1. Interactive Three.js Visualizer
     // -------------------------------------------------------------
     function init3DScene() {
         const canvas = document.getElementById("three-canvas");
@@ -60,37 +60,36 @@ document.addEventListener("DOMContentLoaded", () => {
         renderer.setSize(width, height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        // Group for rotation
         const group = new THREE.Group();
         scene.add(group);
 
-        // 3D Outer Wireframe Icosahedron (Representing Legal Framework)
+        // Outer Wireframe
         const icosaGeometry = new THREE.IcosahedronGeometry(1.3, 1);
         const icosaMaterial = new THREE.MeshBasicMaterial({
-            color: 0x2563eb,
+            color: 0x1d4ed8,
             wireframe: true,
             transparent: true,
-            opacity: 0.45
+            opacity: 0.5
         });
         const icosaMesh = new THREE.Mesh(icosaGeometry, icosaMaterial);
         group.add(icosaMesh);
 
-        // 3D Inner Glowing Polyhedron (The Contract Core)
+        // Inner Core
         const innerGeometry = new THREE.OctahedronGeometry(0.8, 0);
         const innerMaterial = new THREE.MeshPhongMaterial({
-            color: 0x7c3aed,
-            emissive: 0x3b82f6,
-            emissiveIntensity: 0.4,
+            color: 0x2563eb,
+            emissive: 0x1e40af,
+            emissiveIntensity: 0.5,
             shininess: 90,
             transparent: true,
-            opacity: 0.85,
+            opacity: 0.9,
             flatShading: true
         });
         const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
         group.add(innerMesh);
 
-        // Surrounding Particle Field
-        const particleCount = 60;
+        // Floating particles
+        const particleCount = 50;
         const particleGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
 
@@ -102,27 +101,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
         const particleMaterial = new THREE.PointsMaterial({
-            color: 0x00f2fe,
-            size: 0.06,
+            color: 0x2563eb,
+            size: 0.07,
             transparent: true,
-            opacity: 0.7
+            opacity: 0.6
         });
         const particleField = new THREE.Points(particleGeometry, particleMaterial);
         group.add(particleField);
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
         scene.add(ambientLight);
 
         const pointLight1 = new THREE.PointLight(0x2563eb, 2, 50);
         pointLight1.position.set(5, 5, 5);
         scene.add(pointLight1);
 
-        const pointLight2 = new THREE.PointLight(0x7c3aed, 2, 50);
-        pointLight2.position.set(-5, -5, 5);
-        scene.add(pointLight2);
-
-        // Mouse Parallax
         let mouseX = 0;
         let mouseY = 0;
         let targetX = 0;
@@ -133,28 +127,21 @@ document.addEventListener("DOMContentLoaded", () => {
             mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
         });
 
-        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
 
             targetX += (mouseX - targetX) * 0.05;
             targetY += (mouseY - targetY) * 0.05;
 
-            group.rotation.x += 0.005;
-            group.rotation.y += 0.008;
-
-            group.rotation.x = targetY * 0.6;
-            group.rotation.y += targetX * 0.02 + 0.006;
+            group.rotation.x = targetY * 0.5;
+            group.rotation.y += targetX * 0.02 + 0.007;
 
             innerMesh.rotation.y -= 0.012;
-            innerMesh.rotation.z += 0.008;
-
             renderer.render(scene, camera);
         }
 
         animate();
 
-        // Responsive Resize
         window.addEventListener("resize", () => {
             const newWidth = container.clientWidth || 300;
             const newHeight = container.clientHeight || 220;
@@ -167,31 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
     init3DScene();
 
     // -------------------------------------------------------------
-    // 2. Interactive 3D Perspective Tilt on Hover for Cards
-    // -------------------------------------------------------------
-    const tiltCards = document.querySelectorAll(".tilt-card");
-    tiltCards.forEach(card => {
-        card.addEventListener("mousemove", (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-
-            const rotateX = ((y - centerY) / centerY) * -6; // max 6deg tilt
-            const rotateY = ((x - centerX) / centerX) * 6;
-
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
-        });
-
-        card.addEventListener("mouseleave", () => {
-            card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)";
-        });
-    });
-
-    // -------------------------------------------------------------
-    // 3. Text Counting
+    // 2. Text Counting
     // -------------------------------------------------------------
     function updateTextStats() {
         const text = contractTextarea.value;
@@ -207,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
     contractTextarea.addEventListener("input", updateTextStats);
 
     // -------------------------------------------------------------
-    // 4. Smooth Number Counting Animation Helper
+    // 3. Smooth Number Counter
     // -------------------------------------------------------------
     function animateValue(element, start, end, duration) {
         if (!element) return;
@@ -224,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // -------------------------------------------------------------
-    // 5. Load Preset Sample
+    // 4. Load Preset Sample
     // -------------------------------------------------------------
     async function loadSample(sampleId) {
         try {
@@ -268,14 +231,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // -------------------------------------------------------------
-    // 6. Run Cognitive Audit
+    // 5. Run Cognitive Audit
     // -------------------------------------------------------------
     async function runAudit() {
         const text = contractTextarea.value.trim();
         const docName = docNameInput.value.trim() || "Contract Agreement";
 
         if (!text) {
-            alert("Please paste contract text or select a preset sample first.");
+            alert("Please paste contract text or select an example above.");
             return;
         }
 
@@ -301,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (err) {
             console.error("Audit error:", err);
-            alert("An error occurred while communicating with the NLP auditor.");
+            alert("An error occurred while analyzing the contract.");
         } finally {
             loadingOverlay.classList.add("hidden");
             scanLaser.classList.add("hidden");
@@ -311,28 +274,28 @@ document.addEventListener("DOMContentLoaded", () => {
     auditBtn.addEventListener("click", runAudit);
 
     // -------------------------------------------------------------
-    // 7. Render Report with Gauges and Counters
+    // 6. Render Report with Gauges and Counters
     // -------------------------------------------------------------
     function renderReport(report) {
         const score = Math.round(report.overall_health_score);
         
         // Count-up animation for Score
-        animateValue(healthScoreVal, 0, score, 1200);
+        animateValue(healthScoreVal, 0, score, 1000);
 
         // Animated SVG Gauge (circumference: 2 * PI * 50 ≈ 314)
         const circumference = 314;
         const offset = circumference - (score / 100) * circumference;
         
-        let gaugeColor = "#dc2626"; // red
-        if (score >= 80) gaugeColor = "#059669"; // emerald
-        else if (score >= 60) gaugeColor = "#d97706"; // amber
+        let gaugeColor = "#b91c1c"; // red
+        if (score >= 80) gaugeColor = "#047857"; // emerald
+        else if (score >= 60) gaugeColor = "#b45309"; // amber
 
         scoreGaugeBar.style.stroke = gaugeColor;
         scoreGaugeBar.style.strokeDashoffset = offset;
 
         // Badges
         gradeBadge.textContent = `Grade ${report.letter_grade}`;
-        riskSeverityBadge.textContent = report.risk_level;
+        riskSeverityBadge.textContent = report.risk_level === 'SAFE' ? 'Safe to Sign' : (report.risk_level === 'CRITICAL' ? 'Critical Risk' : `${report.risk_level} Risk`);
 
         gradeBadge.className = "badge";
         riskSeverityBadge.className = "badge";
@@ -353,29 +316,40 @@ document.addEventListener("DOMContentLoaded", () => {
         verdictDesc.textContent = report.verdict_description;
 
         // Animate stats
-        animateValue(statTrapsCount, 0, report.total_traps_found, 800);
-        animateValue(statCriticalCount, 0, report.critical_traps_count, 800);
-        animateValue(statHighCount, 0, report.high_traps_count, 800);
-        animateValue(statClausesCount, 0, report.total_clauses, 800);
+        animateValue(statTrapsCount, 0, report.total_traps_found, 700);
+        animateValue(statCriticalCount, 0, report.critical_traps_count, 700);
+        animateValue(statHighCount, 0, report.high_traps_count, 700);
+        animateValue(statClausesCount, 0, report.total_clauses, 700);
 
-        // Deontic Modality Progress Bars
+        // Contract Rules Breakdown (Plain English)
         deonticBarsContainer.innerHTML = "";
         const deonticPcts = report.deontic_profile.distribution_percentages || {};
+        
+        const friendlyNames = {
+            "Obligation": "Must-Do Duties (Shall/Must)",
+            "Prohibition": "Forbidden Actions (Shall Not)",
+            "Permission": "Allowed Rights (May)",
+            "Warranty": "Promises & Guarantees",
+            "Disclaimer": "Disclaimers (No Liability)",
+            "Informational / Declarative": "General Information"
+        };
+
         const colors = {
-            "Obligation": "#dc2626",
-            "Prohibition": "#d97706",
-            "Permission": "#2563eb",
-            "Warranty": "#4f46e5",
-            "Disclaimer": "#7c3aed",
-            "Informational / Declarative": "#94a3b8"
+            "Obligation": "#b91c1c",
+            "Prohibition": "#b45309",
+            "Permission": "#1d4ed8",
+            "Warranty": "#4338ca",
+            "Disclaimer": "#6d28d9",
+            "Informational / Declarative": "#64748b"
         };
 
         for (const [cat, pct] of Object.entries(deonticPcts)) {
+            const displayName = friendlyNames[cat] || cat;
             const row = document.createElement("div");
             row.className = "deontic-item";
-            const color = colors[cat] || "#2563eb";
+            const color = colors[cat] || "#1d4ed8";
             row.innerHTML = `
-                <span class="deontic-label">${cat}</span>
+                <span class="deontic-label">${displayName}</span>
                 <div class="deontic-track">
                     <div class="deontic-fill" style="width: 0%; background-color: ${color};"></div>
                 </div>
@@ -383,7 +357,6 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             deonticBarsContainer.appendChild(row);
 
-            // Animate bar width
             setTimeout(() => {
                 const fill = row.querySelector(".deontic-fill");
                 if (fill) fill.style.width = `${pct}%`;
@@ -433,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (clauses.length === 0) {
             clausesList.innerHTML = `
                 <div class="clause-card tilt-card" style="text-align: center; color: var(--text-muted); padding: 28px;">
-                    ✓ No clauses matched this filter criteria.
+                    ✓ No clauses matched this filter.
                 </div>
             `;
             return;
@@ -442,7 +415,6 @@ document.addEventListener("DOMContentLoaded", () => {
         clauses.forEach((clause, index) => {
             const card = document.createElement("div");
             card.className = `clause-card tilt-card ${clause.heat_level.toLowerCase()}`;
-            card.style.animation = `fadeInUp 0.4s ease ${index * 0.05}s both`;
 
             let trapsHtml = "";
             if (clause.traps && clause.traps.length > 0) {
@@ -453,22 +425,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     trapsHtml += `
                         <div class="trap-box">
                             <div class="trap-head">
-                                <span class="trap-name">⚠️ ${trap.category}</span>
-                                <span class="badge ${trap.severity === 'CRITICAL' ? 'badge-danger' : 'badge-warning'}">${trap.severity}</span>
+                                <span class="trap-name">⚠️ Trap Detected: ${trap.category}</span>
+                                <span class="badge ${trap.severity === 'CRITICAL' ? 'badge-danger' : 'badge-warning'}">${trap.severity === 'CRITICAL' ? 'High Risk' : 'Medium Risk'}</span>
                             </div>
-                            <p class="trap-desc"><strong>Legal Danger:</strong> ${trap.legal_danger}</p>
-                            <p class="trap-impact"><strong>Commercial Impact:</strong> ${trap.business_impact}</p>
+                            <p class="trap-desc"><strong>What is the risk:</strong> ${trap.legal_danger}</p>
+                            <p class="trap-impact"><strong>Impact on you:</strong> ${trap.business_impact}</p>
                             <div class="trap-keywords">
-                                <strong>Trigger Patterns:</strong> 
+                                <strong>Trigger words found:</strong> 
                                 ${trap.matched_patterns.map(p => `<span>${p}</span>`).join(" ")}
                             </div>
 
                             ${redline ? `
                             <div class="redline-box">
-                                <div class="redline-title">✏️ Recommended Balanced Alternative:</div>
+                                <div class="redline-title">✏️ Suggested Fair Replacement:</div>
                                 <div class="diff-view">${redline.diff_html}</div>
                                 <div class="talking-point-box">
-                                    <strong>Negotiation Tip:</strong> ${redline.negotiation_talking_point}
+                                    <strong>What to say when negotiating:</strong> ${redline.negotiation_talking_point}
                                 </div>
                             </div>
                             ` : ''}
@@ -526,6 +498,5 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Initial empty stats
     updateTextStats();
 });

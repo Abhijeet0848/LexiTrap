@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LexiTrap • Legal Contract Auditor & Risk Engine</title>
+    <title>LexiTrap • Contract Risk & Trap Analyzer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -11,16 +11,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <!-- Background Ambient Glow Canvas -->
+    <!-- Background Canvas -->
     <div id="canvas-3d-bg" class="canvas-3d-container"></div>
 
     <!-- Navbar -->
     <header class="navbar">
         <div class="nav-container">
-            <div class="nav-brand tilt-hover">
-                <span class="brand-icon pulse-glow">⚖️</span>
+            <div class="nav-brand">
+                <span class="brand-icon">⚖️</span>
                 <span class="brand-name">LexiTrap</span>
-                <span class="brand-tag">NLP Engine</span>
+                <span class="brand-tag">Contract Scanner</span>
             </div>
         </div>
     </header>
@@ -31,14 +31,14 @@
         <section class="hero-section">
             <div class="hero-content">
                 <div class="hero-text-side">
-                    <div class="hero-chip animate-fade-in">
-                        <span class="chip-sparkle">✨</span> Next-Gen Cognitive LegalTech
+                    <div class="hero-chip">
+                        <span class="chip-sparkle">🔍</span> Instant Legal Checker
                     </div>
-                    <h1 class="hero-title animate-slide-up">
-                        Scan Contracts for <span class="gradient-text">Hidden Traps</span> & Predatory Clauses
+                    <h1 class="hero-title">
+                        Find <span class="gradient-text">Unfair Rules & Hidden Traps</span> in Any Contract
                     </h1>
-                    <p class="hero-subtitle animate-slide-up delay-1">
-                        Detect unilateral amendments, perpetual AI training rights, forced arbitration, and generate balanced reciprocal redlines in real-time.
+                    <p class="hero-subtitle">
+                        Paste your SaaS terms, NDA, or job contract to detect one-sided rules, hidden fees, and see fair replacement wording.
                     </p>
                 </div>
                 <!-- Interactive Floating Visualizer Widget -->
@@ -46,7 +46,7 @@
                     <div class="hologram-glass-card tilt-card" id="interactive-3d-card">
                         <canvas id="three-canvas"></canvas>
                         <div class="hologram-badge">
-                            <span class="pulse-dot"></span> Visualizer
+                            <span class="pulse-dot"></span> Live Scanner
                         </div>
                     </div>
                 </div>
@@ -56,8 +56,8 @@
         <!-- Quick Sample Pills -->
         <section class="sample-pills-section tilt-card">
             <div class="sample-pills-header">
-                <span class="sample-pills-label">⚡ Quick Presets:</span>
-                <span class="sample-pills-hint">Click any contract to auto-populate & test</span>
+                <span class="sample-pills-label">⚡ Try an example:</span>
+                <span class="sample-pills-hint">Click any contract below to test instantly</span>
             </div>
             <div class="sample-pills-wrap">
                 {% for sample in samples %}
@@ -70,23 +70,23 @@
             </div>
         </section>
 
-        <!-- Input & Editor Area with 3D Border Glow -->
+        <!-- Input & Editor Area -->
         <section class="editor-section tilt-card">
             <div class="editor-topbar">
                 <div class="doc-name-wrap">
-                    <input type="text" id="doc-name-input" class="doc-name-input" placeholder="Agreement Title (e.g. Master SaaS Agreement)" value="">
+                    <input type="text" id="doc-name-input" class="doc-name-input" placeholder="Contract Name (e.g. Website Terms, NDA, Employment Agreement)" value="">
                 </div>
                 <div class="editor-btn-group">
                     <button id="clear-btn" class="btn btn-light ripple-btn">Clear</button>
                     <button id="audit-btn" class="btn btn-primary btn-glow ripple-btn">
-                        <span class="btn-sparkle">⚡</span> Run Cognitive Audit
+                        <span class="btn-sparkle">⚡</span> Check Contract Now
                     </button>
                 </div>
             </div>
 
             <div class="textarea-wrapper">
                 <div id="scan-laser" class="scan-laser-line hidden"></div>
-                <textarea id="contract-text" class="contract-textarea" placeholder="Paste full agreement text, terms of service, NDA, or employment contract here..."></textarea>
+                <textarea id="contract-text" class="contract-textarea" placeholder="Paste your contract text, terms of service, NDA, or job agreement here..."></textarea>
             </div>
 
             <div class="editor-info-bar">
@@ -95,12 +95,12 @@
                     <span class="count-divider">•</span>
                     <span><strong id="char-count">0</strong> characters</span>
                     <span class="count-divider">•</span>
-                    <span><strong id="est-clauses">0</strong> estimated clauses</span>
+                    <span><strong id="est-clauses">0</strong> sections found</span>
                 </div>
             </div>
         </section>
 
-        <!-- Dynamic Animated Loading State -->
+        <!-- Loading State -->
         <div id="loading-overlay" class="loading-state hidden">
             <div class="scanner-sphere">
                 <div class="orbit-ring ring-1"></div>
@@ -108,8 +108,8 @@
                 <div class="orbit-ring ring-3"></div>
                 <div class="center-core">⚖️</div>
             </div>
-            <h3 class="loading-title">Parsing Deontic Norms & Checking Benchmarks...</h3>
-            <p class="loading-sub">Running clause boundary extraction, vector space similarity, and redline synthesis.</p>
+            <h3 class="loading-title">Checking Contract Clauses...</h3>
+            <p class="loading-sub">Scanning for unfair rules, legal risks, and generating safe alternatives.</p>
         </div>
 
         <!-- Audit Results (Hidden by default) -->
@@ -125,7 +125,7 @@
                         </svg>
                         <div class="score-circle-inner" id="score-circle">
                             <span id="health-score-val" class="score-number">0</span>
-                            <span class="score-max">/ 100</span>
+                            <span class="score-max">Safety Score</span>
                         </div>
                     </div>
                     
@@ -134,7 +134,7 @@
                             <span id="grade-badge" class="badge grade-f">Grade --</span>
                             <span id="risk-severity-badge" class="badge risk-critical">Critical Risk</span>
                         </div>
-                        <h2 id="verdict-title" class="verdict-heading">Evaluating Terms...</h2>
+                        <h2 id="verdict-title" class="verdict-heading">Contract Summary</h2>
                         <p id="verdict-desc" class="verdict-sub">Audit findings will appear here.</p>
                     </div>
                 </div>
@@ -146,11 +146,11 @@
                     </div>
                     <div class="stat-box stat-hover">
                         <span class="stat-number text-danger" id="stat-critical-count">0</span>
-                        <span class="stat-label">Critical</span>
+                        <span class="stat-label">High Risk</span>
                     </div>
                     <div class="stat-box stat-hover">
                         <span class="stat-number text-warning" id="stat-high-count">0</span>
-                        <span class="stat-label">High Risk</span>
+                        <span class="stat-label">Medium Risk</span>
                     </div>
                     <div class="stat-box stat-hover">
                         <span class="stat-number text-primary" id="stat-clauses-count">0</span>
@@ -159,11 +159,11 @@
                 </div>
             </div>
 
-            <!-- Key Summary & Deontic Breakdown with 3D Depth -->
+            <!-- Key Summary & Contract Rules Breakdown -->
             <div class="details-grid">
                 <div class="panel tilt-card">
                     <div class="panel-header">
-                        <h3 class="panel-title">📋 Executive Findings</h3>
+                        <h3 class="panel-title">📋 Key Findings & Issues</h3>
                         <span class="panel-chip">Summary</span>
                     </div>
                     <ul id="executive-points-list" class="summary-list">
@@ -173,10 +173,10 @@
 
                 <div class="panel tilt-card">
                     <div class="panel-header">
-                        <h3 class="panel-title">⚖️ Deontic Logic Distribution</h3>
-                        <span class="panel-chip">Normative Ratio</span>
+                        <h3 class="panel-title">⚖️ Contract Rules Breakdown</h3>
+                        <span class="panel-chip">Rule Types</span>
                     </div>
-                    <p class="panel-desc">Ratio of mandatory obligations vs permissive rights in the agreement:</p>
+                    <p class="panel-desc">Breakdown of mandatory duties, forbidden actions, and permissions:</p>
                     <div id="deontic-bars-container" class="deontic-bars">
                         <!-- Filled by JS -->
                     </div>
@@ -187,11 +187,11 @@
             <div class="filter-toolbar tilt-card">
                 <div class="filter-tabs">
                     <button class="filter-tab active ripple-btn" data-filter="ALL">All Clauses (<span id="count-all">0</span>)</button>
-                    <button class="filter-tab ripple-btn" data-filter="TRAPS">Traps Only (<span id="count-traps">0</span>)</button>
-                    <button class="filter-tab ripple-btn" data-filter="CRITICAL">Critical (<span id="count-critical">0</span>)</button>
+                    <button class="filter-tab ripple-btn" data-filter="TRAPS">Risky Clauses (<span id="count-traps">0</span>)</button>
+                    <button class="filter-tab ripple-btn" data-filter="CRITICAL">High Risk Only (<span id="count-critical">0</span>)</button>
                 </div>
                 <button id="export-md-btn" class="btn btn-outline btn-sm ripple-btn">
-                    📥 Download Markdown Report
+                    📥 Download Report (Markdown)
                 </button>
             </div>
 
@@ -205,7 +205,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>LexiTrap • Cognitive LegalTech NLP System & Trap-Clause Auditor</p>
+        <p>LexiTrap • Legal Contract Risk Scanner & Fair Redline Generator</p>
     </footer>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
