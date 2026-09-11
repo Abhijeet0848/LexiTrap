@@ -70,30 +70,71 @@ def fetch_url():
         def __init__(self):
             super().__init__()
             self.text_parts = []
-            self.ignore_tags = {"script", "style", "nav", "footer", "header", "noscript", "svg", "iframe"}
+            self.ignore_tags = {
+                "script", "style", "nav", "footer", "header", "noscript", 
+                "svg", "iframe", "head", "title", "meta", "link", "aside", 
+                "form", "button", "select", "option"
+            }
             self.current_tag = None
+            self.row_cells = []
+            self.in_table_row = False
 
         def handle_starttag(self, tag, attrs):
-            self.current_tag = tag.lower()
-            if self.current_tag in {"br", "hr"}:
+            t = tag.lower()
+            self.current_tag = t
+            if t == "tr":
+                self.in_table_row = True
+                self.row_cells = []
+            elif t in {"br", "hr"}:
                 self.text_parts.append("\n")
 
         def handle_endtag(self, tag):
-            self.current_tag = None
-            if tag.lower() in {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "section", "article", "tr", "table", "blockquote"}:
+            t = tag.lower()
+            if t == "tr":
+                self.in_table_row = False
+                if self.row_cells:
+                    row_str = " | ".join(c.strip() for c in self.row_cells if c.strip())
+                    if row_str:
+                        self.text_parts.append(f"\n• {row_str}\n")
+                    self.row_cells = []
+            elif t in {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "section", "article", "blockquote"}:
                 self.text_parts.append("\n")
-            elif tag.lower() in {"td", "th"}:
-                self.text_parts.append(" | ")
+            
+            self.current_tag = None
 
         def handle_data(self, data):
-            if self.current_tag not in self.ignore_tags:
-                clean = data.strip()
-                if clean:
-                    self.text_parts.append(clean + " ")
+            if self.current_tag in self.ignore_tags:
+                return
+            clean = data.strip()
+            if not clean:
+                return
+            
+            if self.in_table_row and self.current_tag in {"td", "th"}:
+                self.row_cells.append(clean)
+            else:
+                self.text_parts.append(clean + " ")
 
         def get_text(self):
             raw = "".join(self.text_parts)
-            return re.sub(r"\n{3,}", "\n\n", raw).strip()
+            web_noise = {
+                "explore plus", "login", "become a seller", "more", "cart", "download app", 
+                "sign in", "sign up", "register", "menu", "search", "back to top", "help center",
+                "24x7 customer care", "terms of use", "security", "privacy", "sitemap", "about us",
+                "contact us", "careers", "press", "corporate information"
+            }
+            lines = [l.strip() for l in raw.split("\n")]
+            filtered = []
+            for l in lines:
+                if not l:
+                    continue
+                if re.search(r"\b(?:Store Online|Best Price in India|Flipkart\.com)\b", l, re.I):
+                    continue
+                if l.lower() in web_noise:
+                    continue
+                filtered.append(l)
+            
+            result = "\n\n".join(filtered)
+            return re.sub(r"\n{3,}", "\n\n", result).strip()
 
     data = request.get_json(silent=True) or {}
     url = data.get("url", "").strip()

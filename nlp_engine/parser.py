@@ -98,15 +98,30 @@ class DocumentParser:
     def __init__(self):
         pass
 
+    NON_CLAUSE_HEADER_TOKENS = {
+        "days", "day", "hours", "weeks", "months", "additional cost", "free", "refund",
+        "replacement", "exchange", "lifestyle", "no", "yes", "na", "n/a", "etc", "none",
+        "furniture", "home", "books", "electronics", "fashion", "mobiles", "appliances",
+        "grocery", "toys", "sports", "auto", "beauty", "music", "category", "about",
+        "consumer policy", "mail us", "registered office address", "karnataka, india"
+    }
+
+    WEB_NOISE_LINES = {
+        "explore plus", "login", "become a seller", "more", "cart", "download app", 
+        "sign in", "sign up", "register", "menu", "search", "back to top", "help center",
+        "24x7 customer care", "terms of use", "security", "privacy", "sitemap", "about us",
+        "contact us", "careers", "press", "corporate information"
+    }
+
     def clean_text(self, text: str) -> str:
         """
-        Cleans and normalizes raw text and OCR scan output:
+        Cleans and normalizes raw text, web scrapes, and OCR scan output:
         - Unescapes HTML entities (&amp;, &lt;, &gt;, &quot;)
         - Strips HTML tags (e.g. <p>, <div>, <br>)
         - Decomposes typographic ligatures (ﬁ -> fi, ﬂ -> fl, ﬀ -> ff, etc.)
         - Normalizes smart quotes, apostrophes, and dashes
         - Reconstructs broken hyphenated line-wraps from OCR scans (e.g. "indemni-\n fication" -> "indemnification")
-        - Strips stray OCR margin pipes
+        - Strips web layout noise, SEO title bars, and orphan footer markers
         - Normalizes Windows (CRLF) and Unix (LF) line endings
         - Strips zero-width unicode artifacts and collapses whitespace
         """
@@ -135,7 +150,7 @@ class DocumentParser:
             "œ": "oe",
             "æ": "ae",
             "Œ": "OE",
-            "Æ": "AE",
+            "AE": "AE",
         }
         for lig, repl in ligature_map.items():
             cleaned = cleaned.replace(lig, repl)
@@ -150,11 +165,26 @@ class DocumentParser:
         
         # 7. Strip stray OCR margin pipe artifacts
         cleaned = re.sub(r"(?:^|\n)\s*\|\s*", "\n", cleaned)
-        
+
         # 8. Remove zero-width spaces, BOMs, and non-breaking spaces
         cleaned = re.sub(r"[\ufeff\u200b\u200c\u200d\u00a0]", " ", cleaned)
         
-        # 9. Collapse excessive blank lines
+        # 9. Filter web noise, SEO title bars, and standalone corporate footer artifacts
+        lines = cleaned.split("\n")
+        filtered_lines = []
+        for line in lines:
+            s = line.strip()
+            if not s:
+                continue
+            if re.search(r"\b(?:Store Online|Best Price in India|Flipkart\.com)\b", s, re.I):
+                continue
+            if s.lower() in self.WEB_NOISE_LINES:
+                continue
+            filtered_lines.append(s)
+        
+        cleaned = "\n".join(filtered_lines)
+
+        # 10. Collapse excessive blank lines
         cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
         
         return cleaned.strip()
@@ -207,7 +237,26 @@ class DocumentParser:
         if not line_clean:
             return None
 
-        # 1. Markdown headers e.g. '### 1. Scope of Service' or '## Dispute Resolution'
+        # Ignore bullet items, table rows, and pipe lines (while allowing bold markdown headers starting with **)
+        if (line_clean.startswith(("•", "|")) or (line_clean.startswith(("-", "*")) and not line_clean.startswith("**"))) or " | " in line_clean:
+            return None
+
+        # 1. Part / Section / Article / Chapter / Schedule / Annexure standalone header
+        part_match = re.match(
+            r"^(?:Part|Section|Article|Clause|Paragraph|Chapter|Appendix|Schedule|Annexure|Exhibit)\s+([0-9IVXLCDMA-Z]+(?:\.\d+)*)\s*[:.\-–—]?\s*(.*)$",
+            line_clean, re.I
+        )
+        if part_match:
+            num = part_match.group(1).strip()
+            title = part_match.group(2).strip()
+            prefix = part_match.group(0).split()[0]
+            if not title:
+                title = f"{prefix} {num}"
+            elif prefix.lower() in {"part", "chapter", "schedule", "annexure"}:
+                title = f"{prefix} {num}: {title}"
+            return ("STANDALONE", num, title, "")
+
+        # 2. Markdown headers e.g. '### 1. Scope of Service' or '## Dispute Resolution'
         md_match = re.match(
             r"^(#{1,6})\s*(?:(?:Section|Article|Clause|Paragraph)\s+)?(?:(\d+(?:\.\d+)*|[IVXLCDM]+\.)\s*)?[:.\-–—]?\s*(.+)$",
             line_clean, re.I
@@ -215,9 +264,10 @@ class DocumentParser:
         if md_match:
             num = (md_match.group(2) or "").replace(".", "").strip()
             title = re.sub(r"[*#_`]", "", md_match.group(3)).strip()
-            return ("STANDALONE", num, title, "")
+            if title.lower() not in self.NON_CLAUSE_HEADER_TOKENS:
+                return ("STANDALONE", num, title, "")
 
-        # 2. Bold Markdown headers e.g. '**1. Title**' or '**Section 1: Indemnity**'
+        # 3. Bold Markdown headers e.g. '**1. Title**' or '**Section 1: Indemnity**'
         bold_match = re.match(
             r"^\*\*(?:(?:Section|Article|Clause|Paragraph)\s+)?(?:(\d+(?:\.\d+)*|[IVXLCDM]+\.)\s*)?[:.\-–—]?\s*([^*]+)\*\*$",
             line_clean, re.I
@@ -225,31 +275,43 @@ class DocumentParser:
         if bold_match:
             num = (bold_match.group(1) or "").replace(".", "").strip()
             title = bold_match.group(2).strip()
-            return ("STANDALONE", num, title, "")
-
-        # 3. Explicit Section/Article Standalone Header e.g. 'Section 1. Definitions' or 'Article II: Governing Law'
-        sec_match = re.match(
-            r"^(?:Section|Article|Clause|Paragraph|Schedule|Exhibit)\s+(\d+(?:\.\d+)*|[IVXLCDM]+)\s*[:.\-–—]?\s*(.*)$",
-            line_clean, re.I
-        )
-        if sec_match:
-            num = sec_match.group(1).strip()
-            title = sec_match.group(2).strip()
-            if not title:
-                title = f"Section {num}"
-            return ("STANDALONE", num, title, "")
+            if title.lower() not in self.NON_CLAUSE_HEADER_TOKENS:
+                return ("STANDALONE", num, title, "")
 
         # 4. Numbered Standalone Header e.g. '1. Definitions', '1.1 Scope of Work', '1. MODIFICATION OF TERMS.'
         num_match = re.match(
-            r"^(\d+(?:\.\d+)*)\.?\s+([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{1,80})[:.]?$",
+            r"^(\d+(?:\.\d+)*)\.?\s+([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{1,70})[:.]?$",
             line_clean
         )
         if num_match:
             num = num_match.group(1).strip()
-            title = num_match.group(2).strip()
-            return ("STANDALONE", num, title, "")
+            title = num_match.group(2).strip().rstrip(".:")
+            if title.lower() not in self.NON_CLAUSE_HEADER_TOKENS:
+                return ("STANDALONE", num, title, "")
 
-        # 5. Inline Section with body e.g. '1. INDEMNIFICATION. Customer agrees to defend...' or 'Section 1: Indemnity - Customer shall...'
+        # 5. ALL-CAPS standalone header e.g. 'LIMITATION OF LIABILITY'
+        if re.match(r"^[A-Z\s,;/\-–—]{4,60}:?$", line_clean) and len(line_clean.split()) <= 8:
+            title = line_clean.rstrip(":")
+            if title.lower() not in self.NON_CLAUSE_HEADER_TOKENS:
+                return ("STANDALONE", "", title, "")
+
+        # 6. Standalone Policy Title Lines (e.g. 'Cancellation Policy - Hyperlocal', 'Easy Doorstep Cancellation', 'Returns Policy')
+        words = line_clean.split()
+        if 1 <= len(words) <= 7 and len(line_clean) <= 65 and not line_clean.endswith((".", ";", ",")) and not line_clean[0].islower():
+            lower = line_clean.lower()
+            not_starters = (
+                "the ", "if ", "you ", "we ", "in ", "for ", "any ", "all ", "each ",
+                "either ", "neither ", "customer ", "user ", "by ", "except ", "subject ",
+                "such ", "this ", "these ", "under ", "provided ", "whereas ", "now therefore", 
+                "do read", "refer ", "our ", "free ", "brand ", "please "
+            )
+            is_title_case = all(w[0].isupper() or w.lower() in {"and", "or", "of", "the", "in", "on", "for", "to", "with", "a", "an", "-", "/", "&"} for w in words if w)
+            has_policy_kw = bool(re.search(r"\b(?:Policy|Terms|Cancellation|Returns|Guidelines|Rules|Agreement|Provisions|Notice|Dispute|Warranty|Delivery|Hyperlocal|Conditions|Exceptions|Obligations|Liability|Indemnity)\b", line_clean, re.I))
+            
+            if not lower.startswith(not_starters) and (is_title_case or has_policy_kw) and lower not in self.NON_CLAUSE_HEADER_TOKENS:
+                return ("STANDALONE", "", line_clean, "")
+
+        # 7. Inline Section with body e.g. '1. INDEMNIFICATION. Customer agrees to defend...' or 'Section 1: Indemnity - Customer shall...'
         inline_match = re.match(
             r"^(?:(?:Section|Article|Clause|Paragraph)\s+)?(\d+(?:\.\d+)*|[IVXLCDM]+\.)?\s*[:.\-–—]?\s*([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{1,40})[:.\-–—]\s+(.+)$",
             line_clean, re.I
@@ -258,14 +320,10 @@ class DocumentParser:
             num = (inline_match.group(1) or "").replace(".", "").strip()
             title = inline_match.group(2).strip()
             body = inline_match.group(3).strip()
-            if len(title.split()) <= 7 and not title.lower().startswith((
+            if len(title.split()) <= 7 and title.lower() not in self.NON_CLAUSE_HEADER_TOKENS and not title.lower().startswith((
                 "if ", "the ", "in the event", "provided that", "neither party", "each party", "you agree", "customer shall"
             )):
                 return ("INLINE", num, title, body)
-
-        # 6. ALL-CAPS standalone header e.g. 'LIMITATION OF LIABILITY'
-        if re.match(r"^[A-Z\s,;/\-–—]{4,60}:?$", line_clean) and len(line_clean.split()) <= 8:
-            return ("STANDALONE", "", line_clean.rstrip(":"), "")
 
         return None
 

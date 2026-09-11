@@ -80,6 +80,8 @@ class TrapDetector:
             "patterns": [
                 (re.compile(r"\b(?:modify|change|update|alter|amend|revise)\s+(?:these\s+terms(?:\s+of\s+service)?|this\s+agreement|the\s+service|terms|policies)\b.*?\b(?:at\s+any\s+time|without\s+(?:prior\s+)?notice|in\s+(?:our|its)\s+sole\s+discretion|from\s+time\s+to\s+time\s+without\s+notice)\b", re.I), 1.0),
                 (re.compile(r"\b(?:reserves\s+the\s+right\s+to\s+(?:modify|change|alter|update|revise|amend))\b.*?\b(?:without\s+prior\s+notice|effective\s+immediately|sole\s+(?:and\s+absolute\s+)?discretion|at\s+any\s+time)\b", re.I), 0.95),
+                (re.compile(r"\b(?:reserves?\s+the\s+right\s+to\s+(?:accept|reject|cancel|waive(?:\s+off)?|modify|alter|change|amend|update))\b.*?\b(?:time\s+window|fee|fees|pricing|terms|policies|policy|cancellation|cancellations|order|orders)\b.*?\b(?:from\s+time\s+to\s+time|at\s+(?:our|its)\s+discretion|without\s+(?:prior\s+)?notice)?", re.I), 0.90),
+                (re.compile(r"\b(?:communicated\s+to\s+you\s+periodically|determined\s+by\s+the\s+(?:company|platform))\b", re.I), 0.85),
                 (re.compile(r"\b(?:your\s+continued\s+use\s+(?:of\s+the\s+service|of\s+this\s+site|of\s+the\s+platform|thereof)?\s*(?:constitutes|shall\s+be\s+deemed|implies)\s+(?:your\s+)?acceptance\s+of\s+(?:the\s+)?(?:modified|new|updated|revised)\s+terms)\b", re.I), 0.92),
                 (re.compile(r"\b(?:we\s+may\s+revise|we\s+may\s+update|we\s+may\s+change)\s+(?:these\s+terms|this\s+agreement)\s+(?:periodically\s+)?without\s+(?:prior\s+)?(?:obligation\s+to\s+notify|notice)\b", re.I), 0.90),
                 (re.compile(r"\b(?:subject\s+to\s+change\s+without\s+(?:prior\s+)?notice)\b", re.I), 0.85),
@@ -223,6 +225,7 @@ class TrapDetector:
                 (re.compile(r"\b(?:liability\s+shall\s+not\s+exceed|liability\s+exceed)\s+(?:fifty\s+dollars|one\s+hundred\s+dollars|\$50|\$100|\$0|the\s+amount\s+of\s+\$0|zero\s+dollars|\$[0-9]{1,3})\b", re.I), 0.96),
                 (re.compile(r"\b(?:exceed\s+\$50\s+\(fifty\s+dollars\)|\$100\s+\(one\s+hundred\s+dollars\)|fifty\s+dollars\s+\(\$50(?:\.00)?\))\b", re.I), 0.99),
                 (re.compile(r"\b(?:provided\s+strictly\s+[\"']as\s+is[\"']\s+and\s+[\"']as\s+available[\"']\s+without\s+warranty|strictly\s+[\"']as\s+is[\"'])\b", re.I), 0.90),
+                (re.compile(r"\b(?:non-cancellable\s+and\s+non-refundable|non-refundable\s+and\s+non-cancellable|strictly\s+non-refundable|all\s+orders?\s+are\s+non-cancellable|no\s+refunds?\s+shall\s+be\s+given)\b", re.I), 0.94),
                 (re.compile(r"\b(?:disclaims\s+all\s+liability\s+for\s+any\s+loss\s+of\s+data,\s*outage|security\s+breaches|unauthorized\s+access)\b", re.I), 0.94),
                 (re.compile(r"\b(?:under\s+no\s+circumstances\s+shall\s+(?:company|us|vendor)\s+be\s+liable\s+for\s+any\s+direct,\s*indirect,\s*incidental)\b", re.I), 0.92),
                 (re.compile(r"\b(?:total\s+cumulative\s+liability\s+shall\s+be\s+limited\s+to\s+the\s+amount\s+paid\s+by\s+you\s+in\s+the\s+preceding\s+one\s+\(1\)\s+month)\b", re.I), 0.88),
