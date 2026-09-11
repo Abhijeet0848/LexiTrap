@@ -14,6 +14,15 @@ app = Flask(__name__)
 auditor = ContractAuditor()
 
 
+@app.route("/favicon.ico")
+def favicon():
+    """Serves brand favicon."""
+    return Response(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚖️</text></svg>',
+        mimetype="image/svg+xml"
+    )
+
+
 @app.route("/")
 def index():
     """Renders the main contract audit dashboard."""

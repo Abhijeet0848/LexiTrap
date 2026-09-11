@@ -36,6 +36,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const countTrapsEl = document.getElementById("count-traps");
     const countCriticalEl = document.getElementById("count-critical");
 
+    // OCR Progress Banner Elements
+    const ocrStatusBanner = document.getElementById("ocr-status-banner");
+    const ocrProgressBar = document.getElementById("ocr-progress-bar");
+    const ocrStatusTitle = document.getElementById("ocr-status-title");
+    const ocrStatusSub = document.getElementById("ocr-status-sub");
+
+    // Photo Preview Elements
+    const photoPreviewBox = document.getElementById("photo-preview-box");
+    const photoPreviewImg = document.getElementById("photo-preview-img");
+    const photoPreviewName = document.getElementById("photo-preview-name");
+    const removePhotoBtn = document.getElementById("remove-photo-btn");
+    const photoPlaceholderIcon = document.getElementById("photo-placeholder-icon");
+
+    // PDF / File Upload Elements
+    const uploadPdfBtn = document.getElementById("upload-pdf-btn");
+    const pdfUploadInput = document.getElementById("pdf-upload-input");
+
     let currentAuditReport = null;
     let activeFilter = "ALL";
 
