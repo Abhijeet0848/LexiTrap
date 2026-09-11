@@ -167,8 +167,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Show thumbnail preview
             const reader = new FileReader();
+            const photoPlaceholderIcon = document.getElementById("photo-placeholder-icon");
             reader.onload = (re) => {
                 photoPreviewImg.src = re.target.result;
+                photoPreviewImg.style.display = "block";
+                if (photoPlaceholderIcon) photoPlaceholderIcon.style.display = "none";
                 photoPreviewName.textContent = file.name;
                 photoPreviewBox.classList.remove("hidden");
             };
@@ -233,6 +236,9 @@ document.addEventListener("DOMContentLoaded", () => {
         removePhotoBtn.addEventListener("click", () => {
             photoPreviewBox.classList.add("hidden");
             photoPreviewImg.src = "";
+            photoPreviewImg.style.display = "none";
+            const photoPlaceholderIcon = document.getElementById("photo-placeholder-icon");
+            if (photoPlaceholderIcon) photoPlaceholderIcon.style.display = "inline-block";
         });
     }
 

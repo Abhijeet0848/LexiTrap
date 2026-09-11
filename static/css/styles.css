@@ -59,6 +59,10 @@
     padding: 0;
 }
 
+.hidden {
+    display: none !important;
+}
+
 body {
     background-color: var(--bg-page);
     color: var(--text-body);
@@ -428,6 +432,13 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
+}
+
+.photo-preview-thumb-wrap img:not([src]),
+.photo-preview-thumb-wrap img[src=""] {
+    opacity: 0;
+    visibility: hidden;
 }
 
 .photo-preview-info {
