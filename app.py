@@ -124,23 +124,42 @@ def fetch_url():
             self.ignore_tags = {
                 "script", "style", "nav", "footer", "header", "noscript", 
                 "svg", "iframe", "head", "title", "meta", "link", "aside", 
-                "form", "button", "select", "option"
+                "form", "button", "select", "option", "video", "canvas", "input", "textarea"
             }
             self.current_tag = None
             self.row_cells = []
             self.in_table_row = False
+            self.ignore_depth = 0
 
         def handle_starttag(self, tag, attrs):
             t = tag.lower()
             self.current_tag = t
-            if t == "tr":
-                self.in_table_row = True
-                self.row_cells = []
-            elif t in {"br", "hr"}:
-                self.text_parts.append("\n")
+            attrs_dict = dict(attrs)
+            classes = attrs_dict.get("class", "").lower()
+            tag_id = attrs_dict.get("id", "").lower()
+            role = attrs_dict.get("role", "").lower()
+            aria_hidden = attrs_dict.get("aria-hidden", "").lower()
+
+            if (t in self.ignore_tags or 
+                "modal" in classes or "hidden" in classes or "camera" in classes or "popup" in classes or
+                "modal" in tag_id or "camera" in tag_id or "dialog" in tag_id or
+                role in {"dialog", "alertdialog"} or aria_hidden == "true"):
+                self.ignore_depth += 1
+
+            if self.ignore_depth == 0:
+                if t == "tr":
+                    self.in_table_row = True
+                    self.row_cells = []
+                elif t in {"br", "hr"}:
+                    self.text_parts.append("\n")
 
         def handle_endtag(self, tag):
             t = tag.lower()
+            attrs_dict = {}
+            if self.ignore_depth > 0:
+                self.ignore_depth -= 1
+                return
+
             if t == "tr":
                 self.in_table_row = False
                 if self.row_cells:
@@ -154,7 +173,7 @@ def fetch_url():
             self.current_tag = None
 
         def handle_data(self, data):
-            if self.current_tag in self.ignore_tags:
+            if self.ignore_depth > 0 or self.current_tag in self.ignore_tags:
                 return
             clean = data.strip()
             if not clean:
@@ -171,7 +190,8 @@ def fetch_url():
                 "explore plus", "login", "become a seller", "more", "cart", "download app", 
                 "sign in", "sign up", "register", "menu", "search", "back to top", "help center",
                 "24x7 customer care", "terms of use", "security", "privacy", "sitemap", "about us",
-                "contact us", "careers", "press", "corporate information"
+                "contact us", "careers", "press", "corporate information", "copied summary to clipboard!",
+                "copy summary text", "scan contract with camera", "snap & extract text"
             }
             lines = [l.strip() for l in raw.split("\n")]
             filtered = []
@@ -195,6 +215,15 @@ def fetch_url():
 
     if not (url.startswith("http://") or url.startswith("https://")):
         url = "https://" + url
+
+    # Self-fetching guard: Prevent scanning LexiTrap app itself
+    parsed_input = urlparse(url)
+    target_host = (parsed_input.netloc or "").lower().split(":")[0]
+    if target_host in {"lexi-trap.vercel.app", "lexitrap.vercel.app", "lexitrap.com", "localhost", "127.0.0.1", "0.0.0.0"}:
+        return jsonify({
+            "status": "error",
+            "message": "⚠️ You entered the LexiTrap application URL itself. Please enter an external company's Terms of Service page (e.g., https://www.redditinc.com/policies/user-agreement, https://store.steampowered.com/subscriber_agreement/, or https://discord.com/terms)."
+        }), 400
 
     # SSRF Protection: Validate target hostname and IP addresses against private networks
     is_safe, safety_error = is_safe_url(url)
@@ -251,6 +280,19 @@ def fetch_url():
                 "message": "Could not extract sufficient text from this URL. The page may require JavaScript or CAPTCHA verification."
             }), 400
 
+        # Legal relevance check: Verify the extracted page contains legal terms or policies
+        legal_keywords = {
+            "terms", "agreement", "privacy", "policy", "conditions", "service", 
+            "liability", "license", "warranty", "shall", "user", "rights", "disclaimer",
+            "governing law", "termination", "indemnification", "confidential"
+        }
+        found_markers = [kw for kw in legal_keywords if re.search(r'\b' + re.escape(kw) + r'\b', extracted_text, re.IGNORECASE)]
+        if len(found_markers) < 2:
+            return jsonify({
+                "status": "error",
+                "message": "The fetched page does not appear to contain legal Terms of Service, Privacy Policies, or contract clauses. Please make sure your URL points to a specific legal policy page (e.g. /terms, /privacy-policy, /subscriber_agreement)."
+            }), 400
+
         parsed = urlparse(url)
         doc_title = f"{parsed.netloc} Policy / Terms"
 
@@ -258,15 +300,18 @@ def fetch_url():
             "status": "success",
             "title": doc_title,
             "text": extracted_text,
-            "url": url,
+            "source_url": url,
         })
+
     except urllib.error.HTTPError as he:
         return jsonify({
             "status": "error",
-            "message": f"Website returned HTTP {he.code}: {he.reason}. (Note: Some portals block automated fetches; try copy-pasting the text or using Photo/PDF scanner)."
+            "message": f"Website returned HTTP {he.code}: {he.reason}. (Some websites block automated scraping; try copy-pasting the text into the editor)."
         }), 400
+    except urllib.error.URLError as ue:
+        return jsonify({"status": "error", "message": f"Connection failed: {str(ue.reason)}"}), 400
     except Exception as e:
-        return jsonify({"status": "error", "message": f"Failed to fetch URL: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": f"Fetch error: {str(e)}"}), 500
 
 
 
