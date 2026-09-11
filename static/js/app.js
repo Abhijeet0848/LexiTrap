@@ -568,34 +568,6 @@ document.addEventListener("DOMContentLoaded", () => {
             riskSeverityBadge.style.backgroundColor = "#dc2626";
         }
 
-        // Readability & Language Clarity Badges in Simple English
-        const readBadge = document.getElementById("readability-badge");
-        const obfBadge = document.getElementById("obfuscation-badge");
-        if (report.readability_profile) {
-            const grade = report.readability_profile.flesch_kincaid_grade;
-            const easeLabel = report.readability_profile.reading_ease_label || 'Standard';
-            
-            let gradeCategory = 'Simple';
-            if (grade >= 16) gradeCategory = 'College Level';
-            else if (grade >= 12) gradeCategory = 'High School';
-            else if (grade >= 8) gradeCategory = 'Middle School';
-
-            if (readBadge) {
-                readBadge.textContent = `Reading Level: ${easeLabel} (${gradeCategory} • Grade ${grade})`;
-            }
-            if (obfBadge) {
-                const obfLevel = report.readability_profile.obfuscation_level || 'Clear & Plain English';
-                obfBadge.textContent = `Language Clarity: ${obfLevel}`;
-                let obfClass = 'low-obfuscation';
-                if (obfLevel.toLowerCase().includes('heavy') || obfLevel.toLowerCase().includes('extreme')) {
-                    obfClass = 'high-obfuscation';
-                } else if (obfLevel.toLowerCase().includes('moderate')) {
-                    obfClass = 'medium-obfuscation';
-                }
-                obfBadge.className = `score-badge badge-obfuscation ${obfClass}`;
-            }
-        }
-
         verdictTitle.textContent = report.verdict_title;
         verdictDesc.textContent = report.verdict_description;
 
