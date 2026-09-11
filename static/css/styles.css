@@ -393,6 +393,48 @@ input, button, textarea, select {
     }
 }
 
+.url-fetch-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.url-quick-pills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-left: 2px;
+}
+
+.quick-pill-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.url-quick-pill {
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 2px 9px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.url-quick-pill:hover {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+    transform: translateY(-1px);
+}
+
 .url-icon {
     font-size: 1.1rem;
     flex-shrink: 0;

@@ -87,11 +87,19 @@
         <section class="editor-card">
             <!-- Source Input Toolbar (URL, Photo OCR, PDF Upload) -->
             <div class="input-toolbar-grid">
-                <!-- URL Fetcher Bar -->
-                <div class="url-fetch-bar">
-                    <span class="url-icon">🌐</span>
-                    <input type="text" id="url-input" class="url-input" placeholder="Paste live Terms of Service URL (e.g. reddit.com/policies/terms-of-service)">
-                    <button id="fetch-url-btn" class="btn btn-secondary btn-sm">Fetch Web Terms</button>
+                <!-- URL Fetcher Bar & Quick Live Links -->
+                <div class="url-fetch-container">
+                    <div class="url-fetch-bar">
+                        <span class="url-icon">🌐</span>
+                        <input type="text" id="url-input" class="url-input" placeholder="Paste company Terms of Service URL (e.g. redditinc.com/policies/user-agreement)">
+                        <button id="fetch-url-btn" class="btn btn-secondary btn-sm">Fetch Web Terms</button>
+                    </div>
+                    <div class="url-quick-pills">
+                        <span class="quick-pill-label">⚡ Test live company URL:</span>
+                        <button type="button" class="url-quick-pill" data-url="https://www.redditinc.com/policies/user-agreement">Reddit Terms</button>
+                        <button type="button" class="url-quick-pill" data-url="https://docs.github.com/en/site-policy/github-terms/github-terms-of-service">GitHub ToS</button>
+                        <button type="button" class="url-quick-pill" data-url="https://discord.com/terms">Discord Terms</button>
+                    </div>
                 </div>
 
                 <!-- Document & Photo Upload Options (Direct Standalone Buttons) -->

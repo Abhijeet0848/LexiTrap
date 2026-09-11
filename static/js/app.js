@@ -159,6 +159,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const urlQuickPills = document.querySelectorAll(".url-quick-pill");
+    urlQuickPills.forEach(pill => {
+        pill.addEventListener("click", () => {
+            const targetUrl = pill.getAttribute("data-url");
+            if (targetUrl && urlInput) {
+                urlInput.value = targetUrl;
+                handleFetchUrl();
+            }
+        });
+    });
+
     // Photo OCR & File Upload Controls (Direct Standalone Buttons)
     const btnCameraScan = document.getElementById("btn-camera-scan");
     const btnGalleryUpload = document.getElementById("btn-gallery-upload");
