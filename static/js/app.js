@@ -1,9 +1,9 @@
 /**
- * LexAudit Web Application Frontend Controller
+ * LexiTrap Web Application Controller (Light Theme)
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Elements
+    // Input Elements
     const contractTextarea = document.getElementById("contract-text");
     const docNameInput = document.getElementById("doc-name-input");
     const charCountEl = document.getElementById("char-count");
@@ -13,14 +13,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const clearBtn = document.getElementById("clear-btn");
     const loadingOverlay = document.getElementById("loading-overlay");
     const resultsSection = document.getElementById("results-section");
-    const sampleCards = document.querySelectorAll(".sample-card");
     const loadSampleBtns = document.querySelectorAll(".load-sample-btn");
     const exportMdBtn = document.getElementById("export-md-btn");
-    const filterBtns = document.querySelectorAll(".filter-btn");
+    const filterBtns = document.querySelectorAll(".filter-tab");
 
     // Results Elements
     const healthScoreVal = document.getElementById("health-score-val");
-    const gaugeFill = document.getElementById("gauge-fill");
+    const scoreCircle = document.getElementById("score-circle");
     const gradeBadge = document.getElementById("grade-badge");
     const riskSeverityBadge = document.getElementById("risk-severity-badge");
     const verdictTitle = document.getElementById("verdict-title");
@@ -41,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentAuditReport = null;
     let activeFilter = "ALL";
 
-    // Textarea input counters
+    // Text counters
     function updateTextStats() {
         const text = contractTextarea.value;
         charCountEl.textContent = text.length.toLocaleString();
@@ -66,12 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 docNameInput.value = data.sample.name;
                 updateTextStats();
                 
-                // Highlight active sample card
-                sampleCards.forEach(c => c.classList.remove("active"));
-                const activeCard = document.querySelector(`.sample-card[data-sample-id="${sampleId}"]`);
-                if (activeCard) activeCard.classList.add("active");
+                // Highlight active pill
+                loadSampleBtns.forEach(b => b.classList.remove("active"));
+                const activeBtn = document.querySelector(`.load-sample-btn[data-id="${sampleId}"]`);
+                if (activeBtn) activeBtn.classList.add("active");
 
-                // Automatically trigger audit
+                // Trigger audit
                 await runAudit();
             }
         } catch (err) {
@@ -83,16 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     loadSampleBtns.forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.stopPropagation();
+        btn.addEventListener("click", () => {
             const id = btn.getAttribute("data-id");
-            loadSample(id);
-        });
-    });
-
-    sampleCards.forEach(card => {
-        card.addEventListener("click", () => {
-            const id = card.getAttribute("data-sample-id");
             loadSample(id);
         });
     });
@@ -104,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTextStats();
         resultsSection.classList.add("hidden");
         currentAuditReport = null;
-        sampleCards.forEach(c => c.classList.remove("active"));
+        loadSampleBtns.forEach(b => b.classList.remove("active"));
     });
 
     // Run Audit
@@ -148,25 +139,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Render Full Report
     function renderReport(report) {
-        // Health Score & Gauge
-        const score = report.overall_health_score;
-        healthScoreVal.textContent = Math.round(score);
+        const score = Math.round(report.overall_health_score);
+        healthScoreVal.textContent = score;
 
-        // Circular Gauge calculations (radius = 70, circumference ≈ 440)
-        const circumference = 440;
-        const offset = circumference - (score / 100) * circumference;
-        gaugeFill.style.strokeDashoffset = offset;
-
-        // Color coding gauge and badges
-        let gaugeColor = "#ff4d6d"; // Rose
-        if (score >= 80) gaugeColor = "#00f2a9"; // Emerald
-        else if (score >= 60) gaugeColor = "#ffb703"; // Amber
-        else if (score >= 40) gaugeColor = "#fb8500";
-
-        gaugeFill.style.stroke = gaugeColor;
-        gradeBadge.textContent = report.letter_grade;
-        gradeBadge.style.backgroundColor = gaugeColor;
+        // Color coding for score badge & circle
+        gradeBadge.textContent = `Grade ${report.letter_grade}`;
         riskSeverityBadge.textContent = report.risk_level;
+
+        gradeBadge.className = "badge";
+        riskSeverityBadge.className = "badge";
+        scoreCircle.style.backgroundColor = "";
+        scoreCircle.style.borderColor = "";
+        healthScoreVal.style.color = "";
+
+        if (score >= 80) {
+            gradeBadge.classList.add("grade-a");
+            riskSeverityBadge.classList.add("risk-safe");
+            scoreCircle.style.backgroundColor = "#ecfdf5";
+            scoreCircle.style.borderColor = "#a7f3d0";
+            healthScoreVal.style.color = "#059669";
+        } else if (score >= 60) {
+            gradeBadge.classList.add("grade-b");
+            riskSeverityBadge.classList.add("risk-medium");
+            scoreCircle.style.backgroundColor = "#fffbeb";
+            scoreCircle.style.borderColor = "#fde68a";
+            healthScoreVal.style.color = "#d97706";
+        } else {
+            gradeBadge.classList.add("grade-f");
+            riskSeverityBadge.classList.add("risk-critical");
+            scoreCircle.style.backgroundColor = "#fef2f2";
+            scoreCircle.style.borderColor = "#fecaca";
+            healthScoreVal.style.color = "#dc2626";
+        }
 
         verdictTitle.textContent = report.verdict_title;
         verdictDesc.textContent = report.verdict_description;
@@ -180,26 +184,26 @@ document.addEventListener("DOMContentLoaded", () => {
         deonticBarsContainer.innerHTML = "";
         const deonticPcts = report.deontic_profile.distribution_percentages || {};
         const colors = {
-            "Obligation": "#ff4d6d",
-            "Prohibition": "#ffb703",
-            "Permission": "#00f2fe",
-            "Warranty": "#4facfe",
-            "Disclaimer": "#8a2be2",
-            "Informational / Declarative": "#64748b"
+            "Obligation": "#dc2626",
+            "Prohibition": "#d97706",
+            "Permission": "#2563eb",
+            "Warranty": "#4f46e5",
+            "Disclaimer": "#7c3aed",
+            "Informational / Declarative": "#94a3b8"
         };
 
         for (const [cat, pct] of Object.entries(deonticPcts)) {
-            const barRow = document.createElement("div");
-            barRow.className = "deontic-row";
-            const color = colors[cat] || "#00f2fe";
-            barRow.innerHTML = `
-                <span class="deontic-name">${cat}</span>
-                <div class="deontic-bar-track">
-                    <div class="deontic-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+            const row = document.createElement("div");
+            row.className = "deontic-item";
+            const color = colors[cat] || "#2563eb";
+            row.innerHTML = `
+                <span class="deontic-label">${cat}</span>
+                <div class="deontic-track">
+                    <div class="deontic-fill" style="width: ${pct}%; background-color: ${color};"></div>
                 </div>
-                <span class="deontic-pct">${pct}%</span>
+                <span class="deontic-percent">${pct}%</span>
             `;
-            deonticBarsContainer.appendChild(barRow);
+            deonticBarsContainer.appendChild(row);
         }
 
         // Executive Findings
@@ -244,16 +248,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (clauses.length === 0) {
             clausesList.innerHTML = `
-                <div class="card" style="text-align: center; color: var(--text-muted); padding: 32px;">
-                    ✓ No clauses matched the active filter criteria.
+                <div class="clause-card" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                    ✓ No clauses matched this filter.
                 </div>
             `;
             return;
         }
 
         clauses.forEach(clause => {
-            const clauseEl = document.createElement("div");
-            clauseEl.className = `clause-item ${clause.heat_level.toLowerCase()}`;
+            const card = document.createElement("div");
+            card.className = `clause-card ${clause.heat_level.toLowerCase()}`;
 
             let trapsHtml = "";
             if (clause.traps && clause.traps.length > 0) {
@@ -262,35 +266,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     const redline = (currentAuditReport.redlines || []).find(r => r.clause_id === clause.clause_id && r.trap_category === trap.category);
 
                     trapsHtml += `
-                        <div class="trap-detail-box">
-                            <div class="trap-title-row">
-                                <span class="trap-category-name">⚠️ ${trap.category}</span>
-                                <span class="sample-badge ${trap.severity.toLowerCase()}">${trap.severity}</span>
+                        <div class="trap-box">
+                            <div class="trap-head">
+                                <span class="trap-name">⚠️ ${trap.category}</span>
+                                <span class="badge ${trap.severity === 'CRITICAL' ? 'badge-danger' : 'badge-warning'}">${trap.severity}</span>
                             </div>
-                            <p class="trap-explanation"><strong>Legal Risk:</strong> ${trap.legal_danger}</p>
-                            <p class="trap-explanation"><strong>Business Impact:</strong> ${trap.business_impact}</p>
-                            <div class="trap-triggers">
-                                <strong>Trigger Keywords:</strong> 
+                            <p class="trap-desc"><strong>Legal Risk:</strong> ${trap.legal_danger}</p>
+                            <p class="trap-impact"><strong>Business Impact:</strong> ${trap.business_impact}</p>
+                            <div class="trap-keywords">
+                                <strong>Trigger Words:</strong> 
                                 ${trap.matched_patterns.map(p => `<span>${p}</span>`).join(" ")}
                             </div>
 
-                            ${dev.benchmark ? `
-                            <div class="benchmark-box">
-                                <strong>Benchmark Standard:</strong> ${dev.benchmark.standard_name} (${dev.deviation_level})
-                                <div style="margin-top: 4px; color: var(--text-secondary);">${dev.benchmark.title}</div>
-                            </div>
-                            ` : ''}
-
                             ${redline ? `
-                            <div class="redline-accordion">
-                                <div class="redline-header">
-                                    <h5>✏️ Proposed Balanced Redline Alternative</h5>
-                                </div>
-                                <div class="redline-body">
-                                    <div class="diff-content">${redline.diff_html}</div>
-                                    <div class="talking-point">
-                                        <strong>Negotiation Strategy:</strong> ${redline.negotiation_talking_point}
-                                    </div>
+                            <div class="redline-box">
+                                <div class="redline-title">✏️ Recommended Balanced Alternative:</div>
+                                <div class="diff-view">${redline.diff_html}</div>
+                                <div class="talking-point-box">
+                                    <strong>Negotiation Tip:</strong> ${redline.negotiation_talking_point}
                                 </div>
                             </div>
                             ` : ''}
@@ -299,22 +292,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
 
-            clauseEl.innerHTML = `
-                <div class="clause-header">
-                    <div class="clause-title-wrap">
-                        <span class="clause-id-tag">${clause.clause_id}</span>
-                        <h4 class="clause-title">${clause.title}</h4>
+            card.innerHTML = `
+                <div class="clause-card-header">
+                    <div class="clause-title-group">
+                        <span class="clause-id">${clause.clause_id}</span>
+                        <h4 class="clause-heading">${clause.title}</h4>
                     </div>
-                    <div class="clause-tags">
-                        <span class="deontic-badge">${clause.deontic_profile.dominant_category}</span>
-                        <span class="sample-badge ${clause.heat_level.toLowerCase()}">Risk ${clause.risk_score}</span>
+                    <div class="clause-badge-group">
+                        <span class="deontic-pill">${clause.deontic_profile.dominant_category}</span>
+                        <span class="risk-pill ${clause.heat_level.toLowerCase()}">Risk ${clause.risk_score}</span>
                     </div>
                 </div>
-                <div class="clause-text">${escapeHtml(clause.text)}</div>
+                <div class="clause-body-text">${escapeHtml(clause.text)}</div>
                 ${trapsHtml}
             `;
 
-            clausesList.appendChild(clauseEl);
+            clausesList.appendChild(card);
         });
     }
 
@@ -344,10 +337,10 @@ document.addEventListener("DOMContentLoaded", () => {
             a.remove();
         } catch (err) {
             console.error("Export error:", err);
-            alert("Failed to export markdown report.");
+            alert("Failed to export report.");
         }
     });
 
-    // Initialize with first preset sample
+    // Auto-load first sample
     loadSample("predatory_saas_tos");
 });
