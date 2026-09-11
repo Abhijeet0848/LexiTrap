@@ -186,6 +186,10 @@ class BenchmarkMatcher:
         self.benchmark_map: Dict[TrapCategory, BenchmarkClause] = {
             bm.category: bm for bm in self.STANDARD_BENCHMARKS
         }
+        # Pre-cache individual benchmark vectors for instant cosine similarity
+        self.bm_vectors: Dict[TrapCategory, Any] = {
+            bm.category: self.vectorizer.transform([bm.fair_text]) for bm in self.STANDARD_BENCHMARKS
+        }
 
     def match_benchmark_for_category(self, category: TrapCategory) -> Optional[BenchmarkClause]:
         """Returns the gold-standard benchmark clause for a specific trap category."""
@@ -196,7 +200,8 @@ class BenchmarkMatcher:
         Calculates cosine similarity and deviation score between a clause and its category benchmark.
         """
         benchmark = self.match_benchmark_for_category(category)
-        if not benchmark:
+        bm_vec = self.bm_vectors.get(category)
+        if not benchmark or bm_vec is None:
             return {
                 "similarity_score": 0.0,
                 "deviation_score": 1.0,
@@ -205,7 +210,6 @@ class BenchmarkMatcher:
             }
 
         clause_vec = self.vectorizer.transform([clause_text])
-        bm_vec = self.vectorizer.transform([benchmark.fair_text])
         sim = float(cosine_similarity(clause_vec, bm_vec)[0][0])
         dev = max(0.0, min(1.0, round(1.0 - sim, 3)))
 

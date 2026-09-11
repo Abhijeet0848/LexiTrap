@@ -1,5 +1,5 @@
 /**
- * LexiTrap Clean Frontend Controller
+ * LexiTrap Instant Frontend Controller (Optimized & Ultra-Fast)
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const estClausesEl = document.getElementById("est-clauses");
     const auditBtn = document.getElementById("audit-btn");
     const clearBtn = document.getElementById("clear-btn");
-    const loadingOverlay = document.getElementById("loading-overlay");
     const resultsSection = document.getElementById("results-section");
     const loadSampleBtns = document.querySelectorAll(".load-sample-btn");
     const exportMdBtn = document.getElementById("export-md-btn");
@@ -54,8 +53,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     contractTextarea.addEventListener("input", updateTextStats);
 
-    // Number Counting Animation
-    function animateValue(element, start, end, duration) {
+    // Number Counting Animation (Fast 250ms)
+    function animateValue(element, start, end, duration = 250) {
         if (!element) return;
         let startTimestamp = null;
         const step = (timestamp) => {
@@ -64,6 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
             element.textContent = Math.floor(progress * (end - start) + start);
             if (progress < 1) {
                 window.requestAnimationFrame(step);
+            } else {
+                element.textContent = end;
             }
         };
         window.requestAnimationFrame(step);
@@ -71,26 +72,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Load Sample Contract
     async function loadSample(sampleId) {
+        loadSampleBtns.forEach(b => b.classList.remove("active"));
+        const activeCard = document.querySelector(`.example-card[data-id="${sampleId}"]`);
+        if (activeCard) activeCard.classList.add("active");
+
         try {
-            loadingOverlay.classList.remove("hidden");
             const res = await fetch(`/api/sample/${sampleId}`);
             const data = await res.json();
             if (data.status === "success") {
                 contractTextarea.value = data.text;
                 docNameInput.value = data.sample.name;
                 updateTextStats();
-                
-                loadSampleBtns.forEach(b => b.classList.remove("active"));
-                const activeCard = document.querySelector(`.example-card[data-id="${sampleId}"]`);
-                if (activeCard) activeCard.classList.add("active");
-
                 await runAudit();
             }
         } catch (err) {
             console.error("Failed to load sample:", err);
             alert("Error loading sample contract.");
-        } finally {
-            loadingOverlay.classList.add("hidden");
         }
     }
 
@@ -111,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadSampleBtns.forEach(b => b.classList.remove("active"));
     });
 
-    // Run Audit
+    // Run Audit (Instant execution)
     async function runAudit() {
         const text = contractTextarea.value.trim();
         const docName = docNameInput.value.trim() || "Contract Agreement";
@@ -121,8 +118,9 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        loadingOverlay.classList.remove("hidden");
-        resultsSection.classList.add("hidden");
+        const originalBtnHtml = auditBtn.innerHTML;
+        auditBtn.innerHTML = '<span>⏳</span> Checking...';
+        auditBtn.disabled = true;
 
         try {
             const response = await fetch("/api/audit", {
@@ -144,7 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Audit error:", err);
             alert("An error occurred while analyzing the contract.");
         } finally {
-            loadingOverlay.classList.add("hidden");
+            auditBtn.innerHTML = originalBtnHtml;
+            auditBtn.disabled = false;
         }
     }
 
@@ -153,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Render Full Report
     function renderReport(report) {
         const score = Math.round(report.overall_health_score);
-        animateValue(healthScoreVal, 0, score, 800);
+        animateValue(healthScoreVal, 0, score, 300);
 
         // Grade & Risk level color styling
         gradeBadge.textContent = `Grade ${report.letter_grade}`;
@@ -185,11 +184,11 @@ document.addEventListener("DOMContentLoaded", () => {
         verdictTitle.textContent = report.verdict_title;
         verdictDesc.textContent = report.verdict_description;
 
-        // Animate stats
-        animateValue(statTrapsCount, 0, report.total_traps_found, 600);
-        animateValue(statCriticalCount, 0, report.critical_traps_count, 600);
-        animateValue(statHighCount, 0, report.high_traps_count, 600);
-        animateValue(statClausesCount, 0, report.total_clauses, 600);
+        // Fast animate stats
+        animateValue(statTrapsCount, 0, report.total_traps_found, 250);
+        animateValue(statCriticalCount, 0, report.critical_traps_count, 250);
+        animateValue(statHighCount, 0, report.high_traps_count, 250);
+        animateValue(statClausesCount, 0, report.total_clauses, 250);
 
         // Rule Breakdown
         deonticBarsContainer.innerHTML = "";
