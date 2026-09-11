@@ -93,12 +93,35 @@
 
                 <!-- Document & Photo Upload Options -->
                 <div class="upload-actions-bar">
-                    <input type="file" id="photo-upload-input" accept="image/*" capture="environment" style="display:none;">
+                    <!-- Camera Direct Input (capture) -->
+                    <input type="file" id="camera-capture-input" accept="image/*" capture="environment" style="display:none;">
+                    <!-- Media Gallery Input -->
+                    <input type="file" id="gallery-upload-input" accept="image/*" style="display:none;">
+                    <!-- PDF/Doc Input -->
                     <input type="file" id="pdf-upload-input" accept=".pdf,.txt,.md" style="display:none;">
                     
-                    <button id="upload-photo-btn" class="btn btn-outline btn-sm">
-                        <span>📷</span> Upload / Scan Photo
-                    </button>
+                    <div class="photo-dropdown-wrapper">
+                        <button id="upload-photo-btn" class="btn btn-outline btn-sm">
+                            <span>📷</span> Upload / Scan Photo ▾
+                        </button>
+                        <div id="photo-choice-menu" class="photo-choice-menu hidden">
+                            <button type="button" id="btn-choice-camera" class="choice-item">
+                                <span class="choice-icon">📸</span>
+                                <div class="choice-text">
+                                    <strong>Take Photo with Camera</strong>
+                                    <small>Snap paper contract directly</small>
+                                </div>
+                            </button>
+                            <button type="button" id="btn-choice-gallery" class="choice-item">
+                                <span class="choice-icon">🖼️</span>
+                                <div class="choice-text">
+                                    <strong>Media / Gallery Picker</strong>
+                                    <small>Choose saved image or screenshot</small>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
                     <button id="upload-pdf-btn" class="btn btn-outline btn-sm">
                         <span>📄</span> Upload PDF / File
                     </button>

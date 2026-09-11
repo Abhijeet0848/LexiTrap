@@ -143,8 +143,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Photo OCR & File Upload Controls
-    const photoUploadInput = document.getElementById("photo-upload-input");
     const uploadPhotoBtn = document.getElementById("upload-photo-btn");
+    const photoChoiceMenu = document.getElementById("photo-choice-menu");
+    const btnChoiceCamera = document.getElementById("btn-choice-camera");
+    const btnChoiceGallery = document.getElementById("btn-choice-gallery");
+    const cameraCaptureInput = document.getElementById("camera-capture-input");
+    const galleryUploadInput = document.getElementById("gallery-upload-input");
+
     const pdfUploadInput = document.getElementById("pdf-upload-input");
     const uploadPdfBtn = document.getElementById("upload-pdf-btn");
     const ocrStatusBanner = document.getElementById("ocr-status-banner");
@@ -156,80 +161,115 @@ document.addEventListener("DOMContentLoaded", () => {
     const photoPreviewName = document.getElementById("photo-preview-name");
     const removePhotoBtn = document.getElementById("remove-photo-btn");
 
-    if (uploadPhotoBtn && photoUploadInput) {
-        uploadPhotoBtn.addEventListener("click", () => {
-            photoUploadInput.click();
+    // Toggle Photo Choice Dropdown
+    if (uploadPhotoBtn && photoChoiceMenu) {
+        uploadPhotoBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            photoChoiceMenu.classList.toggle("hidden");
         });
 
-        photoUploadInput.addEventListener("change", async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            // Show thumbnail preview
-            const reader = new FileReader();
-            const photoPlaceholderIcon = document.getElementById("photo-placeholder-icon");
-            reader.onload = (re) => {
-                photoPreviewImg.src = re.target.result;
-                photoPreviewImg.style.display = "block";
-                if (photoPlaceholderIcon) photoPlaceholderIcon.style.display = "none";
-                photoPreviewName.textContent = file.name;
-                photoPreviewBox.classList.remove("hidden");
-            };
-            reader.readAsDataURL(file);
-
-            // Show OCR progress banner
-            ocrStatusBanner.classList.remove("hidden");
-            ocrProgressBar.style.width = "10%";
-            ocrStatusTitle.textContent = "Scanning contract photo with OCR...";
-            ocrStatusSub.textContent = "Initializing Optical Character Recognition engine...";
-
-            try {
-                if (typeof Tesseract === "undefined") {
-                    throw new Error("OCR library could not be loaded from CDN. Please check internet connection.");
-                }
-
-                const result = await Tesseract.recognize(
-                    file,
-                    'eng',
-                    {
-                        logger: (m) => {
-                            if (m.status === "recognizing text") {
-                                const progress = Math.round((m.progress || 0) * 100);
-                                ocrProgressBar.style.width = `${progress}%`;
-                                ocrStatusTitle.textContent = `Reading contract text... (${progress}%)`;
-                                ocrStatusSub.textContent = `Processing image lines and characters...`;
-                            }
-                        }
-                    }
-                );
-
-                const extractedText = (result && result.data && result.data.text) ? result.data.text.trim() : "";
-
-                if (!extractedText || extractedText.length < 20) {
-                    alert("Could not detect clear legal text in this photo. Please make sure the photo is well-lit and readable.");
-                } else {
-                    contractTextarea.value = extractedText;
-                    const cleanDocTitle = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
-                    docNameInput.value = `Scanned: ${cleanDocTitle}`;
-                    updateTextStats();
-                    
-                    ocrStatusTitle.textContent = "✅ Text successfully extracted!";
-                    ocrStatusSub.textContent = "Running instant contract risk audit...";
-                    ocrProgressBar.style.width = "100%";
-                    
-                    setTimeout(async () => {
-                        ocrStatusBanner.classList.add("hidden");
-                        await runAudit();
-                    }, 500);
-                }
-            } catch (err) {
-                console.error("OCR scanning error:", err);
-                alert("OCR Error: " + err.message);
-                ocrStatusBanner.classList.add("hidden");
-            } finally {
-                photoUploadInput.value = "";
+        // Close dropdown when clicking outside
+        document.addEventListener("click", (e) => {
+            if (!photoChoiceMenu.contains(e.target) && e.target !== uploadPhotoBtn) {
+                photoChoiceMenu.classList.add("hidden");
             }
         });
+    }
+
+    // Option 1: Take Photo with Camera
+    if (btnChoiceCamera && cameraCaptureInput) {
+        btnChoiceCamera.addEventListener("click", () => {
+            photoChoiceMenu.classList.add("hidden");
+            cameraCaptureInput.click();
+        });
+
+        cameraCaptureInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) processImageFile(file);
+            cameraCaptureInput.value = "";
+        });
+    }
+
+    // Option 2: Choose from Media / Gallery
+    if (btnChoiceGallery && galleryUploadInput) {
+        btnChoiceGallery.addEventListener("click", () => {
+            photoChoiceMenu.classList.add("hidden");
+            galleryUploadInput.click();
+        });
+
+        galleryUploadInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) processImageFile(file);
+            galleryUploadInput.value = "";
+        });
+    }
+
+    // Shared OCR Image Processor
+    async function processImageFile(file) {
+        if (!file) return;
+
+        // Show thumbnail preview
+        const reader = new FileReader();
+        const photoPlaceholderIcon = document.getElementById("photo-placeholder-icon");
+        reader.onload = (re) => {
+            photoPreviewImg.src = re.target.result;
+            photoPreviewImg.style.display = "block";
+            if (photoPlaceholderIcon) photoPlaceholderIcon.style.display = "none";
+            photoPreviewName.textContent = file.name || "Camera Photo";
+            photoPreviewBox.classList.remove("hidden");
+        };
+        reader.readAsDataURL(file);
+
+        // Show OCR progress banner
+        ocrStatusBanner.classList.remove("hidden");
+        ocrProgressBar.style.width = "10%";
+        ocrStatusTitle.textContent = "Scanning contract photo with OCR...";
+        ocrStatusSub.textContent = "Initializing Optical Character Recognition engine...";
+
+        try {
+            if (typeof Tesseract === "undefined") {
+                throw new Error("OCR library could not be loaded from CDN. Please check your internet connection.");
+            }
+
+            const result = await Tesseract.recognize(
+                file,
+                'eng',
+                {
+                    logger: (m) => {
+                        if (m.status === "recognizing text") {
+                            const progress = Math.round((m.progress || 0) * 100);
+                            ocrProgressBar.style.width = `${progress}%`;
+                            ocrStatusTitle.textContent = `Reading contract text... (${progress}%)`;
+                            ocrStatusSub.textContent = `Processing image lines and characters...`;
+                        }
+                    }
+                }
+            );
+
+            const extractedText = (result && result.data && result.data.text) ? result.data.text.trim() : "";
+
+            if (!extractedText || extractedText.length < 20) {
+                alert("Could not detect clear legal text in this photo. Please ensure the image is clear and well-lit.");
+            } else {
+                contractTextarea.value = extractedText;
+                const baseName = (file.name || "contract").replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+                docNameInput.value = `Scanned: ${baseName}`;
+                updateTextStats();
+                
+                ocrStatusTitle.textContent = "✅ Text successfully extracted!";
+                ocrStatusSub.textContent = "Running instant contract risk audit...";
+                ocrProgressBar.style.width = "100%";
+                
+                setTimeout(async () => {
+                    ocrStatusBanner.classList.add("hidden");
+                    await runAudit();
+                }, 400);
+            }
+        } catch (err) {
+            console.error("OCR scanning error:", err);
+            alert("OCR Error: " + err.message);
+            ocrStatusBanner.classList.add("hidden");
+        }
     }
 
     if (removePhotoBtn) {
