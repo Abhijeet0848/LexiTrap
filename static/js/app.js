@@ -1,5 +1,5 @@
 /**
- * LexiTrap Web Application Controller (Light Theme)
+ * LexiTrap Interactive 3D & Animation Controller
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const auditBtn = document.getElementById("audit-btn");
     const clearBtn = document.getElementById("clear-btn");
     const loadingOverlay = document.getElementById("loading-overlay");
+    const scanLaser = document.getElementById("scan-laser");
     const resultsSection = document.getElementById("results-section");
     const loadSampleBtns = document.querySelectorAll(".load-sample-btn");
     const exportMdBtn = document.getElementById("export-md-btn");
@@ -19,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Results Elements
     const healthScoreVal = document.getElementById("health-score-val");
-    const scoreCircle = document.getElementById("score-circle");
+    const scoreGaugeBar = document.getElementById("score-gauge-bar");
     const gradeBadge = document.getElementById("grade-badge");
     const riskSeverityBadge = document.getElementById("risk-severity-badge");
     const verdictTitle = document.getElementById("verdict-title");
@@ -40,7 +41,158 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentAuditReport = null;
     let activeFilter = "ALL";
 
-    // Text counters
+    // -------------------------------------------------------------
+    // 1. Initialize Interactive Three.js 3D Holographic Geometry
+    // -------------------------------------------------------------
+    function init3DScene() {
+        const canvas = document.getElementById("three-canvas");
+        if (!canvas || typeof THREE === "undefined") return;
+
+        const container = canvas.parentElement;
+        const width = container.clientWidth || 300;
+        const height = container.clientHeight || 220;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.z = 4.2;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Group for rotation
+        const group = new THREE.Group();
+        scene.add(group);
+
+        // 3D Outer Wireframe Icosahedron (Representing Legal Framework)
+        const icosaGeometry = new THREE.IcosahedronGeometry(1.3, 1);
+        const icosaMaterial = new THREE.MeshBasicMaterial({
+            color: 0x2563eb,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.45
+        });
+        const icosaMesh = new THREE.Mesh(icosaGeometry, icosaMaterial);
+        group.add(icosaMesh);
+
+        // 3D Inner Glowing Polyhedron (The Contract Core)
+        const innerGeometry = new THREE.OctahedronGeometry(0.8, 0);
+        const innerMaterial = new THREE.MeshPhongMaterial({
+            color: 0x7c3aed,
+            emissive: 0x3b82f6,
+            emissiveIntensity: 0.4,
+            shininess: 90,
+            transparent: true,
+            opacity: 0.85,
+            flatShading: true
+        });
+        const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
+        group.add(innerMesh);
+
+        // Surrounding Particle Field
+        const particleCount = 60;
+        const particleGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            positions[i] = (Math.random() - 0.5) * 5;
+            positions[i + 1] = (Math.random() - 0.5) * 5;
+            positions[i + 2] = (Math.random() - 0.5) * 5;
+        }
+
+        particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        const particleMaterial = new THREE.PointsMaterial({
+            color: 0x00f2fe,
+            size: 0.06,
+            transparent: true,
+            opacity: 0.7
+        });
+        const particleField = new THREE.Points(particleGeometry, particleMaterial);
+        group.add(particleField);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(ambientLight);
+
+        const pointLight1 = new THREE.PointLight(0x2563eb, 2, 50);
+        pointLight1.position.set(5, 5, 5);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x7c3aed, 2, 50);
+        pointLight2.position.set(-5, -5, 5);
+        scene.add(pointLight2);
+
+        // Mouse Parallax
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        window.addEventListener("mousemove", (e) => {
+            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            targetX += (mouseX - targetX) * 0.05;
+            targetY += (mouseY - targetY) * 0.05;
+
+            group.rotation.x += 0.005;
+            group.rotation.y += 0.008;
+
+            group.rotation.x = targetY * 0.6;
+            group.rotation.y += targetX * 0.02 + 0.006;
+
+            innerMesh.rotation.y -= 0.012;
+            innerMesh.rotation.z += 0.008;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Responsive Resize
+        window.addEventListener("resize", () => {
+            const newWidth = container.clientWidth || 300;
+            const newHeight = container.clientHeight || 220;
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(newWidth, newHeight);
+        });
+    }
+
+    init3DScene();
+
+    // -------------------------------------------------------------
+    // 2. Interactive 3D Perspective Tilt on Hover for Cards
+    // -------------------------------------------------------------
+    const tiltCards = document.querySelectorAll(".tilt-card");
+    tiltCards.forEach(card => {
+        card.addEventListener("mousemove", (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateX = ((y - centerY) / centerY) * -6; // max 6deg tilt
+            const rotateY = ((x - centerX) / centerX) * 6;
+
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+        });
+
+        card.addEventListener("mouseleave", () => {
+            card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)";
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 3. Text Counting
+    // -------------------------------------------------------------
     function updateTextStats() {
         const text = contractTextarea.value;
         charCountEl.textContent = text.length.toLocaleString();
@@ -54,7 +206,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     contractTextarea.addEventListener("input", updateTextStats);
 
-    // Load Preset Sample
+    // -------------------------------------------------------------
+    // 4. Smooth Number Counting Animation Helper
+    // -------------------------------------------------------------
+    function animateValue(element, start, end, duration) {
+        if (!element) return;
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            element.textContent = Math.floor(progress * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    // -------------------------------------------------------------
+    // 5. Load Preset Sample
+    // -------------------------------------------------------------
     async function loadSample(sampleId) {
         try {
             loadingOverlay.classList.remove("hidden");
@@ -65,12 +236,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 docNameInput.value = data.sample.name;
                 updateTextStats();
                 
-                // Highlight active pill
                 loadSampleBtns.forEach(b => b.classList.remove("active"));
                 const activeBtn = document.querySelector(`.load-sample-btn[data-id="${sampleId}"]`);
                 if (activeBtn) activeBtn.classList.add("active");
 
-                // Trigger audit
                 await runAudit();
             }
         } catch (err) {
@@ -98,7 +267,9 @@ document.addEventListener("DOMContentLoaded", () => {
         loadSampleBtns.forEach(b => b.classList.remove("active"));
     });
 
-    // Run Audit
+    // -------------------------------------------------------------
+    // 6. Run Cognitive Audit
+    // -------------------------------------------------------------
     async function runAudit() {
         const text = contractTextarea.value.trim();
         const docName = docNameInput.value.trim() || "Contract Agreement";
@@ -109,6 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         loadingOverlay.classList.remove("hidden");
+        scanLaser.classList.remove("hidden");
         resultsSection.classList.add("hidden");
 
         try {
@@ -132,53 +304,59 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("An error occurred while communicating with the NLP auditor.");
         } finally {
             loadingOverlay.classList.add("hidden");
+            scanLaser.classList.add("hidden");
         }
     }
 
     auditBtn.addEventListener("click", runAudit);
 
-    // Render Full Report
+    // -------------------------------------------------------------
+    // 7. Render Report with Gauges and Counters
+    // -------------------------------------------------------------
     function renderReport(report) {
         const score = Math.round(report.overall_health_score);
-        healthScoreVal.textContent = score;
+        
+        // Count-up animation for Score
+        animateValue(healthScoreVal, 0, score, 1200);
 
-        // Color coding for score badge & circle
+        // Animated SVG Gauge (circumference: 2 * PI * 50 ≈ 314)
+        const circumference = 314;
+        const offset = circumference - (score / 100) * circumference;
+        
+        let gaugeColor = "#dc2626"; // red
+        if (score >= 80) gaugeColor = "#059669"; // emerald
+        else if (score >= 60) gaugeColor = "#d97706"; // amber
+
+        scoreGaugeBar.style.stroke = gaugeColor;
+        scoreGaugeBar.style.strokeDashoffset = offset;
+
+        // Badges
         gradeBadge.textContent = `Grade ${report.letter_grade}`;
         riskSeverityBadge.textContent = report.risk_level;
 
         gradeBadge.className = "badge";
         riskSeverityBadge.className = "badge";
-        scoreCircle.style.backgroundColor = "";
-        scoreCircle.style.borderColor = "";
-        healthScoreVal.style.color = "";
+        healthScoreVal.style.color = gaugeColor;
 
         if (score >= 80) {
             gradeBadge.classList.add("grade-a");
             riskSeverityBadge.classList.add("risk-safe");
-            scoreCircle.style.backgroundColor = "#ecfdf5";
-            scoreCircle.style.borderColor = "#a7f3d0";
-            healthScoreVal.style.color = "#059669";
         } else if (score >= 60) {
             gradeBadge.classList.add("grade-b");
             riskSeverityBadge.classList.add("risk-medium");
-            scoreCircle.style.backgroundColor = "#fffbeb";
-            scoreCircle.style.borderColor = "#fde68a";
-            healthScoreVal.style.color = "#d97706";
         } else {
             gradeBadge.classList.add("grade-f");
             riskSeverityBadge.classList.add("risk-critical");
-            scoreCircle.style.backgroundColor = "#fef2f2";
-            scoreCircle.style.borderColor = "#fecaca";
-            healthScoreVal.style.color = "#dc2626";
         }
 
         verdictTitle.textContent = report.verdict_title;
         verdictDesc.textContent = report.verdict_description;
 
-        statTrapsCount.textContent = report.total_traps_found;
-        statCriticalCount.textContent = report.critical_traps_count;
-        statHighCount.textContent = report.high_traps_count;
-        statClausesCount.textContent = report.total_clauses;
+        // Animate stats
+        animateValue(statTrapsCount, 0, report.total_traps_found, 800);
+        animateValue(statCriticalCount, 0, report.critical_traps_count, 800);
+        animateValue(statHighCount, 0, report.high_traps_count, 800);
+        animateValue(statClausesCount, 0, report.total_clauses, 800);
 
         // Deontic Modality Progress Bars
         deonticBarsContainer.innerHTML = "";
@@ -199,11 +377,17 @@ document.addEventListener("DOMContentLoaded", () => {
             row.innerHTML = `
                 <span class="deontic-label">${cat}</span>
                 <div class="deontic-track">
-                    <div class="deontic-fill" style="width: ${pct}%; background-color: ${color};"></div>
+                    <div class="deontic-fill" style="width: 0%; background-color: ${color};"></div>
                 </div>
                 <span class="deontic-percent">${pct}%</span>
             `;
             deonticBarsContainer.appendChild(row);
+
+            // Animate bar width
+            setTimeout(() => {
+                const fill = row.querySelector(".deontic-fill");
+                if (fill) fill.style.width = `${pct}%`;
+            }, 100);
         }
 
         // Executive Findings
@@ -248,16 +432,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (clauses.length === 0) {
             clausesList.innerHTML = `
-                <div class="clause-card" style="text-align: center; color: var(--text-muted); padding: 24px;">
-                    ✓ No clauses matched this filter.
+                <div class="clause-card tilt-card" style="text-align: center; color: var(--text-muted); padding: 28px;">
+                    ✓ No clauses matched this filter criteria.
                 </div>
             `;
             return;
         }
 
-        clauses.forEach(clause => {
+        clauses.forEach((clause, index) => {
             const card = document.createElement("div");
-            card.className = `clause-card ${clause.heat_level.toLowerCase()}`;
+            card.className = `clause-card tilt-card ${clause.heat_level.toLowerCase()}`;
+            card.style.animation = `fadeInUp 0.4s ease ${index * 0.05}s both`;
 
             let trapsHtml = "";
             if (clause.traps && clause.traps.length > 0) {
@@ -271,10 +456,10 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <span class="trap-name">⚠️ ${trap.category}</span>
                                 <span class="badge ${trap.severity === 'CRITICAL' ? 'badge-danger' : 'badge-warning'}">${trap.severity}</span>
                             </div>
-                            <p class="trap-desc"><strong>Legal Risk:</strong> ${trap.legal_danger}</p>
-                            <p class="trap-impact"><strong>Business Impact:</strong> ${trap.business_impact}</p>
+                            <p class="trap-desc"><strong>Legal Danger:</strong> ${trap.legal_danger}</p>
+                            <p class="trap-impact"><strong>Commercial Impact:</strong> ${trap.business_impact}</p>
                             <div class="trap-keywords">
-                                <strong>Trigger Words:</strong> 
+                                <strong>Trigger Patterns:</strong> 
                                 ${trap.matched_patterns.map(p => `<span>${p}</span>`).join(" ")}
                             </div>
 
