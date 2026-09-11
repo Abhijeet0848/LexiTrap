@@ -1,0 +1,22 @@
+CLOUDSPHERE INC. TERMS OF SERVICE & MASTER SUBSCRIPTION AGREEMENT
+
+Section 1. Acceptance of Terms and Unilateral Modifications
+CloudSphere Inc. ("Company") provides cloud workflow solutions to you ("Customer"). Company reserves the right to modify, change, alter, or update these Terms of Service at any time without notice in our sole discretion. Your continued use of the service constitutes acceptance of the modified terms and any updated pricing schedules.
+
+Section 2. Intellectual Property and User Feedback
+You irrevocably assign to us all right, title, and interest in and to any suggestions, enhancement requests, recommendations, or custom workflows created while using the Platform. All feedback and derivative works shall be the sole property of Company without any royalty or attribution.
+
+Section 3. Customer Data & AI Model Training Rights
+Customer grants Company a perpetual, irrevocable, worldwide, royalty-free license to use your data, customer content, and user submissions to train, fine-tune, develop, and commercialize artificial intelligence algorithms, neural networks, and large language models for our own and third-party commercial applications.
+
+Section 4. Automatic Renewal and Billing Lock-in
+This Agreement automatically renews for successive multi-year periods of three (3) years unless written notice of termination is served via certified postal mail at least ninety (90) days prior to the expiration of the current term. All fees paid are strictly non-refundable under any circumstance.
+
+Section 5. Asymmetric and Uncapped Indemnification
+Customer shall indemnify, defend, and hold harmless Company, its affiliates, directors, and licensors from and against any and all claims, damages, liabilities, costs, and attorney's fees arising out of or related to Customer's use of the service or breach of this Agreement. Company provides no indemnification of any kind to Customer.
+
+Section 6. Disclaimer of Warranties and Liability Limitation
+THE SERVICES ARE PROVIDED STRICTLY "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL COMPANY'S AGGREGATE TOTAL LIABILITY EXCEED $50 (FIFTY DOLLARS) FOR ANY LOSS OF DATA, OUTAGE, OR SECURITY BREACH.
+
+Section 7. Mandatory Binding Arbitration and Class Action Waiver
+All disputes arising under this Agreement shall be exclusively resolved by binding arbitration in Company's home county. You agree to resolve all claims solely in an individual capacity and not as a plaintiff or class member, and you expressly waive any right to a jury trial or class action lawsuit.

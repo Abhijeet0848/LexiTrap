@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexAudit • Legal Contract Dark Pattern & Trap-Clause Auditor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="dark-theme">
+    <!-- Header / Navbar -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <div class="logo-icon">⚖️</div>
+                <div>
+                    <h1 class="logo-title">LexAudit<span class="logo-badge">NLP Engine</span></h1>
+                    <p class="logo-subtitle">Cognitive Contract Risk & Dark Pattern Auditor</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span class="status-pill"><span class="pulse-dot"></span> NLP Pipeline Active</span>
+                <a href="#about-section" class="btn btn-secondary btn-sm">Architecture & Viva Guide</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Top Controls: Preset Contract Selector -->
+        <section class="card sample-picker-card">
+            <div class="card-header">
+                <div>
+                    <h2 class="section-title">📂 Choose Contract or Paste Custom Agreement</h2>
+                    <p class="section-desc">Select a preset high-risk or standard sample, or paste your own NDA / SaaS Terms / Employment agreement.</p>
+                </div>
+            </div>
+            
+            <div class="sample-grid">
+                {% for sample in samples %}
+                <div class="sample-card" data-sample-id="{{ sample.id }}">
+                    <div class="sample-badge {{ sample.expected_risk | lower }}">{{ sample.expected_risk }} RISK</div>
+                    <div class="sample-type">{{ sample.type }}</div>
+                    <h3 class="sample-title">{{ sample.name }}</h3>
+                    <p class="sample-desc">{{ sample.description }}</p>
+                    <button class="btn btn-sm btn-outline load-sample-btn" data-id="{{ sample.id }}">Load Contract</button>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Editor & Input Area -->
+        <section class="card editor-card">
+            <div class="editor-header">
+                <div class="doc-title-input-group">
+                    <label for="doc-name-input">Contract Title:</label>
+                    <input type="text" id="doc-name-input" class="input-text" placeholder="e.g. Master SaaS Agreement" value="CloudSphere Terms of Service">
+                </div>
+                <div class="editor-actions">
+                    <button id="clear-btn" class="btn btn-secondary btn-sm">Clear</button>
+                    <button id="audit-btn" class="btn btn-primary btn-glow">
+                        <span class="btn-icon">⚡</span> Run Cognitive NLP Audit
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-body">
+                <textarea id="contract-text" class="contract-textarea" placeholder="Paste full agreement text, clauses, terms of service, or NDA here..."></textarea>
+            </div>
+            <div class="editor-footer">
+                <div class="editor-stats">
+                    <span>Characters: <b id="char-count">0</b></span>
+                    <span>Words: <b id="word-count">0</b></span>
+                    <span>Estimated Clauses: <b id="est-clauses">0</b></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner-container">
+                <div class="cosmic-spinner"></div>
+                <h3>Extracting Deontic Modalities & Scanning Traps...</h3>
+                <p>Running hierarchical clause segmentation, semantic deviation scoring, and redline synthesis.</p>
+            </div>
+        </div>
+
+        <!-- Audit Results Section (Hidden until audit complete) -->
+        <section id="results-section" class="results-section hidden">
+            <!-- Executive Summary Top Dashboard -->
+            <div class="grid-2-col">
+                <!-- Left: Health Score Card -->
+                <div class="card score-card">
+                    <div class="score-card-inner">
+                        <div class="gauge-container">
+                            <svg class="score-gauge" viewBox="0 0 160 160">
+                                <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+                                <circle id="gauge-fill" class="gauge-fill" cx="80" cy="80" r="70"></circle>
+                            </svg>
+                            <div class="gauge-text">
+                                <span id="health-score-val" class="score-num">--</span>
+                                <span class="score-label">Health Score</span>
+                            </div>
+                        </div>
+                        <div class="verdict-info">
+                            <div class="grade-badge-wrap">
+                                <span id="grade-badge" class="grade-badge">A+</span>
+                                <span id="risk-severity-badge" class="risk-badge">SAFE</span>
+                            </div>
+                            <h3 id="verdict-title" class="verdict-title">Safe & Balanced Agreement</h3>
+                            <p id="verdict-desc" class="verdict-desc">Evaluating contract details...</p>
+                            
+                            <div class="stat-pills-row">
+                                <div class="stat-pill">
+                                    <span class="pill-label">Traps Found</span>
+                                    <span id="stat-traps-count" class="pill-val red">0</span>
+                                </div>
+                                <div class="stat-pill">
+                                    <span class="pill-label">Critical</span>
+                                    <span id="stat-critical-count" class="pill-val red">0</span>
+                                </div>
+                                <div class="stat-pill">
+                                    <span class="pill-label">High Risk</span>
+                                    <span id="stat-high-count" class="pill-val yellow">0</span>
+                                </div>
+                                <div class="stat-pill">
+                                    <span class="pill-label">Total Clauses</span>
+                                    <span id="stat-clauses-count" class="pill-val cyan">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Deontic Logic & Findings -->
+                <div class="card deontic-card">
+                    <div class="card-header">
+                        <h3 class="section-title">⚖️ Deontic Logic & Normative Distribution</h3>
+                        <span class="badge badge-info">Modal Analysis</span>
+                    </div>
+                    <p class="section-desc">Classifies imperative commitments vs permissive rights across the agreement.</p>
+                    
+                    <div id="deontic-bars-container" class="deontic-bars-container">
+                        <!-- Filled by JS -->
+                    </div>
+
+                    <div class="executive-takeaways">
+                        <h4 class="takeaway-title">🔍 Executive Key Findings:</h4>
+                        <ul id="executive-points-list" class="findings-list">
+                            <!-- Filled by JS -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export & Controls Bar -->
+            <div class="action-bar card">
+                <div class="action-bar-left">
+                    <span class="filter-label">Filter Clauses:</span>
+                    <button class="filter-btn active" data-filter="ALL">All Clauses (<span id="count-all">0</span>)</button>
+                    <button class="filter-btn" data-filter="TRAPS">Trap Clauses Only (<span id="count-traps">0</span>)</button>
+                    <button class="filter-btn" data-filter="CRITICAL">Critical Severity (<span id="count-critical">0</span>)</button>
+                </div>
+                <div class="action-bar-right">
+                    <button id="export-md-btn" class="btn btn-secondary btn-sm">
+                        <span class="btn-icon">📥</span> Export Markdown Audit Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Clause-by-Clause Heatmap & Inspection -->
+            <div class="card clauses-container-card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="section-title">🌡️ Clause-Level Risk Heatmap & Redline Workbench</h3>
+                        <p class="section-desc">Inspect flagged traps, compare against industry benchmarks, and view balanced redlines.</p>
+                    </div>
+                </div>
+                <div id="clauses-list" class="clauses-list">
+                    <!-- Dynamic Clauses Rendered Here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Research & Academic Architecture Section -->
+        <section id="about-section" class="card info-card">
+            <div class="card-header">
+                <h3 class="section-title">🎓 Academic & Architectural Foundations</h3>
+                <span class="badge badge-primary">LegalTech NLP</span>
+            </div>
+            <div class="architecture-grid">
+                <div class="arch-box">
+                    <h4>1. Hierarchical Parser & Segmentation</h4>
+                    <p>Handles deep legal structures (Roman numerals, section headers, multi-tiered clauses) with sentence boundary protection for legal abbreviations (e.g. <em>i.e., et al., Inc., Ltd.</em>).</p>
+                </div>
+                <div class="arch-box">
+                    <h4>2. Deontic Modality Classification</h4>
+                    <p>Categorizes legal speech acts into 5 deontic modalities: <strong>Obligations</strong> (shall/must), <strong>Prohibitions</strong> (shall not/forbidden), <strong>Permissions</strong> (may/entitled), <strong>Warranties</strong>, and <strong>Disclaimers</strong>.</p>
+                </div>
+                <div class="arch-box">
+                    <h4>3. Contrastive Benchmark Deviation</h4>
+                    <p>Projects predatory clauses against Gold-Standard benchmarks (YC Safe NDA, IEEE SaaS, CommonAccord) using TF-IDF and Cosine Distance to quantify market standard deviation.</p>
+                </div>
+                <div class="arch-box">
+                    <h4>4. Automated Balanced Redlining</h4>
+                    <p>Generates bilateral, fair alternative contract clauses with strike-through and addition diffs plus tactical negotiation talking points.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>LexAudit • Advanced LegalTech NLP System & Trap-Clause Auditor</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

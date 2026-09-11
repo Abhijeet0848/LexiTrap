@@ -1,0 +1,156 @@
+"""
+Deontic Logic Classifier
+Extracts normative modalities: Obligation, Prohibition, Permission, Warranty, Disclaimer.
+"""
+
+import re
+from enum import Enum
+from typing import List, Dict, Any, Tuple
+from .parser import ContractClause
+
+
+class DeonticCategory(str, Enum):
+    OBLIGATION = "Obligation"
+    PROHIBITION = "Prohibition"
+    PERMISSION = "Permission"
+    WARRANTY = "Warranty"
+    DISCLAIMER = "Disclaimer"
+    NEUTRAL = "Informational / Declarative"
+
+
+class DeonticClassifier:
+    """
+    Classifies legal sentences and clauses into deontic modality categories
+    using contextual pattern weighting and modal auxiliary analysis.
+    """
+
+    MODAL_PATTERNS = {
+        DeonticCategory.PROHIBITION: [
+            (re.compile(r"\b(?:shall\s+not|must\s+not|may\s+not|will\s+not|cannot)\b", re.I), 4.5),
+            (re.compile(r"\b(?:is\s+prohibited\s+from|are\s+prohibited\s+from)\b", re.I), 4.5),
+            (re.compile(r"\b(?:under\s+no\s+circumstances\s+shall|in\s+no\s+event\s+shall)\b", re.I), 4.5),
+            (re.compile(r"\b(?:strictly\s+forbidden|not\s+permitted\s+to)\b", re.I), 4.0),
+            (re.compile(r"\b(?:waives\s+any\s+right|relinquishes\s+any\s+claim)\b", re.I), 3.5),
+            (re.compile(r"\b(?:no\s+license\s+is\s+granted|no\s+rights\s+are\s+conveyed)\b", re.I), 3.0),
+        ],
+        DeonticCategory.OBLIGATION: [
+            (re.compile(r"\b(?:shall(?!\s+not)|must(?!\s+not)|will(?!\s+not)|is\s+required\s+to|are\s+required\s+to)\b", re.I), 3.0),
+            (re.compile(r"\b(?:agrees\s+to|undertakes\s+to|covenants\s+to)\b", re.I), 2.8),
+            (re.compile(r"\b(?:is\s+obligated\s+to|are\s+obligated\s+to|bound\s+to)\b", re.I), 3.0),
+            (re.compile(r"\b(?:will\s+promptly|shall\s+immediately|shall\s+cause)\b", re.I), 3.2),
+            (re.compile(r"\b(?:duty\s+to|responsible\s+for\s+ensuring)\b", re.I), 2.2),
+            (re.compile(r"\b(?:indemnify(?:,\s*defend)?\s+and\s+hold\s+harmless)\b", re.I), 3.5),
+        ],
+        DeonticCategory.PERMISSION: [
+            (re.compile(r"\b(?:may|is\s+permitted\s+to|are\s+permitted\s+to)\b", re.I), 2.5),
+            (re.compile(r"\b(?:is\s+entitled\s+to|are\s+entitled\s+to|has\s+the\s+right\s+to)\b", re.I), 2.8),
+            (re.compile(r"\b(?:at\s+its\s+sole\s+discretion|in\s+its\s+discretion)\b", re.I), 3.5),
+            (re.compile(r"\b(?:reserves\s+the\s+right\s+to|reserves\s+all\s+rights\s+to)\b", re.I), 3.2),
+            (re.compile(r"\b(?:can|optional\s+to|has\s+liberty\s+to)\b", re.I), 1.8),
+        ],
+        DeonticCategory.WARRANTY: [
+            (re.compile(r"\b(?:warrants\s+and\s+represents|represents\s+and\s+warrants)\b", re.I), 4.0),
+            (re.compile(r"\b(?:warrants\s+that|represents\s+that|guarantees\s+that)\b", re.I), 3.5),
+            (re.compile(r"\b(?:express\s+warranty|implied\s+warranty|merchantability)\b", re.I), 2.8),
+            (re.compile(r"\b(?:fitness\s+for\s+a\s+particular\s+purpose)\b", re.I), 2.5),
+            (re.compile(r"\b(?:certifies\s+that|covenants\s+that)\b", re.I), 2.5),
+        ],
+        DeonticCategory.DISCLAIMER: [
+            (re.compile(r"\b(?:as\s+is|with\s+all\s+faults|as\s+available)\b", re.I), 4.0),
+            (re.compile(r"\b(?:disclaims\s+all\s+warranties|disclaims\s+any\s+liability)\b", re.I), 4.0),
+            (re.compile(r"\b(?:in\s+no\s+event\s+shall\s+.*?\s+be\s+liable)\b", re.I), 3.5),
+            (re.compile(r"\b(?:without\s+warranty\s+of\s+any\s+kind)\b", re.I), 3.8),
+            (re.compile(r"\b(?:no\s+liability\s+for|not\s+responsible\s+for)\b", re.I), 3.0),
+            (re.compile(r"\b(?:consequential,\s*incidental,\s*special|punitive\s+damages)\b", re.I), 3.0),
+        ],
+    }
+
+    def classify_sentence(self, sentence: str) -> Dict[str, Any]:
+        """Classifies an individual sentence into a deontic modality."""
+        scores: Dict[DeonticCategory, float] = {cat: 0.0 for cat in DeonticCategory if cat != DeonticCategory.NEUTRAL}
+        matched_markers: List[Dict[str, str]] = []
+
+        for category, patterns in self.MODAL_PATTERNS.items():
+            for regex, weight in patterns:
+                matches = regex.findall(sentence)
+                if matches:
+                    scores[category] += weight * len(matches)
+                    for m in matches:
+                        match_text = m if isinstance(m, str) else m[0]
+                        matched_markers.append({
+                            "marker": match_text,
+                            "category": category.value,
+                            "weight": weight
+                        })
+
+        top_category = DeonticCategory.NEUTRAL
+        top_score = 0.0
+        for cat, score in scores.items():
+            if score > top_score:
+                top_score = score
+                top_category = cat
+
+        # Compute confidence score (0 to 1)
+        confidence = min(round(top_score / 4.0, 2), 1.0) if top_score > 0 else 0.5
+
+        return {
+            "sentence": sentence,
+            "category": top_category.value,
+            "confidence": confidence,
+            "score": round(top_score, 2),
+            "markers": matched_markers,
+        }
+
+    def classify_clause(self, clause: ContractClause) -> Dict[str, Any]:
+        """
+        Aggregates sentence-level classifications to provide clause-level deontic profile.
+        """
+        sentence_results = [self.classify_sentence(s) for s in clause.sentences]
+        
+        category_counts: Dict[str, int] = {}
+        for r in sentence_results:
+            cat = r["category"]
+            category_counts[cat] = category_counts.get(cat, 0) + 1
+
+        # Dominant category (excluding neutral unless all neutral)
+        non_neutral = {k: v for k, v in category_counts.items() if k != DeonticCategory.NEUTRAL.value}
+        if non_neutral:
+            dominant_category = max(non_neutral, key=non_neutral.get)
+        else:
+            dominant_category = DeonticCategory.NEUTRAL.value
+
+        all_markers = []
+        for r in sentence_results:
+            all_markers.extend(r["markers"])
+
+        return {
+            "clause_id": clause.clause_id,
+            "dominant_category": dominant_category,
+            "category_breakdown": category_counts,
+            "sentence_classifications": sentence_results,
+            "total_markers": len(all_markers),
+            "markers": all_markers,
+        }
+
+    def analyze_document_profile(self, clauses: List[ContractClause]) -> Dict[str, Any]:
+        """Calculates global deontic profile of the entire agreement."""
+        total_sentences = 0
+        global_counts: Dict[str, int] = {cat.value: 0 for cat in DeonticCategory}
+        
+        for c in clauses:
+            res = self.classify_clause(c)
+            for s_res in res["sentence_classifications"]:
+                total_sentences += 1
+                cat = s_res["category"]
+                global_counts[cat] = global_counts.get(cat, 0) + 1
+
+        percentages = {}
+        for cat, count in global_counts.items():
+            pct = round((count / total_sentences * 100), 1) if total_sentences > 0 else 0.0
+            percentages[cat] = pct
+
+        return {
+            "total_sentences": total_sentences,
+            "counts": global_counts,
+            "distribution_percentages": percentages,
+        }

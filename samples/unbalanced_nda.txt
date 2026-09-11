@@ -1,0 +1,16 @@
+ONE-WAY PROPRIETARY CONFIDENTIALITY AND NON-DISCLOSURE AGREEMENT
+
+Section 1. Confidential Information Scope
+Recipient agrees that all information disclosed by Disclosing Party, including business plans, source code, formulas, and general discussions, shall be deemed strictly Confidential Information. Recipient shall have the duty to protect all information indefinitely.
+
+Section 2. One-Sided Obligations and Restrictions
+Recipient shall not disclose, reproduce, or distribute any Confidential Information to any third party under any circumstances without prior written authorization from Discloser. Discloser makes no representations or warranties regarding accuracy or completeness.
+
+Section 3. Intellectual Property Assignment
+Recipient agrees that any modifications, improvements, or derivative works conceived or developed based on Discloser's Confidential Information shall belong exclusively to Discloser. Recipient hereby irrevocably assigns all such rights, titles, and interests to Discloser.
+
+Section 4. Uncapped Indemnification Burden
+Recipient shall indemnify, defend and hold harmless Discloser and its officers from any and all claims, losses, damages, liabilities, and legal expenses arising directly or indirectly from any alleged disclosure or breach by Recipient, with uncapped indemnification obligations.
+
+Section 5. Non-Compete and Industry Lockout
+Recipient shall not directly or indirectly engage in any competing business or work for any company operating in the enterprise software sector worldwide for a period of two (2) years following the termination of this Agreement.

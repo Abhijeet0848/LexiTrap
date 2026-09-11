@@ -1,0 +1,16 @@
+STANDARD MUTUAL NON-DISCLOSURE AGREEMENT (NVCA / YC MODEL)
+
+Section 1. Purpose and Mutual Definitions
+Both parties desire to explore a mutual business relationship. "Confidential Information" means non-public proprietary technical and business information disclosed by either party ("Disclosing Party") to the other ("Receiving Party"), marked as confidential or reasonably understood to be confidential.
+
+Section 2. Standard Exclusions from Confidentiality
+Confidential Information does not include information that: (a) is or becomes publicly known through no breach; (b) was already known to Receiving Party prior to disclosure; (c) is independently developed without reference to Disclosing Party's information; or (d) is required to be disclosed by law with prompt notice.
+
+Section 3. Mutual Duty of Care and Non-Use
+Each party agrees to hold the other party's Confidential Information in strict confidence, using the same degree of care it uses for its own confidential information of like nature, but not less than reasonable care. Neither party shall use Confidential Information except to evaluate the potential business relationship.
+
+Section 4. Term and Termination
+This Agreement and the duty of confidentiality shall continue for a period of two (2) years from the Effective Date. Upon written request, Receiving Party shall promptly return or certify destruction of all Confidential Information.
+
+Section 5. Governing Law and Mutual Dispute Resolution
+This Agreement shall be governed by Delaware law. The parties agree to resolve any dispute first through good-faith executive negotiations. Neither party waives court jurisdiction for injunctive relief to protect proprietary rights.
