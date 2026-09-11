@@ -1,9 +1,12 @@
-# ⚖️ LexAudit: Legal Contract "Dark Pattern" & Trap-Clause Auditor
+# ⚖️ LexiTrap: Legal Contract Risk & Trap-Clause Auditor
 > **Cognitive Legal NLP • Deontic Logic Extraction • Benchmark Deviation Scoring • Automated Redlining**
 
+[![Live Demo on Vercel](https://img.shields.io/badge/Live_Demo-lexi--trap.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://lexi-trap.vercel.app/)
 [![NLP Engine](https://img.shields.io/badge/NLP_Engine-Cognitive_LegalTech-00f2fe.svg)](https://github.com/)
 [![License](https://img.shields.io/badge/License-MIT-00f2a9.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.9+-ffb703.svg)](https://www.python.org/)
+
+🌐 **Live Web Application**: **[https://lexi-trap.vercel.app/](https://lexi-trap.vercel.app/)**
 
 ---
 
@@ -87,7 +90,9 @@ python cli.py --file path/to/contract.txt --export report.md
 
 ---
 
-## 🌐 6. Web Application Dashboard & Cloud Deployment
+## 🌐 6. Web Application Dashboard & Deployment
+
+* 🚀 **Live Production Deployment**: **[https://lexi-trap.vercel.app/](https://lexi-trap.vercel.app/)**
 
 ### Local Run:
 ```bash
@@ -95,11 +100,9 @@ python app.py
 ```
 Open **`http://127.0.0.1:5000`** in your browser.
 
-### Cloud Deployment (Render / Railway / Heroku):
-1. Push this repository to GitHub.
-2. In Render / Railway / Heroku, select **New Web Service** and connect the repository.
-3. Build Command: `pip install -r requirements.txt`
-4. Start Command: `gunicorn app:app` (or use the built-in `Procfile`).
+### Cloud Deployment (Vercel / Render / Railway):
+- **Vercel**: Connect the repo on [Vercel.com](https://vercel.com/) — it automatically builds using the included `vercel.json`.
+- **Render / Railway / Heroku**: Connect the repo — it builds using `requirements.txt` and `Procfile`.
 
 ---
 
