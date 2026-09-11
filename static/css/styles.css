@@ -16,8 +16,8 @@
     
     --text-heading: #0f172a;
     --text-body: #1e293b;
-    --text-muted: #64748b;
-    --text-light: #94a3b8;
+    --text-muted: #475569;
+    --text-light: #64748b;
     
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
@@ -400,7 +400,7 @@ input, button, textarea, select {
 
 .url-input {
     flex: 1;
-    min-width: 0; /* Allows text truncation / safe flex shrinking */
+    min-width: 0;
     border: none;
     background: transparent;
     font-size: clamp(0.82rem, 1.8vw, 0.9rem);
@@ -1424,15 +1424,22 @@ input, button, textarea, select {
 
 .footer-bottom-bar {
     border-top: 1px solid var(--border);
-    padding-top: 20px;
+    padding-top: 22px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: clamp(0.75rem, 1.6vw, 0.82rem);
-    color: var(--text-light);
+    font-size: clamp(0.84rem, 1.8vw, 0.92rem);
+    font-weight: 600;
+    color: var(--text-heading);
     flex-wrap: wrap;
     gap: 10px;
     text-align: left;
+    line-height: 1.5;
+}
+
+.footer-bottom-bar span {
+    color: var(--text-heading);
+    font-weight: 600;
 }
 
 /* ==========================================================================
