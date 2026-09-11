@@ -87,30 +87,40 @@ python cli.py --file path/to/contract.txt --export report.md
 
 ---
 
-## 🌐 6. Web Application Dashboard
+## 🌐 6. Web Application Dashboard & Cloud Deployment
 
-Launch the interactive Glassmorphic Dark UI:
-
+### Local Run:
 ```bash
 python app.py
 ```
 Open **`http://127.0.0.1:5000`** in your browser.
 
-### Key Web Features:
-- **Circular Animated Risk Gauge**: Visualizes overall contract health score (0–100) and letter grades (A+ to F).
-- **Deontic Distribution Radar**: Live breakdown of obligations vs permissions.
-- **Clause-Level Risk Heatmap**: Filter by *Critical*, *Traps Only*, or *All Clauses*.
-- **Interactive Redline Workbench**: Side-by-side `<ins>` and `<del>` diffs with legal rationale and negotiation counter-proposals.
-- **1-Click Markdown Export**: Download comprehensive executive audit summaries.
+### Cloud Deployment (Render / Railway / Heroku):
+1. Push this repository to GitHub.
+2. In Render / Railway / Heroku, select **New Web Service** and connect the repository.
+3. Build Command: `pip install -r requirements.txt`
+4. Start Command: `gunicorn app:app` (or use the built-in `Procfile`).
 
 ---
 
-## 📚 7. Academic Viva & Research Documentation
+## 🌟 7. Key Features
+- **Deterministic Legal NLP**: 100% offline, privacy-preserving, zero third-party API dependencies.
+- **Website Action Decision Verdict**: Direct advice on whether it's safe to sign up, log in, or proceed.
+- **Linguistic Readability & Obfuscation Analysis**: Flesch Reading Ease and grade-level scoring.
+- **Interactive Contract DNA Heatmap**: Visual risk density strip across all contract clauses.
+- **Clean Contract Redline Generator**: 1-click generation of balanced, standard-compliant agreements.
+- **Draft A vs. Draft B Version Diff Analyzer**: Side-by-side comparative risk reduction auditor.
+- **Multi-Format Export**: Print/Save as PDF, Interactive HTML, Markdown, and Plain Text.
+
+---
+
+## 📚 8. Academic Viva & Research Documentation
 
 For detailed theoretical breakdowns, mathematical proofs, deontic modal logic formulation, and 20+ viva interview questions, consult:
 👉 **[ACADEMIC_VIVA_GUIDE.md](docs/ACADEMIC_VIVA_GUIDE.md)**
+👉 **[REAL_WORLD_TERMS_TRAP_CASES.md](docs/REAL_WORLD_TERMS_TRAP_CASES.md)**
 
 ---
 
-## 📄 8. License
+## 📄 9. License
 MIT License. Built for educational, research, and production LegalTech applications.
