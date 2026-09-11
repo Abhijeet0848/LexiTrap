@@ -3,24 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LexiTrap • Contract Risk & Trap Analyzer</title>
+    <title>LexiTrap • Legal Contract Risk & Trap Analyzer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <!-- Background Canvas -->
-    <div id="canvas-3d-bg" class="canvas-3d-container"></div>
-
     <!-- Navbar -->
     <header class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
                 <span class="brand-icon">⚖️</span>
                 <span class="brand-name">LexiTrap</span>
-                <span class="brand-tag">Contract Scanner</span>
+                <span class="brand-tag">Contract Risk Scanner</span>
             </div>
         </div>
     </header>
@@ -29,168 +25,171 @@
     <main class="container">
         <!-- Hero Section -->
         <section class="hero-section">
-            <div class="hero-content">
-                <div class="hero-text-side">
-                    <div class="hero-chip">
-                        <span class="chip-sparkle">🔍</span> Instant Legal Checker
-                    </div>
-                    <h1 class="hero-title">
-                        Find <span class="gradient-text">Unfair Rules & Hidden Traps</span> in Any Contract
-                    </h1>
-                    <p class="hero-subtitle">
-                        Paste your SaaS terms, NDA, or job contract to detect one-sided rules, hidden fees, and see fair replacement wording.
-                    </p>
-                </div>
-                <!-- Interactive Floating Visualizer Widget -->
-                <div class="hero-3d-side" id="hero-3d-viewport">
-                    <div class="hologram-glass-card tilt-card" id="interactive-3d-card">
-                        <canvas id="three-canvas"></canvas>
-                        <div class="hologram-badge">
-                            <span class="pulse-dot"></span> Live Scanner
-                        </div>
-                    </div>
-                </div>
+            <div class="hero-chip">
+                <span>🛡️</span> AI Contract Safety Checker
             </div>
+            <h1 class="hero-title">Find Unfair Traps & Risks in Any Contract</h1>
+            <p class="hero-subtitle">
+                Paste your agreement to detect hidden traps, unilateral terms, perpetual data rights, and get fair replacement redlines instantly.
+            </p>
         </section>
 
-        <!-- Quick Sample Pills -->
-        <section class="sample-pills-section tilt-card">
-            <div class="sample-pills-header">
-                <span class="sample-pills-label">⚡ Try an example:</span>
-                <span class="sample-pills-hint">Click any contract below to test instantly</span>
+        <!-- Clean Example Cards Grid -->
+        <section class="examples-section">
+            <div class="section-heading-row">
+                <span class="section-subtitle">Click an example to test:</span>
             </div>
-            <div class="sample-pills-wrap">
-                {% for sample in samples %}
-                <button class="pill-btn load-sample-btn ripple-btn" data-id="{{ sample.id }}">
-                    <span class="pill-dot {{ sample.expected_risk | lower }}"></span>
-                    <span class="pill-text">{{ sample.name }}</span>
-                    <span class="pill-type-tag">{{ sample.type }}</span>
-                </button>
-                {% endfor %}
+            <div class="example-cards-grid">
+                <div class="example-card load-sample-btn" data-id="predatory_saas_tos">
+                    <div class="example-card-top">
+                        <span class="badge-danger">High Risk</span>
+                        <span class="example-type">SaaS Terms</span>
+                    </div>
+                    <h3 class="example-title">Toxic SaaS Terms</h3>
+                    <p class="example-hint">Unilateral changes, AI data rights & $50 liability cap</p>
+                </div>
+
+                <div class="example-card load-sample-btn" data-id="unbalanced_nda">
+                    <div class="example-card-top">
+                        <span class="badge-warning">Medium Risk</span>
+                        <span class="example-type">NDA</span>
+                    </div>
+                    <h3 class="example-title">One-Sided Vendor NDA</h3>
+                    <p class="example-hint">Perpetual secrecy, IP assignment & 2-year lockout</p>
+                </div>
+
+                <div class="example-card load-sample-btn" data-id="fair_standard_nda">
+                    <div class="example-card-top">
+                        <span class="badge-success">Safe</span>
+                        <span class="example-type">Standard NDA</span>
+                    </div>
+                    <h3 class="example-title">Fair Mutual NDA</h3>
+                    <p class="example-hint">Balanced YC model with standard mutual protections</p>
+                </div>
+
+                <div class="example-card load-sample-btn" data-id="predatory_employment_contract">
+                    <div class="example-card-top">
+                        <span class="badge-danger">High Risk</span>
+                        <span class="example-type">Job Contract</span>
+                    </div>
+                    <h3 class="example-title">Employment Contract</h3>
+                    <p class="example-hint">3-year worldwide non-compete & personal IP claim</p>
+                </div>
             </div>
         </section>
 
         <!-- Input & Editor Area -->
-        <section class="editor-section tilt-card">
-            <div class="editor-topbar">
-                <div class="doc-name-wrap">
-                    <input type="text" id="doc-name-input" class="doc-name-input" placeholder="Contract Name (e.g. Website Terms, NDA, Employment Agreement)" value="">
+        <section class="editor-card">
+            <div class="editor-header">
+                <div class="doc-input-wrap">
+                    <label for="doc-name-input" class="input-label">Contract Name</label>
+                    <input type="text" id="doc-name-input" class="doc-name-input" placeholder="e.g. Master SaaS Agreement, Vendor NDA, Freelance Contract" value="">
                 </div>
-                <div class="editor-btn-group">
-                    <button id="clear-btn" class="btn btn-light ripple-btn">Clear</button>
-                    <button id="audit-btn" class="btn btn-primary btn-glow ripple-btn">
-                        <span class="btn-sparkle">⚡</span> Check Contract Now
+                <div class="editor-actions">
+                    <button id="clear-btn" class="btn btn-secondary">Clear</button>
+                    <button id="audit-btn" class="btn btn-primary">
+                        <span>⚡</span> Check Contract Now
                     </button>
                 </div>
             </div>
 
-            <div class="textarea-wrapper">
-                <div id="scan-laser" class="scan-laser-line hidden"></div>
+            <div class="editor-body">
                 <textarea id="contract-text" class="contract-textarea" placeholder="Paste your contract text, terms of service, NDA, or job agreement here..."></textarea>
             </div>
 
-            <div class="editor-info-bar">
-                <div class="text-counts">
+            <div class="editor-footer">
+                <div class="stats-group">
                     <span><strong id="word-count">0</strong> words</span>
-                    <span class="count-divider">•</span>
+                    <span class="dot-sep">•</span>
                     <span><strong id="char-count">0</strong> characters</span>
-                    <span class="count-divider">•</span>
-                    <span><strong id="est-clauses">0</strong> sections found</span>
+                    <span class="dot-sep">•</span>
+                    <span><strong id="est-clauses">0</strong> sections</span>
                 </div>
             </div>
         </section>
 
         <!-- Loading State -->
         <div id="loading-overlay" class="loading-state hidden">
-            <div class="scanner-sphere">
-                <div class="orbit-ring ring-1"></div>
-                <div class="orbit-ring ring-2"></div>
-                <div class="orbit-ring ring-3"></div>
-                <div class="center-core">⚖️</div>
-            </div>
-            <h3 class="loading-title">Checking Contract Clauses...</h3>
-            <p class="loading-sub">Scanning for unfair rules, legal risks, and generating safe alternatives.</p>
+            <div class="loading-spinner"></div>
+            <h3 class="loading-title">Scanning Contract Clauses...</h3>
+            <p class="loading-sub">Checking for unfair rules, legal risks, and generating safe alternatives.</p>
         </div>
 
         <!-- Audit Results (Hidden by default) -->
         <section id="results-section" class="results-container hidden">
             
-            <!-- Health Score & Verdict Banner -->
-            <div class="score-banner tilt-card">
-                <div class="score-left">
-                    <div class="score-dial-wrap">
-                        <svg class="score-svg-gauge" viewBox="0 0 120 120">
-                            <circle class="score-gauge-track" cx="60" cy="60" r="50"></circle>
-                            <circle id="score-gauge-bar" class="score-gauge-bar" cx="60" cy="60" r="50"></circle>
-                        </svg>
-                        <div class="score-circle-inner" id="score-circle">
+            <!-- Health Score & Summary Banner -->
+            <div class="results-banner">
+                <div class="score-block">
+                    <div class="score-circle-wrap">
+                        <div class="score-circle" id="score-circle">
                             <span id="health-score-val" class="score-number">0</span>
-                            <span class="score-max">Safety Score</span>
+                            <span class="score-total">/ 100</span>
                         </div>
                     </div>
                     
-                    <div class="score-meta">
+                    <div class="score-text">
                         <div class="badge-row">
-                            <span id="grade-badge" class="badge grade-f">Grade --</span>
-                            <span id="risk-severity-badge" class="badge risk-critical">Critical Risk</span>
+                            <span id="grade-badge" class="score-badge badge-grade">Grade --</span>
+                            <span id="risk-severity-badge" class="score-badge badge-risk">High Risk</span>
                         </div>
                         <h2 id="verdict-title" class="verdict-heading">Contract Summary</h2>
                         <p id="verdict-desc" class="verdict-sub">Audit findings will appear here.</p>
                     </div>
                 </div>
 
-                <div class="score-stats">
-                    <div class="stat-box stat-hover">
-                        <span class="stat-number text-danger" id="stat-traps-count">0</span>
-                        <span class="stat-label">Traps Found</span>
+                <div class="stat-boxes-grid">
+                    <div class="stat-card">
+                        <span class="stat-count text-danger" id="stat-traps-count">0</span>
+                        <span class="stat-name">Traps Found</span>
                     </div>
-                    <div class="stat-box stat-hover">
-                        <span class="stat-number text-danger" id="stat-critical-count">0</span>
-                        <span class="stat-label">High Risk</span>
+                    <div class="stat-card">
+                        <span class="stat-count text-danger" id="stat-critical-count">0</span>
+                        <span class="stat-name">High Risk</span>
                     </div>
-                    <div class="stat-box stat-hover">
-                        <span class="stat-number text-warning" id="stat-high-count">0</span>
-                        <span class="stat-label">Medium Risk</span>
+                    <div class="stat-card">
+                        <span class="stat-count text-warning" id="stat-high-count">0</span>
+                        <span class="stat-name">Medium Risk</span>
                     </div>
-                    <div class="stat-box stat-hover">
-                        <span class="stat-number text-primary" id="stat-clauses-count">0</span>
-                        <span class="stat-label">Total Clauses</span>
+                    <div class="stat-card">
+                        <span class="stat-count text-primary" id="stat-clauses-count">0</span>
+                        <span class="stat-name">Total Clauses</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Key Summary & Contract Rules Breakdown -->
+            <!-- Key Findings & Rule Breakdown Grid -->
             <div class="details-grid">
-                <div class="panel tilt-card">
-                    <div class="panel-header">
-                        <h3 class="panel-title">📋 Key Findings & Issues</h3>
-                        <span class="panel-chip">Summary</span>
+                <div class="detail-card">
+                    <div class="card-head">
+                        <h3 class="card-title">📋 Key Findings & Issues</h3>
+                        <span class="card-tag">Summary</span>
                     </div>
-                    <ul id="executive-points-list" class="summary-list">
+                    <ul id="executive-points-list" class="findings-list">
                         <!-- Filled by JS -->
                     </ul>
                 </div>
 
-                <div class="panel tilt-card">
-                    <div class="panel-header">
-                        <h3 class="panel-title">⚖️ Contract Rules Breakdown</h3>
-                        <span class="panel-chip">Rule Types</span>
+                <div class="detail-card">
+                    <div class="card-head">
+                        <h3 class="card-title">⚖️ Contract Rules Breakdown</h3>
+                        <span class="card-tag">Rule Types</span>
                     </div>
-                    <p class="panel-desc">Breakdown of mandatory duties, forbidden actions, and permissions:</p>
-                    <div id="deontic-bars-container" class="deontic-bars">
+                    <p class="card-desc">Breakdown of mandatory duties, forbidden actions, and permissions:</p>
+                    <div id="deontic-bars-container" class="rules-bars-list">
                         <!-- Filled by JS -->
                     </div>
                 </div>
             </div>
 
-            <!-- Clause List Controls -->
-            <div class="filter-toolbar tilt-card">
+            <!-- Filter Toolbar -->
+            <div class="filter-bar">
                 <div class="filter-tabs">
-                    <button class="filter-tab active ripple-btn" data-filter="ALL">All Clauses (<span id="count-all">0</span>)</button>
-                    <button class="filter-tab ripple-btn" data-filter="TRAPS">Risky Clauses (<span id="count-traps">0</span>)</button>
-                    <button class="filter-tab ripple-btn" data-filter="CRITICAL">High Risk Only (<span id="count-critical">0</span>)</button>
+                    <button class="filter-btn active" data-filter="ALL">All Clauses (<span id="count-all">0</span>)</button>
+                    <button class="filter-btn" data-filter="TRAPS">Risky Clauses (<span id="count-traps">0</span>)</button>
+                    <button class="filter-btn" data-filter="CRITICAL">High Risk Only (<span id="count-critical">0</span>)</button>
                 </div>
-                <button id="export-md-btn" class="btn btn-outline btn-sm ripple-btn">
+                <button id="export-md-btn" class="btn btn-outline btn-sm">
                     📥 Download Report (Markdown)
                 </button>
             </div>
