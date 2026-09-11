@@ -701,12 +701,64 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span class="risk-pill ${clause.heat_level.toLowerCase()}">Risk ${clause.risk_score}</span>
                     </div>
                 </div>
-                <div class="clause-body-text">${escapeHtml(clause.text)}</div>
+                <div class="clause-body-text">${highlightClauseDangerText(clause)}</div>
                 ${trapsHtml}
             `;
 
             clausesList.appendChild(card);
         });
+    }
+
+    function highlightClauseDangerText(clause) {
+        if (!clause || !clause.text) return "";
+        const text = clause.text;
+        if (!clause.traps || clause.traps.length === 0) {
+            return escapeHtml(text);
+        }
+
+        // Collect all distinct matched patterns
+        const patterns = [];
+        const criticalSet = new Set();
+
+        clause.traps.forEach(trap => {
+            const isCritical = trap.severity === "CRITICAL" || trap.severity === "HIGH";
+            (trap.matched_patterns || []).forEach(p => {
+                const trimmed = (p || "").trim();
+                if (trimmed.length >= 3 && !patterns.includes(trimmed)) {
+                    patterns.push(trimmed);
+                    if (isCritical) criticalSet.add(trimmed.toLowerCase());
+                }
+            });
+        });
+
+        if (patterns.length === 0) {
+            return escapeHtml(text);
+        }
+
+        // Sort by length descending so longer compound phrases match first
+        patterns.sort((a, b) => b.length - a.length);
+
+        // Escape for regex and build master composite regex
+        const escapedPatterns = patterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+        const masterRegex = new RegExp(`(${escapedPatterns.join("|")})`, "gi");
+
+        // Split text by regex preserving matches
+        const parts = text.split(masterRegex);
+        let resultHtml = "";
+
+        parts.forEach(part => {
+            if (!part) return;
+            const isMatch = patterns.some(p => p.toLowerCase() === part.toLowerCase());
+            if (isMatch) {
+                const isCrit = criticalSet.has(part.toLowerCase());
+                const className = isCrit ? "highlight-danger" : "highlight-warning";
+                resultHtml += `<mark class="${className}" title="⚠️ Risk Trigger: ${escapeHtml(part)}">${escapeHtml(part)}</mark>`;
+            } else {
+                resultHtml += escapeHtml(part);
+            }
+        });
+
+        return resultHtml;
     }
 
     function escapeHtml(text) {

@@ -1176,9 +1176,42 @@ input, button, textarea, select {
     padding: clamp(10px, 2vw, 12px);
     border-radius: var(--radius-sm);
     margin-bottom: 12px;
-    line-height: 1.55;
+    line-height: 1.65;
     overflow-wrap: anywhere;
     word-break: break-word;
+}
+
+/* Danger & Warning Highlights in Extracted Contract Text */
+.highlight-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-bottom: 2px solid #ef4444;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.18);
+    display: inline;
+}
+
+.highlight-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+    border-bottom: 2px solid #f59e0b;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.18);
+    display: inline;
+}
+
+.clause-card.critical .clause-body-text {
+    border-left: 3px solid var(--danger);
+    background-color: #fff8f8;
+}
+
+.clause-card.high .clause-body-text {
+    border-left: 3px solid var(--warning);
+    background-color: #fffdf6;
 }
 
 /* Trap Box Inside Clause */
