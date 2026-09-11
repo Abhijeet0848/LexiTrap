@@ -1,6 +1,23 @@
 # 🌐 Real-World Platform Terms & Conditions Links Directory
 
-This directory contains real-time Terms of Service (ToS), Terms of Use, and Privacy Policy URLs across major global tech platforms, categorized by industry. You can copy any of these links and paste them into the **LexiTrap URL Fetcher** (`http://127.0.0.1:5000`) to test live legal audits.
+This directory contains real-time Terms of Service (ToS), Terms of Use, and Privacy Policy URLs across major global tech platforms.
+
+---
+
+## 🔥 Top High-Risk & Controversial Platforms (Best for Viva & Live Demos)
+
+These platforms feature widely debated, aggressive, or high-risk clauses (such as forced AI training on user work, unilateral price changes, and total liability gutting) making them **ideal for live demonstration**:
+
+| Platform & Controversy | Live Terms Link | What Makes It High Risk / Demonstrable |
+| :--- | :--- | :--- |
+| **Adobe Creative Cloud** *(2024 AI Terms Backlash)* | [Adobe General Terms](https://www.adobe.com/legal/terms.html) | **AI Content Access:** Clause giving Adobe rights to access and analyze customer artwork, PSDs, and videos to train algorithms. |
+| **Zoom Communications** *(2023 Video AI Ingestion)* | [Zoom Terms](https://explore.zoom.us/en/terms/) | **Audio/Video Rights:** Broad license to customer video streams and audio transcripts for machine learning model development. |
+| **Character.AI** *(Persona & Chat Harvesting)* | [Character.ai Terms](https://character.ai/tos) | **Perpetual Dialogue Rights:** Irrevocable worldwide license to user prompts, custom characters, and generated chat logs. |
+| **Reddit** *(2024 AI Licensing Agreement)* | [Reddit User Agreement](https://www.redditinc.com/policies/user-agreement) | **Commercial AI Data Sales:** Explicit rights to monetize and license public user posts to commercial LLM firms. |
+| **Ticketmaster / Live Nation** *(Arbitration Lock)* | [Ticketmaster Terms](https://www.ticketmaster.com/terms) | **Court Access Gutting:** Aggressive mandatory private arbitration and class action waiver shielding them from antitrust lawsuits. |
+| **DoorDash Consumer Agreement** | [DoorDash Terms](https://help.doordash.com/consumers/s/terms-and-conditions-us) | **Tiny Liability Cap:** Vendor liability strictly capped to the dollar value of the single fast-food order regardless of data breaches. |
+| **Chegg** *(Subscription Trap & Data Sharing)* | [Chegg Terms](https://www.chegg.com/terms-and-conditions) | **Auto-Renew Lockin & Logging:** Narrow cancellation windows + rights to disclose user search logs to educational institutions. |
+| **Equifax** *(Data Breach Liability Waiver)* | [Equifax Terms](https://www.equifax.com/terms/) | **Class Action Waiver:** Precludes affected users from collective class action litigation following cybersecurity leaks. |
 
 ---
 
