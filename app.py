@@ -1,9 +1,11 @@
 """
 Flask Web Application for Legal Contract Dark Pattern & Trap-Clause Auditor
-Provides interactive dashboard, live contract analyzer, risk heatmaps, redline comparison, and report exports.
+Provides interactive dashboard, live contract analyzer, photo/PDF document scanner,
+risk heatmaps, redline comparison, and report exports.
 """
 
 import os
+import io
 from flask import Flask, render_template, request, jsonify, Response
 from nlp_engine import ContractAuditor
 from samples.sample_data import SAMPLE_CONTRACTS, load_sample_text, list_samples
@@ -99,7 +101,6 @@ def fetch_url():
         if len(extracted_text) < 50:
             return jsonify({"status": "error", "message": "Could not extract sufficient text from this URL."}), 400
 
-        # Extract page title from URL or domain
         from urllib.parse import urlparse
         parsed = urlparse(url)
         doc_title = f"{parsed.netloc} Terms of Service"
@@ -112,6 +113,65 @@ def fetch_url():
         })
     except Exception as e:
         return jsonify({"status": "error", "message": f"Failed to fetch URL: {str(e)}"}), 500
+
+
+@app.route("/api/upload-file", methods=["POST"])
+def upload_file():
+    """Extracts text from uploaded PDF or text documents."""
+    if "file" not in request.files:
+        return jsonify({"status": "error", "message": "No file uploaded."}), 400
+
+    file = request.files["file"]
+    filename = file.filename or "Uploaded Document"
+    ext = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
+
+    try:
+        if ext == "pdf":
+            # Extract via pdfplumber or pypdf
+            extracted_pages = []
+            try:
+                import pdfplumber
+                with pdfplumber.open(io.BytesIO(file.read())) as pdf:
+                    for page in pdf.pages:
+                        txt = page.extract_text()
+                        if txt:
+                            extracted_pages.append(txt)
+            except Exception:
+                file.seek(0)
+                from pypdf import PdfReader
+                reader = PdfReader(io.BytesIO(file.read()))
+                for page in reader.pages:
+                    txt = page.extract_text()
+                    if txt:
+                        extracted_pages.append(txt)
+
+            full_text = "\n\n".join(extracted_pages).strip()
+            if not full_text:
+                return jsonify({"status": "error", "message": "Could not extract text from this PDF."}), 400
+
+            doc_title = filename.rsplit(".", 1)[0].replace("_", " ").title()
+            return jsonify({
+                "status": "success",
+                "title": doc_title,
+                "text": full_text,
+                "filename": filename
+            })
+
+        elif ext in ["txt", "md", "rtf"]:
+            content = file.read().decode("utf-8", errors="replace").strip()
+            doc_title = filename.rsplit(".", 1)[0].replace("_", " ").title()
+            return jsonify({
+                "status": "success",
+                "title": doc_title,
+                "text": content,
+                "filename": filename
+            })
+
+        else:
+            return jsonify({"status": "error", "message": f"Unsupported file type .{ext}. For photos (JPG/PNG), use the in-browser OCR scanner."}), 400
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"File parsing error: {str(e)}"}), 500
 
 
 @app.route("/api/audit", methods=["POST"])
@@ -139,7 +199,6 @@ def export_report():
     if not report_dict:
         return jsonify({"status": "error", "message": "Missing audit report data."}), 400
 
-    # Build markdown
     md = []
     md.append(f"# Legal Contract Audit Report: {report_dict.get('document_name')}\n")
     md.append(f"**Health Score:** {report_dict.get('overall_health_score')}/100 (Grade: **{report_dict.get('letter_grade')}**)")
@@ -148,10 +207,10 @@ def export_report():
 
     md.append(f"| Summary Metric | Value |")
     md.append(f"| :--- | :--- |")
-    md.append(f"| Clauses Audited | {report_dict.get('total_clauses')} |")
-    md.append(f"| Word Count | {report_dict.get('total_words')} |")
-    md.append(f"| Total Traps Detected | {report_dict.get('total_traps_found')} |")
-    md.append(f"| Critical Traps | {report_dict.get('critical_traps_count')} |")
+    md.append(f"| Total Clauses Analyzed | {report_dict.get('total_clauses')} |")
+    md.append(f"| Total Words | {report_dict.get('total_words')} |")
+    md.append(f"| Predatory Traps Flagged | {report_dict.get('total_traps_found')} |")
+    md.append(f"| Critical Risk Traps | {report_dict.get('critical_traps_count')} |")
     md.append(f"| High Risk Traps | {report_dict.get('high_traps_count')} |\n")
 
     md.append("## Executive Summary\n")
@@ -159,34 +218,26 @@ def export_report():
         md.append(f"- {pt}")
     md.append("\n")
 
-    md.append("## Clause-Level Risk Breakdown\n")
-    for clause in report_dict.get("clause_audit_details", []):
-        md.append(f"### {clause.get('clause_id')}: {clause.get('title')} (Risk Score: {clause.get('risk_score')}/100 - {clause.get('heat_level')})")
-        md.append(f"**Dominant Modality:** {clause.get('deontic_profile', {}).get('dominant_category')}\n")
-        md.append(f"> {clause.get('text')}\n")
-        
-        for t in clause.get("traps", []):
-            md.append(f"- **Trap Type:** {t.get('category')} ({t.get('severity')})")
-            md.append(f"- **Legal Risk:** {t.get('legal_danger')}")
-            md.append(f"- **Business Impact:** {t.get('business_impact')}")
-            md.append(f"- **Recommended Mitigation:** {t.get('recommended_mitigation')}\n")
+    md.append("## Flagged Dangerous Clauses & Redline Recommendations\n")
+    for c in report_dict.get("clause_audit_details", []):
+        if c.get("has_traps"):
+            md.append(f"### {c.get('title')} (Risk Score: {c.get('risk_score')}/100 - {c.get('heat_level')})\n")
+            md.append(f"> **Original Predatory Text:**\n> {c.get('text')}\n")
+            for t in c.get("traps", []):
+                md.append(f"- **Trap Category:** {t.get('category')} ({t.get('severity')})")
+                md.append(f"- **Legal Risk:** {t.get('legal_danger')}")
+                md.append(f"- **Recommended Mitigation:** {t.get('recommended_mitigation')}\n")
 
-    redlines = report_dict.get("redlines", [])
-    if redlines:
-        md.append("## Recommended Balanced Redlines\n")
-        for rl in redlines:
-            md.append(f"### {rl.get('clause_title')} — {rl.get('trap_category')}")
-            md.append(f"**Original Predatory Text:**\n```text\n{rl.get('original_text')}\n```")
-            md.append(f"**Balanced Alternative:**\n```text\n{rl.get('recommended_text')}\n```")
-            md.append(f"**Negotiation Talking Point:** {rl.get('negotiation_talking_point')}\n")
+    report_markdown = "\n".join(md)
+    filename = f"LexiTrap_Audit_{report_dict.get('document_name', 'Report').replace(' ', '_')}.md"
 
-    content = "\n".join(md)
     return Response(
-        content,
+        report_markdown,
         mimetype="text/markdown",
-        headers={"Content-disposition": "attachment; filename=contract_audit_report.md"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)

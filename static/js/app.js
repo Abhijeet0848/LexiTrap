@@ -142,6 +142,142 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Photo OCR & File Upload Controls
+    const photoUploadInput = document.getElementById("photo-upload-input");
+    const uploadPhotoBtn = document.getElementById("upload-photo-btn");
+    const pdfUploadInput = document.getElementById("pdf-upload-input");
+    const uploadPdfBtn = document.getElementById("upload-pdf-btn");
+    const ocrStatusBanner = document.getElementById("ocr-status-banner");
+    const ocrStatusTitle = document.getElementById("ocr-status-title");
+    const ocrStatusSub = document.getElementById("ocr-status-sub");
+    const ocrProgressBar = document.getElementById("ocr-progress-bar");
+    const photoPreviewBox = document.getElementById("photo-preview-box");
+    const photoPreviewImg = document.getElementById("photo-preview-img");
+    const photoPreviewName = document.getElementById("photo-preview-name");
+    const removePhotoBtn = document.getElementById("remove-photo-btn");
+
+    if (uploadPhotoBtn && photoUploadInput) {
+        uploadPhotoBtn.addEventListener("click", () => {
+            photoUploadInput.click();
+        });
+
+        photoUploadInput.addEventListener("change", async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Show thumbnail preview
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                photoPreviewImg.src = re.target.result;
+                photoPreviewName.textContent = file.name;
+                photoPreviewBox.classList.remove("hidden");
+            };
+            reader.readAsDataURL(file);
+
+            // Show OCR progress banner
+            ocrStatusBanner.classList.remove("hidden");
+            ocrProgressBar.style.width = "10%";
+            ocrStatusTitle.textContent = "Scanning contract photo with OCR...";
+            ocrStatusSub.textContent = "Initializing Optical Character Recognition engine...";
+
+            try {
+                if (typeof Tesseract === "undefined") {
+                    throw new Error("OCR library could not be loaded from CDN. Please check internet connection.");
+                }
+
+                const result = await Tesseract.recognize(
+                    file,
+                    'eng',
+                    {
+                        logger: (m) => {
+                            if (m.status === "recognizing text") {
+                                const progress = Math.round((m.progress || 0) * 100);
+                                ocrProgressBar.style.width = `${progress}%`;
+                                ocrStatusTitle.textContent = `Reading contract text... (${progress}%)`;
+                                ocrStatusSub.textContent = `Processing image lines and characters...`;
+                            }
+                        }
+                    }
+                );
+
+                const extractedText = (result && result.data && result.data.text) ? result.data.text.trim() : "";
+
+                if (!extractedText || extractedText.length < 20) {
+                    alert("Could not detect clear legal text in this photo. Please make sure the photo is well-lit and readable.");
+                } else {
+                    contractTextarea.value = extractedText;
+                    const cleanDocTitle = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+                    docNameInput.value = `Scanned: ${cleanDocTitle}`;
+                    updateTextStats();
+                    
+                    ocrStatusTitle.textContent = "✅ Text successfully extracted!";
+                    ocrStatusSub.textContent = "Running instant contract risk audit...";
+                    ocrProgressBar.style.width = "100%";
+                    
+                    setTimeout(async () => {
+                        ocrStatusBanner.classList.add("hidden");
+                        await runAudit();
+                    }, 500);
+                }
+            } catch (err) {
+                console.error("OCR scanning error:", err);
+                alert("OCR Error: " + err.message);
+                ocrStatusBanner.classList.add("hidden");
+            } finally {
+                photoUploadInput.value = "";
+            }
+        });
+    }
+
+    if (removePhotoBtn) {
+        removePhotoBtn.addEventListener("click", () => {
+            photoPreviewBox.classList.add("hidden");
+            photoPreviewImg.src = "";
+        });
+    }
+
+    // PDF / Text File Upload Handler
+    if (uploadPdfBtn && pdfUploadInput) {
+        uploadPdfBtn.addEventListener("click", () => {
+            pdfUploadInput.click();
+        });
+
+        pdfUploadInput.addEventListener("change", async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const originalBtnText = uploadPdfBtn.innerHTML;
+            uploadPdfBtn.innerHTML = "<span>⏳</span> Reading...";
+            uploadPdfBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const res = await fetch("/api/upload-file", {
+                    method: "POST",
+                    body: formData,
+                });
+                const data = await res.json();
+                if (data.status === "success") {
+                    contractTextarea.value = data.text;
+                    docNameInput.value = data.title;
+                    updateTextStats();
+                    await runAudit();
+                } else {
+                    alert("File upload error: " + (data.message || "Failed to read file"));
+                }
+            } catch (err) {
+                console.error("Upload error:", err);
+                alert("Failed to upload and parse document.");
+            } finally {
+                uploadPdfBtn.innerHTML = originalBtnText;
+                uploadPdfBtn.disabled = false;
+                pdfUploadInput.value = "";
+            }
+        });
+    }
+
     loadSampleBtns.forEach(btn => {
         btn.addEventListener("click", () => {
             const id = btn.getAttribute("data-id");
@@ -155,6 +291,8 @@ document.addEventListener("DOMContentLoaded", () => {
         docNameInput.value = "";
         updateTextStats();
         resultsSection.classList.add("hidden");
+        if (photoPreviewBox) photoPreviewBox.classList.add("hidden");
+        if (ocrStatusBanner) ocrStatusBanner.classList.add("hidden");
         currentAuditReport = null;
         loadSampleBtns.forEach(b => b.classList.remove("active"));
     });

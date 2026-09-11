@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Tesseract.js for instant client-side photo OCR of legal contracts -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
@@ -30,7 +32,7 @@
             </div>
             <h1 class="hero-title">Find Unfair Traps & Risks in Any Contract</h1>
             <p class="hero-subtitle">
-                Paste your agreement to detect hidden traps, unilateral terms, perpetual data rights, and get fair replacement redlines instantly.
+                Paste text, upload a document photo/PDF, or fetch web terms to detect hidden traps, unilateral terms, perpetual data rights, and get fair replacement redlines instantly.
             </p>
         </section>
 
@@ -80,11 +82,53 @@
 
         <!-- Input & Editor Area -->
         <section class="editor-card">
-            <!-- URL Fetcher Bar -->
-            <div class="url-fetch-bar">
-                <span class="url-icon">🌐</span>
-                <input type="text" id="url-input" class="url-input" placeholder="Paste any live Terms of Service URL (e.g. https://www.reddit.com/policies/terms-of-service)">
-                <button id="fetch-url-btn" class="btn btn-secondary btn-sm">Fetch from Web</button>
+            <!-- Source Input Toolbar (URL, Photo OCR, PDF Upload) -->
+            <div class="input-toolbar-grid">
+                <!-- URL Fetcher Bar -->
+                <div class="url-fetch-bar">
+                    <span class="url-icon">🌐</span>
+                    <input type="text" id="url-input" class="url-input" placeholder="Paste live Terms of Service URL (e.g. reddit.com/policies/terms-of-service)">
+                    <button id="fetch-url-btn" class="btn btn-secondary btn-sm">Fetch Web Terms</button>
+                </div>
+
+                <!-- Document & Photo Upload Options -->
+                <div class="upload-actions-bar">
+                    <input type="file" id="photo-upload-input" accept="image/*" capture="environment" style="display:none;">
+                    <input type="file" id="pdf-upload-input" accept=".pdf,.txt,.md" style="display:none;">
+                    
+                    <button id="upload-photo-btn" class="btn btn-outline btn-sm">
+                        <span>📷</span> Upload / Scan Photo
+                    </button>
+                    <button id="upload-pdf-btn" class="btn btn-outline btn-sm">
+                        <span>📄</span> Upload PDF / File
+                    </button>
+                </div>
+            </div>
+
+            <!-- OCR / Scanning Status Banner -->
+            <div id="ocr-status-banner" class="ocr-status-banner hidden">
+                <div class="ocr-status-content">
+                    <span class="ocr-spinner">🔄</span>
+                    <div class="ocr-text-wrap">
+                        <strong id="ocr-status-title">Reading contract photo...</strong>
+                        <span id="ocr-status-sub">Extracting text using Optical Character Recognition (OCR)</span>
+                    </div>
+                </div>
+                <div class="ocr-progress-track">
+                    <div id="ocr-progress-bar" class="ocr-progress-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Image Preview Thumbnail (When photo is uploaded) -->
+            <div id="photo-preview-box" class="photo-preview-box hidden">
+                <div class="photo-preview-thumb-wrap">
+                    <img id="photo-preview-img" src="" alt="Contract Photo">
+                </div>
+                <div class="photo-preview-info">
+                    <span id="photo-preview-name" class="photo-name">contract_photo.jpg</span>
+                    <span class="photo-hint">Text extracted via OCR below. You can edit before auditing.</span>
+                </div>
+                <button id="remove-photo-btn" class="btn-icon" title="Remove photo">✕</button>
             </div>
 
             <div class="editor-header">
@@ -101,7 +145,7 @@
             </div>
 
             <div class="editor-body">
-                <textarea id="contract-text" class="contract-textarea" placeholder="Paste your contract text, terms of service, NDA, or job agreement here..."></textarea>
+                <textarea id="contract-text" class="contract-textarea" placeholder="Paste your contract text, terms of service, NDA, or upload a contract photo/PDF above..."></textarea>
             </div>
 
             <div class="editor-footer">
@@ -153,98 +197,111 @@
                     </div>
                     <div class="stat-card">
                         <span class="stat-count text-primary" id="stat-clauses-count">0</span>
-                        <span class="stat-name">Total Clauses</span>
+                        <span class="stat-name">Total Sections</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Key Findings & Rule Breakdown Grid -->
-            <div class="details-grid">
-                <div class="detail-card">
-                    <div class="card-head">
-                        <h3 class="card-title">📋 Key Findings & Issues</h3>
-                        <span class="card-tag">Summary</span>
+            <!-- Insights Row (Rule Breakdown & Executive Summary) -->
+            <div class="insights-row">
+                <!-- Contract Rules Breakdown -->
+                <div class="insight-card">
+                    <div class="insight-card-header">
+                        <h3 class="card-title">Contract Rules Breakdown</h3>
+                        <span class="card-hint">Obligations, Prohibitions & Permissions</span>
                     </div>
-                    <ul id="executive-points-list" class="findings-list">
-                        <!-- Filled by JS -->
+                    <div id="deontic-bars-container" class="rules-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Key Findings -->
+                <div class="insight-card">
+                    <div class="insight-card-header">
+                        <h3 class="card-title">Key Findings</h3>
+                        <span class="card-hint">Immediate action points</span>
+                    </div>
+                    <ul id="executive-points-list" class="points-list">
+                        <!-- Populated dynamically -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Clause Risk & Redlines Feed -->
+            <div class="clauses-section">
+                <div class="clauses-header">
+                    <div>
+                        <h2 class="section-title">Section-by-Section Risk & Redlines</h2>
+                        <p class="section-desc">Review flagged traps, legal risks, and suggested balanced wording.</p>
+                    </div>
+                    <div class="clauses-actions">
+                        <div class="filter-pills">
+                            <button class="filter-btn active" data-filter="ALL">All (<span id="count-all">0</span>)</button>
+                            <button class="filter-btn" data-filter="TRAPS">Traps Only (<span id="count-traps">0</span>)</button>
+                            <button class="filter-btn" data-filter="CRITICAL">High Risk (<span id="count-critical">0</span>)</button>
+                        </div>
+                        <button id="export-md-btn" class="btn btn-secondary btn-sm">
+                            <span>📥</span> Export Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Clauses Dynamic List -->
+                <div id="clauses-list" class="clauses-list">
+                    <!-- Populated dynamically by app.js -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Clean Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="nav-brand">
+                    <span class="brand-icon">⚖️</span>
+                    <span class="brand-name">LexiTrap</span>
+                </div>
+                <p class="footer-mission">
+                    Empowering users, freelancers, and businesses to understand what they sign. LexiTrap automatically scans legal contracts and terms of service for hidden predatory clauses, asymmetrical obligations, and dark patterns.
+                </p>
+            </div>
+
+            <div class="footer-columns">
+                <div class="footer-col">
+                    <h4 class="footer-col-title">What We Check</h4>
+                    <ul class="footer-links">
+                        <li><strong>Unilateral Changes:</strong> Sneakily altering terms without notice</li>
+                        <li><strong>AI Model Training:</strong> Ingesting private data for LLMs</li>
+                        <li><strong>Forced Arbitration:</strong> Stripping open court & jury rights</li>
+                        <li><strong>Uncapped Indemnity:</strong> Forcing you to pay all legal damages</li>
+                        <li><strong>Zero Liability Caps:</strong> Disclaiming all fault even in data breaches</li>
+                        <li><strong>Overbroad Non-Competes:</strong> Unfair lockout from your trade</li>
                     </ul>
                 </div>
 
-                <div class="detail-card">
-                    <div class="card-head">
-                        <h3 class="card-title">⚖️ Contract Rules Breakdown</h3>
-                        <span class="card-tag">Rule Types</span>
-                    </div>
-                    <p class="card-desc">Breakdown of mandatory duties, forbidden actions, and permissions:</p>
-                    <div id="deontic-bars-container" class="rules-bars-list">
-                        <!-- Filled by JS -->
-                    </div>
+                <div class="footer-col">
+                    <h4 class="footer-col-title">How It Works</h4>
+                    <ul class="footer-links">
+                        <li><strong>1. Parse:</strong> Reads structured sections and sentences</li>
+                        <li><strong>2. Classify:</strong> Detects obligations, prohibitions & rights</li>
+                        <li><strong>3. Scan:</strong> Evaluates 8 high-risk trap categories</li>
+                        <li><strong>4. Benchmark:</strong> Compares against fair industry standards</li>
+                        <li><strong>5. Redline:</strong> Generates balanced replacement text</li>
+                    </ul>
                 </div>
             </div>
 
-            <!-- Filter Toolbar -->
-            <div class="filter-bar">
-                <div class="filter-tabs">
-                    <button class="filter-btn active" data-filter="ALL">All Clauses (<span id="count-all">0</span>)</button>
-                    <button class="filter-btn" data-filter="TRAPS">Risky Clauses (<span id="count-traps">0</span>)</button>
-                    <button class="filter-btn" data-filter="CRITICAL">High Risk Only (<span id="count-critical">0</span>)</button>
-                </div>
-                <button id="export-md-btn" class="btn btn-outline btn-sm">
-                    📥 Download Report (Markdown)
-                </button>
+            <div class="footer-bottom">
+                <p>© 2026 LexiTrap NLP System. Designed for contract transparency and fairness.</p>
             </div>
-
-            <!-- Clause Cards List -->
-            <div id="clauses-list" class="clauses-list">
-                <!-- Filled dynamically by JS -->
-            </div>
-
-        </section>
-
-        <!-- Brief Description & Guide Section in Footer -->
-        <section class="footer-guide-section">
-            <h2 class="footer-guide-title">📖 Guide: What Each Contract Example Checks</h2>
-            <div class="footer-guide-grid">
-                <div class="guide-card">
-                    <div class="guide-card-header">
-                        <span class="guide-icon">🚨</span>
-                        <h4>Toxic SaaS Terms</h4>
-                    </div>
-                    <p>Scans for vendors altering terms or prices without notice, using your uploaded data to train commercial AI models, and eliminating liability for data loss.</p>
-                </div>
-
-                <div class="guide-card">
-                    <div class="guide-card-header">
-                        <span class="guide-icon">⚠️</span>
-                        <h4>One-Sided Vendor NDA</h4>
-                    </div>
-                    <p>Detects one-way confidentiality burdens, involuntary transfer of customer inventions, unlimited legal indemnity, and 2-year industry non-compete locks.</p>
-                </div>
-
-                <div class="guide-card">
-                    <div class="guide-card-header">
-                        <span class="guide-icon">🛡️</span>
-                        <h4>Fair Mutual NDA</h4>
-                    </div>
-                    <p>Industry-standard benchmark (YC model) with equal protections for both parties, clear confidentiality timeframes, and standard mutual court rights.</p>
-                </div>
-
-                <div class="guide-card">
-                    <div class="guide-card-header">
-                        <span class="guide-icon">🚨</span>
-                        <h4>Employment Contract</h4>
-                    </div>
-                    <p>Flags overbroad restrictive covenants such as 3-year worldwide non-compete bans and company claims over inventions made on personal time or devices.</p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <p>LexiTrap • Legal Contract Risk Scanner & Fair Redline Generator</p>
+        </div>
     </footer>
 
+    <!-- Three.js Background Ambient Visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
