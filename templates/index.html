@@ -347,6 +347,33 @@
         </div>
     </footer>
 
+    <!-- Live Camera Viewfinder Modal (Webcam & Mobile Camera Stream) -->
+    <div id="camera-modal" class="camera-modal hidden">
+        <div class="camera-modal-backdrop" id="camera-modal-backdrop"></div>
+        <div class="camera-modal-dialog">
+            <div class="camera-modal-header">
+                <div class="camera-title-wrap">
+                    <span class="camera-icon">📸</span>
+                    <h3>Scan Contract with Camera</h3>
+                </div>
+                <button id="close-camera-btn" class="btn-close-modal" title="Close Camera">✕</button>
+            </div>
+            <div class="camera-viewfinder-container">
+                <video id="camera-video-feed" autoplay playsinline muted></video>
+                <div class="camera-overlay-guideline">
+                    <div class="camera-frame-box"></div>
+                    <span class="camera-hint-text">📄 Position contract page inside the box</span>
+                </div>
+            </div>
+            <div class="camera-modal-footer">
+                <button type="button" id="cancel-camera-btn" class="btn btn-secondary">Cancel</button>
+                <button type="button" id="snap-photo-btn" class="btn btn-primary">
+                    <span>📸</span> Snap & Extract Text
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Three.js Background Ambient Visualization -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>

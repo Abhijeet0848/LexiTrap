@@ -148,27 +148,89 @@ document.addEventListener("DOMContentLoaded", () => {
     const cameraCaptureInput = document.getElementById("camera-capture-input");
     const galleryUploadInput = document.getElementById("gallery-upload-input");
 
-    const pdfUploadInput = document.getElementById("pdf-upload-input");
-    const uploadPdfBtn = document.getElementById("upload-pdf-btn");
-    const ocrStatusBanner = document.getElementById("ocr-status-banner");
-    const ocrStatusTitle = document.getElementById("ocr-status-title");
-    const ocrStatusSub = document.getElementById("ocr-status-sub");
-    const ocrProgressBar = document.getElementById("ocr-progress-bar");
-    const photoPreviewBox = document.getElementById("photo-preview-box");
-    const photoPreviewImg = document.getElementById("photo-preview-img");
-    const photoPreviewName = document.getElementById("photo-preview-name");
-    const removePhotoBtn = document.getElementById("remove-photo-btn");
+    // Camera Modal Elements
+    const cameraModal = document.getElementById("camera-modal");
+    const cameraModalBackdrop = document.getElementById("camera-modal-backdrop");
+    const cameraVideoFeed = document.getElementById("camera-video-feed");
+    const closeCameraBtn = document.getElementById("close-camera-btn");
+    const cancelCameraBtn = document.getElementById("cancel-camera-btn");
+    const snapPhotoBtn = document.getElementById("snap-photo-btn");
+    let activeCameraStream = null;
 
-    // Direct Button 1: Camera Scan
-    if (btnCameraScan && cameraCaptureInput) {
-        btnCameraScan.addEventListener("click", () => {
-            cameraCaptureInput.click();
+    function stopCameraStream() {
+        if (activeCameraStream) {
+            activeCameraStream.getTracks().forEach(track => track.stop());
+            activeCameraStream = null;
+        }
+        if (cameraVideoFeed) {
+            cameraVideoFeed.srcObject = null;
+        }
+        if (cameraModal) {
+            cameraModal.classList.add("hidden");
+        }
+    }
+
+    // Direct Button 1: Live Webcam / Device Camera
+    if (btnCameraScan) {
+        btnCameraScan.addEventListener("click", async () => {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: { ideal: "environment" },
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        },
+                        audio: false
+                    });
+                    activeCameraStream = stream;
+                    cameraVideoFeed.srcObject = stream;
+                    cameraModal.classList.remove("hidden");
+                } catch (err) {
+                    console.warn("Could not access camera via getUserMedia, falling back to file picker:", err);
+                    if (cameraCaptureInput) cameraCaptureInput.click();
+                }
+            } else if (cameraCaptureInput) {
+                cameraCaptureInput.click();
+            }
         });
 
-        cameraCaptureInput.addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (file) processImageFile(file);
-            cameraCaptureInput.value = "";
+        if (cameraCaptureInput) {
+            cameraCaptureInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) processImageFile(file);
+                cameraCaptureInput.value = "";
+            });
+        }
+    }
+
+    // Camera Modal Controls
+    if (closeCameraBtn) closeCameraBtn.addEventListener("click", stopCameraStream);
+    if (cancelCameraBtn) cancelCameraBtn.addEventListener("click", stopCameraStream);
+    if (cameraModalBackdrop) cameraModalBackdrop.addEventListener("click", stopCameraStream);
+
+    // Snap & Capture Photo from Video Stream
+    if (snapPhotoBtn && cameraVideoFeed) {
+        snapPhotoBtn.addEventListener("click", () => {
+            const video = cameraVideoFeed;
+            const width = video.videoWidth || 1280;
+            const height = video.videoHeight || 720;
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const file = new File([blob], "camera_contract_snap.jpg", { type: "image/jpeg" });
+                    stopCameraStream();
+                    processImageFile(file);
+                } else {
+                    alert("Failed to capture image snapshot from camera.");
+                }
+            }, "image/jpeg", 0.95);
         });
     }
 
