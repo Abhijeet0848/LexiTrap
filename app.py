@@ -58,23 +58,32 @@ def get_sample_content(sample_id):
 def fetch_url():
     """Fetches and extracts clean text from a live Terms of Service URL."""
     import urllib.request
+    import urllib.error
+    import ssl
+    import gzip
+    import zlib
     import re
+    from urllib.parse import urlparse
     from html.parser import HTMLParser
 
     class TextExtractor(HTMLParser):
         def __init__(self):
             super().__init__()
             self.text_parts = []
-            self.ignore_tags = {"script", "style", "nav", "footer", "header", "noscript", "svg"}
+            self.ignore_tags = {"script", "style", "nav", "footer", "header", "noscript", "svg", "iframe"}
             self.current_tag = None
 
         def handle_starttag(self, tag, attrs):
             self.current_tag = tag.lower()
+            if self.current_tag in {"br", "hr"}:
+                self.text_parts.append("\n")
 
         def handle_endtag(self, tag):
             self.current_tag = None
-            if tag.lower() in {"p", "div", "h1", "h2", "h3", "h4", "li", "section", "article"}:
+            if tag.lower() in {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "section", "article", "tr", "table", "blockquote"}:
                 self.text_parts.append("\n")
+            elif tag.lower() in {"td", "th"}:
+                self.text_parts.append(" | ")
 
         def handle_data(self, data):
             if self.current_tag not in self.ignore_tags:
@@ -95,24 +104,56 @@ def fetch_url():
     if not (url.startswith("http://") or url.startswith("https://")):
         url = "https://" + url
 
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate",
+        "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+    }
+
     try:
-        req = urllib.request.Request(
-            url,
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        )
-        with urllib.request.urlopen(req, timeout=8) as response:
-            html_content = response.read().decode("utf-8", errors="replace")
+        req = urllib.request.Request(url, headers=headers)
+        ssl_ctx = ssl.create_default_context()
+        ssl_ctx.check_hostname = False
+        ssl_ctx.verify_mode = ssl.CERT_NONE
+
+        with urllib.request.urlopen(req, context=ssl_ctx, timeout=12) as response:
+            encoding = response.headers.get("Content-Encoding", "").lower()
+            raw_bytes = response.read()
+
+            if "gzip" in encoding:
+                try:
+                    html_content = gzip.decompress(raw_bytes).decode("utf-8", errors="replace")
+                except Exception:
+                    html_content = raw_bytes.decode("utf-8", errors="replace")
+            elif "deflate" in encoding:
+                try:
+                    html_content = zlib.decompress(raw_bytes).decode("utf-8", errors="replace")
+                except Exception:
+                    html_content = raw_bytes.decode("utf-8", errors="replace")
+            else:
+                html_content = raw_bytes.decode("utf-8", errors="replace")
 
         extractor = TextExtractor()
         extractor.feed(html_content)
         extracted_text = extractor.get_text()
 
         if len(extracted_text) < 50:
-            return jsonify({"status": "error", "message": "Could not extract sufficient text from this URL."}), 400
+            return jsonify({
+                "status": "error",
+                "message": "Could not extract sufficient text from this URL. The page may require JavaScript or CAPTCHA verification."
+            }), 400
 
-        from urllib.parse import urlparse
         parsed = urlparse(url)
-        doc_title = f"{parsed.netloc} Terms of Service"
+        doc_title = f"{parsed.netloc} Policy / Terms"
 
         return jsonify({
             "status": "success",
@@ -120,8 +161,14 @@ def fetch_url():
             "text": extracted_text,
             "url": url,
         })
+    except urllib.error.HTTPError as he:
+        return jsonify({
+            "status": "error",
+            "message": f"Website returned HTTP {he.code}: {he.reason}. (Note: Some portals block automated fetches; try copy-pasting the text or using Photo/PDF scanner)."
+        }), 400
     except Exception as e:
         return jsonify({"status": "error", "message": f"Failed to fetch URL: {str(e)}"}), 500
+
 
 
 @app.route("/api/upload-file", methods=["POST"])
