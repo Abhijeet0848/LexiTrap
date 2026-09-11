@@ -1,6 +1,7 @@
 """
 Document Parser & Hierarchical Clause Segmenter
 Handles extraction and segmentation of legal agreements into structured clauses.
+Supports standard section numbering, markdown headers, Roman numerals, and abbreviation-safe sentence tokenization.
 """
 
 import re
@@ -40,18 +41,22 @@ class DocumentParser:
     """
     Parses unstructured legal text into hierarchical clauses and sentences.
     Supports section numbers (1., 1.1, Section 1), Roman numerals (I., IV.),
-    lettered points (a., (b)), and title headers.
+    markdown headings (### 1. Title), bolded titles (**1. Title**), and all-caps headers.
     """
 
     CLAUSE_START_PATTERNS = [
+        # Markdown headers: ### Section 1. Title / ## 1. Title
+        re.compile(r"^(?:#{1,6})\s*(?:Section|Article|Clause)?\s*(\d+(?:\.\d+)*|[IVXLCDM]+)?[:.\-–—]?\s*(.+)$", re.IGNORECASE),
+        # Bolded headers: **Section 1: Title** or **1. Title**
+        re.compile(r"^\*\*(?:Section|Article|Clause)?\s*(\d+(?:\.\d+)*|[IVXLCDM]+)?[:.\-–—]?\s*([^*]+)\*\*$", re.IGNORECASE),
         # Section 1 / Section 1.1 / Article 2 / Clause 3: Title
-        re.compile(r"^(?:Section|Article|Clause)\s+(\d+(?:\.\d+)*)\s*[:.\-–—]?\s*(.*)$", re.IGNORECASE),
+        re.compile(r"^(?:Section|Article|Clause|Paragraph)\s+(\d+(?:\.\d+)*)\s*[:.\-–—]?\s*(.*)$", re.IGNORECASE),
         # 1. / 1.1 / 1.1.1 Title or text
         re.compile(r"^(\d+(?:\.\d+)+|\d+\.)\s*(.*)$"),
         # Roman numerals: I. / IV. / VIII. Title
         re.compile(r"^([IVXLCDM]+)\.\s*(.*)$"),
         # Capitalized ALL-CAPS headers (e.g., "INDEMNIFICATION", "LIMITATION OF LIABILITY")
-        re.compile(r"^([A-Z\s]{4,50})(?::)?$"),
+        re.compile(r"^([A-Z\s]{4,60})(?::)?$"),
     ]
 
     def __init__(self):
@@ -60,16 +65,15 @@ class DocumentParser:
     def clean_text(self, text: str) -> str:
         """Normalizes line endings and removes redundant spacing."""
         text = text.replace("\r\n", "\n").replace("\r", "\n")
-        # Remove BOM or weird unicode chars
+        # Remove BOM or zero-width unicode chars
         text = text.replace("\ufeff", "").replace("\u200b", "")
         return text.strip()
 
     def segment_sentences(self, text: str) -> List[str]:
         """
         Splits text into sentences while respecting legal abbreviations like
-        e.g., i.e., et al., v., Inc., Ltd., etc.
+        e.g., i.e., et al., v., Inc., Ltd., Pvt., Corp., Sec., Art., U.S.C., etc.
         """
-        # Protect common abbreviations
         protected = text
         abbreviations = {
             r"\be\.g\.\s*": "eg_placeholder ",
@@ -77,11 +81,18 @@ class DocumentParser:
             r"\bet al\.\s*": "etal_placeholder ",
             r"\bInc\.\s*": "inc_placeholder ",
             r"\bLtd\.\s*": "ltd_placeholder ",
+            r"\bPvt\.\s*": "pvt_placeholder ",
             r"\bCorp\.\s*": "corp_placeholder ",
+            r"\bCo\.\s*": "co_placeholder ",
+            r"\bLLC\.\s*": "llc_placeholder ",
+            r"\bLLP\.\s*": "llp_placeholder ",
             r"\bNo\.\s*": "no_placeholder ",
             r"\bvs?\.\s*": "vs_placeholder ",
             r"\bSec\.\s*": "sec_placeholder ",
             r"\bArt\.\s*": "art_placeholder ",
+            r"\bPara\.\s*": "para_placeholder ",
+            r"\bCl\.\s*": "cl_placeholder ",
+            r"\bU\.S\.C\.\s*": "usc_placeholder ",
         }
         for pattern, repl in abbreviations.items():
             protected = re.sub(pattern, repl, protected, flags=re.IGNORECASE)
@@ -120,7 +131,6 @@ class DocumentParser:
         for i, line in enumerate(lines, 1):
             stripped = line.strip()
             if not stripped:
-                # Empty line: if we have content, keep accumulating
                 continue
 
             # Check if this line is a new clause header
@@ -131,15 +141,17 @@ class DocumentParser:
             for pat in self.CLAUSE_START_PATTERNS:
                 m = pat.match(stripped)
                 if m:
-                    groups = m.groups()
+                    groups = [g for g in m.groups() if g is not None]
                     if len(groups) == 2:
                         matched_num = groups[0].strip()
                         matched_title = groups[1].strip()
                     elif len(groups) == 1:
                         matched_title = groups[0].strip()
                         matched_num = ""
-                    is_new_header = True
-                    break
+                    # Filter out short fragments that might just be list items inside text
+                    if matched_title or matched_num:
+                        is_new_header = True
+                        break
 
             if is_new_header:
                 if current_lines:
@@ -171,7 +183,7 @@ class DocumentParser:
                     "end_line": len(lines),
                 })
 
-        # Fallback if no structured sections were detected (e.g., pure unformatted paragraphs)
+        # Fallback if no structured sections were detected (e.g. unformatted paragraphs)
         if not raw_blocks:
             paragraphs = [p.strip() for p in cleaned.split("\n\n") if p.strip()]
             for idx, p in enumerate(paragraphs, 1):
@@ -191,8 +203,10 @@ class DocumentParser:
             
             # Clean up title if it's too long
             title = block["title"]
-            if len(title) > 60:
-                title = title[:57] + "..."
+            # Strip markdown formatting from title
+            title = re.sub(r"[*#_`]", "", title).strip()
+            if len(title) > 65:
+                title = title[:62] + "..."
             if not title:
                 title = f"Clause {idx}"
 

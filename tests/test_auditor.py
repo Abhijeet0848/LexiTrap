@@ -5,7 +5,7 @@ Uses Python's standard library `unittest` framework for out-of-the-box test exec
 
 import unittest
 from nlp_engine.parser import DocumentParser, ContractClause
-from nlp_engine.deontic_classifier import DeonticClassifier, DeonticCategory
+from nlp_engine.deontic_classifier import DeonticClassifier, DeonticCategory, DutyActor
 from nlp_engine.trap_detector import TrapDetector, TrapCategory, RiskSeverity
 from nlp_engine.benchmarks import BenchmarkMatcher
 from nlp_engine.redliner import RedlineGenerator
@@ -33,12 +33,26 @@ class TestDocumentParser(unittest.TestCase):
         self.assertEqual(clauses[1].clause_number, "2")
         self.assertIn("Confidentiality", clauses[1].title)
 
+    def test_markdown_and_bold_headers(self):
+        sample = """
+        ### 1. Scope of Service
+        The company will provide cloud hosting.
+
+        **2. Termination Rights**
+        Either party may terminate upon notice.
+        """
+        clauses = self.parser.parse(sample, "Markdown Doc")
+        self.assertEqual(len(clauses), 2)
+        self.assertIn("Scope of Service", clauses[0].title)
+        self.assertIn("Termination Rights", clauses[1].title)
+
     def test_sentence_abbreviation_preservation(self):
-        text = "Vendor may terminate e.g. upon bankruptcy, i.e. insolvency et al. and Corp. failure."
+        text = "Vendor may terminate e.g. upon bankruptcy, i.e. insolvency et al. and Corp. failure or Pvt. Ltd. dissolution under Sec. 12."
         sentences = self.parser.segment_sentences(text)
         self.assertEqual(len(sentences), 1)
         self.assertIn("e.g.", sentences[0])
         self.assertIn("i.e.", sentences[0])
+        self.assertIn("Pvt. Ltd.", sentences[0])
 
 
 class TestDeonticClassifier(unittest.TestCase):
@@ -49,6 +63,7 @@ class TestDeonticClassifier(unittest.TestCase):
         sentence = "Customer shall promptly indemnify and defend Vendor from any damages."
         res = self.classifier.classify_sentence(sentence)
         self.assertEqual(res["category"], DeonticCategory.OBLIGATION.value)
+        self.assertEqual(res["actor"], DutyActor.CUSTOMER_USER.value)
         self.assertGreater(res["confidence"], 0.6)
 
     def test_prohibition_classification(self):
@@ -57,9 +72,10 @@ class TestDeonticClassifier(unittest.TestCase):
         self.assertEqual(res["category"], DeonticCategory.PROHIBITION.value)
 
     def test_permission_classification(self):
-        sentence = "Company may modify services at its sole discretion."
+        sentence = "Company reserves the right to modify services at its sole discretion."
         res = self.classifier.classify_sentence(sentence)
         self.assertEqual(res["category"], DeonticCategory.PERMISSION.value)
+        self.assertEqual(res["actor"], DutyActor.VENDOR_COMPANY.value)
 
     def test_warranty_classification(self):
         sentence = "Vendor warrants and represents that the software contains no malicious code."
@@ -71,23 +87,35 @@ class TestDeonticClassifier(unittest.TestCase):
         res = self.classifier.classify_sentence(sentence)
         self.assertEqual(res["category"], DeonticCategory.DISCLAIMER.value)
 
+    def test_asymmetry_calculation(self):
+        clauses = [
+            ContractClause(
+                clause_id="c1", clause_number="1", title="User Rules",
+                text="You shall not copy. You must indemnify us. You agree to pay all damages.",
+                start_line=1, end_line=1, word_count=15, char_count=80,
+                sentences=["You shall not copy.", "You must indemnify us.", "You agree to pay all damages."]
+            ),
+            ContractClause(
+                clause_id="c2", clause_number="2", title="Vendor Rights",
+                text="Company may modify at any time.",
+                start_line=2, end_line=2, word_count=7, char_count=35,
+                sentences=["Company may modify at any time."]
+            ),
+        ]
+        profile = self.classifier.analyze_document_profile(clauses)
+        self.assertGreater(profile["asymmetry_index"], 80.0)
+
 
 class TestTrapDetector(unittest.TestCase):
     def setUp(self):
         self.detector = TrapDetector()
-        self.parser = DocumentParser()
 
     def test_detect_unilateral_modification(self):
         clause_text = "Company reserves the right to modify these terms of service at any time without notice in our sole discretion."
         clause = ContractClause(
-            clause_id="c1",
-            clause_number="1",
-            title="Modifications",
-            text=clause_text,
-            start_line=1,
-            end_line=2,
-            word_count=len(clause_text.split()),
-            char_count=len(clause_text),
+            clause_id="c1", clause_number="1", title="Modifications",
+            text=clause_text, start_line=1, end_line=2,
+            word_count=len(clause_text.split()), char_count=len(clause_text),
             sentences=[clause_text]
         )
         traps = self.detector.detect_traps_in_clause(clause)
@@ -98,14 +126,9 @@ class TestTrapDetector(unittest.TestCase):
     def test_detect_ai_data_harvesting(self):
         clause_text = "Customer grants company a perpetual license to use customer data to train machine learning models and AI algorithms."
         clause = ContractClause(
-            clause_id="c2",
-            clause_number="2",
-            title="Data Usage",
-            text=clause_text,
-            start_line=1,
-            end_line=2,
-            word_count=len(clause_text.split()),
-            char_count=len(clause_text),
+            clause_id="c2", clause_number="2", title="Data Usage",
+            text=clause_text, start_line=1, end_line=2,
+            word_count=len(clause_text.split()), char_count=len(clause_text),
             sentences=[clause_text]
         )
         traps = self.detector.detect_traps_in_clause(clause)
@@ -113,21 +136,31 @@ class TestTrapDetector(unittest.TestCase):
         self.assertIn(TrapCategory.PERPETUAL_DATA_AI_HARVESTING, trap_cats)
 
     def test_detect_forced_arbitration_jury_waiver(self):
-        clause_text = "All claims shall be resolved by binding arbitration and you waive any right to a jury trial and class action waiver."
+        clause_text = "All claims shall be resolved exclusively by binding arbitration and you waive any right to a jury trial and class action waiver."
         clause = ContractClause(
-            clause_id="c3",
-            clause_number="3",
-            title="Dispute Resolution",
-            text=clause_text,
-            start_line=1,
-            end_line=2,
-            word_count=len(clause_text.split()),
-            char_count=len(clause_text),
+            clause_id="c3", clause_number="3", title="Dispute Resolution",
+            text=clause_text, start_line=1, end_line=2,
+            word_count=len(clause_text.split()), char_count=len(clause_text),
             sentences=[clause_text]
         )
         traps = self.detector.detect_traps_in_clause(clause)
         trap_cats = [t.category for t in traps]
         self.assertIn(TrapCategory.FORCED_ARBITRATION_CLASS_WAIVER, trap_cats)
+
+    def test_safeguard_prevents_false_positive_on_fair_terms(self):
+        fair_clause_text = (
+            "Neither party may modify this Agreement except through a written instrument signed by both parties. "
+            "Vendor shall provide at least 30 days prior written notice of policy changes, with right to terminate and receive a pro-rata refund."
+        )
+        clause = ContractClause(
+            clause_id="c4", clause_number="4", title="Amendments",
+            text=fair_clause_text, start_line=1, end_line=2,
+            word_count=len(fair_clause_text.split()), char_count=len(fair_clause_text),
+            sentences=[fair_clause_text]
+        )
+        traps = self.detector.detect_traps_in_clause(clause)
+        # Should be filtered out by safeguards
+        self.assertEqual(len(traps), 0)
 
 
 class TestBenchmarkAndRedliner(unittest.TestCase):
@@ -145,16 +178,11 @@ class TestBenchmarkAndRedliner(unittest.TestCase):
         self.assertGreater(dev["deviation_score"], 0.0)
 
     def test_redline_generation(self):
-        clause_text = "Customer shall indemnify, defend and hold harmless company from any and all claims."
+        clause_text = "Customer shall indemnify, defend and hold harmless company from any and all claims and damages."
         clause = ContractClause(
-            clause_id="c4",
-            clause_number="4",
-            title="Indemnity",
-            text=clause_text,
-            start_line=1,
-            end_line=2,
-            word_count=len(clause_text.split()),
-            char_count=len(clause_text),
+            clause_id="c5", clause_number="5", title="Indemnity",
+            text=clause_text, start_line=1, end_line=2,
+            word_count=len(clause_text.split()), char_count=len(clause_text),
             sentences=[clause_text]
         )
         traps = self.detector.detect_traps_in_clause(clause)

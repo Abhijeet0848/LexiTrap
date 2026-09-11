@@ -1,6 +1,7 @@
 """
 Contract Risk Scoring Engine & Audit Report Builder
-Calculates overall contract health (0-100), letter grade (A+ to F), and clause risk heatmaps.
+Calculates overall contract health (0-100), letter grade (A+ to F), and clause risk heatmaps
+using category-saturation penalty caps and structural deontic asymmetry weighting.
 """
 
 from dataclasses import dataclass, field
@@ -58,8 +59,20 @@ class AuditReport:
 class ContractScorer:
     """
     Computes rigorous risk metrics, assigning penalties based on trap severity,
-    deontic obligation density, and benchmark deviations.
+    deontic obligation density, and benchmark deviations with category saturation bounds.
     """
+
+    # Maximum penalty allowed per category to prevent redundant double-counting
+    CATEGORY_PENALTY_CAPS = {
+        TrapCategory.UNILATERAL_MODIFICATION.value: 35.0,
+        TrapCategory.ASYMMETRIC_INDEMNIFICATION.value: 40.0,
+        TrapCategory.FORCED_ARBITRATION_CLASS_WAIVER.value: 30.0,
+        TrapCategory.AGGRESSIVE_IP_EXPROPRIATION.value: 32.0,
+        TrapCategory.PERPETUAL_DATA_AI_HARVESTING.value: 35.0,
+        TrapCategory.TRAPPED_AUTO_RENEWAL.value: 25.0,
+        TrapCategory.OVERBROAD_NON_COMPETE.value: 30.0,
+        TrapCategory.ZERO_LIABILITY_GUTTING.value: 35.0,
+    }
 
     def __init__(self):
         pass
@@ -114,8 +127,8 @@ class ContractScorer:
         if not clause_traps:
             return 0.0, "SAFE"
 
-        penalty = sum(t.penalty_score for t in clause_traps)
-        clause_risk = min(100.0, penalty)
+        raw_penalty = sum(t.penalty_score for t in clause_traps)
+        clause_risk = min(100.0, raw_penalty)
 
         if clause_risk >= 30.0 or any(t.severity == RiskSeverity.CRITICAL for t in clause_traps):
             heat_level = "CRITICAL"
@@ -138,7 +151,7 @@ class ContractScorer:
         redlines: List[Dict[str, Any]],
         clause_details: List[Dict[str, Any]],
     ) -> AuditReport:
-        """Assembles a full AuditReport."""
+        """Assembles a full AuditReport with calibrated penalty bounds and asymmetry metrics."""
         total_clauses = len(clauses)
         total_words = sum(c.word_count for c in clauses)
         total_sentences = sum(len(c.sentences) for c in clauses)
@@ -148,15 +161,27 @@ class ContractScorer:
         high_count = sum(1 for t in traps if t.severity == RiskSeverity.HIGH)
         med_count = sum(1 for t in traps if t.severity == RiskSeverity.MEDIUM)
 
-        # Calculate penalty deduction
-        total_penalty = 0.0
-        category_penalties: Dict[str, float] = {}
-
+        # Calculate raw penalty by category with saturation caps
+        category_raw: Dict[str, float] = {}
         for t in traps:
-            p = t.penalty_score
-            total_penalty += p
             cat_name = t.category.value
-            category_penalties[cat_name] = category_penalties.get(cat_name, 0.0) + round(p, 1)
+            category_raw[cat_name] = category_raw.get(cat_name, 0.0) + t.penalty_score
+
+        category_penalties: Dict[str, float] = {}
+        total_penalty = 0.0
+
+        for cat_name, raw_p in category_raw.items():
+            cap = self.CATEGORY_PENALTY_CAPS.get(cat_name, 35.0)
+            capped_p = min(raw_p, cap)
+            category_penalties[cat_name] = round(capped_p, 1)
+            total_penalty += capped_p
+
+        # Factor in extreme asymmetry (>85% user burden on multi-clause contract)
+        asymmetry_index = deontic_profile.get("asymmetry_index", 50.0)
+        if asymmetry_index > 85.0 and total_clauses >= 3 and len(traps) > 0:
+            asym_penalty = 5.0
+            total_penalty += asym_penalty
+            category_penalties["Structural Duty Asymmetry"] = asym_penalty
 
         # Calculate overall scores
         health_score = max(0.0, min(100.0, round(100.0 - total_penalty, 1)))
@@ -175,6 +200,9 @@ class ContractScorer:
         
         for cat, pen in sorted(category_penalties.items(), key=lambda x: x[1], reverse=True)[:3]:
             summary_points.append(f"Major risk driver: '{cat}' contributing {pen} penalty points.")
+
+        if asymmetry_index > 85.0 and total_clauses >= 3:
+            summary_points.append(f"High Contractual Asymmetry ({asymmetry_index}%): The agreement places almost all burdens on the user while giving maximum discretion to the vendor.")
 
         if not summary_points:
             summary_points.append("No predatory legal patterns or dark traps detected. Agreement is clean.")
