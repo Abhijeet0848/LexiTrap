@@ -595,11 +595,11 @@ document.addEventListener("DOMContentLoaded", () => {
             row.className = "rule-row";
             const color = colors[cat] || "#2563eb";
             row.innerHTML = `
-                <span class="rule-name">${displayName}</span>
+                <span class="rule-name">${escapeHtml(displayName)}</span>
                 <div class="rule-track">
-                    <div class="rule-fill" style="width: ${pct}%; background-color: ${color};"></div>
+                    <div class="rule-fill" style="width: ${encodeURIComponent(pct)}%; background-color: ${escapeHtml(color)};"></div>
                 </div>
-                <span class="rule-pct">${pct}%</span>
+                <span class="rule-pct">${escapeHtml(String(pct))}%</span>
             `;
             deonticBarsContainer.appendChild(row);
         }
@@ -655,25 +655,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         clauses.forEach(clause => {
             const card = document.createElement("div");
-            card.className = `clause-card ${clause.heat_level.toLowerCase()}`;
+            const heatClass = (clause.heat_level || "safe").toLowerCase();
+            card.className = `clause-card ${heatClass}`;
 
             let trapsHtml = "";
             if (clause.traps && clause.traps.length > 0) {
                 clause.traps.forEach(trap => {
-                    const dev = trap.benchmark_comparison || {};
                     const redline = (currentAuditReport.redlines || []).find(r => r.clause_id === clause.clause_id && r.trap_category === trap.category);
 
                     trapsHtml += `
                         <div class="trap-box">
                             <div class="trap-head">
-                                <span class="trap-name">⚠️ Trap Detected: ${trap.category}</span>
+                                <span class="trap-name">⚠️ Trap Detected: ${escapeHtml(trap.category || '')}</span>
                                 <span class="badge ${trap.severity === 'CRITICAL' ? 'badge-danger' : 'badge-warning'}">${trap.severity === 'CRITICAL' ? 'High Risk' : 'Medium Risk'}</span>
                             </div>
-                            <p class="trap-desc"><strong>What is the risk:</strong> ${trap.legal_danger}</p>
-                            <p class="trap-impact"><strong>Impact on you:</strong> ${trap.business_impact}</p>
+                            <p class="trap-desc"><strong>What is the risk:</strong> ${escapeHtml(trap.legal_danger || '')}</p>
+                            <p class="trap-impact"><strong>Impact on you:</strong> ${escapeHtml(trap.business_impact || '')}</p>
                             <div class="trap-keywords">
                                 <strong>Trigger words:</strong> 
-                                ${trap.matched_patterns.map(p => `<span>${p}</span>`).join(" ")}
+                                ${(trap.matched_patterns || []).map(p => `<span>${escapeHtml(p)}</span>`).join(" ")}
                             </div>
 
                             ${redline ? `
@@ -681,7 +681,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <div class="redline-title">✏️ Suggested Fair Replacement:</div>
                                 <div class="diff-view">${redline.diff_html}</div>
                                 <div class="talking-point-box">
-                                    <strong>What to say when negotiating:</strong> ${redline.negotiation_talking_point}
+                                    <strong>What to say when negotiating:</strong> ${escapeHtml(redline.negotiation_talking_point || '')}
                                 </div>
                             </div>
                             ` : ''}
@@ -693,12 +693,12 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div class="clause-card-header">
                     <div class="clause-title-group">
-                        <span class="clause-id">${clause.clause_id}</span>
-                        <h4 class="clause-heading">${clause.title}</h4>
+                        <span class="clause-id">${escapeHtml(clause.clause_id || '')}</span>
+                        <h4 class="clause-heading">${escapeHtml(clause.title || '')}</h4>
                     </div>
                     <div class="clause-badge-group">
-                        <span class="deontic-pill">${clause.deontic_profile.dominant_category}</span>
-                        <span class="risk-pill ${clause.heat_level.toLowerCase()}">Risk ${clause.risk_score}</span>
+                        <span class="deontic-pill">${escapeHtml(clause.deontic_profile ? clause.deontic_profile.dominant_category : '')}</span>
+                        <span class="risk-pill ${heatClass}">Risk ${escapeHtml(String(clause.risk_score || 0))}</span>
                     </div>
                 </div>
                 <div class="clause-body-text">${highlightClauseDangerText(clause)}</div>

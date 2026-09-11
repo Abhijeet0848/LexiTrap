@@ -6,12 +6,59 @@ risk heatmaps, redline comparison, and report exports.
 
 import os
 import io
+import socket
+import ipaddress
+from urllib.parse import urlparse
 from flask import Flask, render_template, request, jsonify, Response
 from nlp_engine import ContractAuditor
 from samples.sample_data import SAMPLE_CONTRACTS, load_sample_text, list_samples
 
 app = Flask(__name__)
+# 16 MB maximum file / request payload limit to prevent unbounded memory allocation DoS
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 auditor = ContractAuditor()
+
+
+@app.after_request
+def apply_security_headers(response):
+    """Applies defensive HTTP security headers to mitigate clickjacking, MIME-sniffing, and XSS."""
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+
+def is_safe_url(url: str) -> tuple:
+    """
+    Validates user-submitted URL to prevent SSRF (Server-Side Request Forgery).
+    Blocks access to private RFC1918 subnets, loopbacks, link-local (169.254.x.x cloud metadata),
+    multicast, and reserved address ranges.
+    """
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False, "Only HTTP and HTTPS protocols are permitted."
+        
+        hostname = parsed.hostname
+        if not hostname:
+            return False, "Invalid URL host."
+        
+        # Block literal loopback/metadata hostnames
+        if hostname.lower() in ("localhost", "metadata.google.internal", "instance-data", "127.0.0.1", "::1"):
+            return False, "Access to internal hostnames is prohibited."
+        
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        addr_info = socket.getaddrinfo(hostname, port, proto=socket.IPPROTO_TCP)
+        for item in addr_info:
+            ip_str = item[4][0]
+            ip = ipaddress.ip_address(ip_str)
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved or ip.is_unspecified:
+                return False, f"Access to private/internal network address ({ip_str}) is prohibited."
+        
+        return True, ""
+    except Exception as e:
+        return False, f"Cannot resolve URL: {str(e)}"
 
 
 @app.route("/favicon.ico")
@@ -145,6 +192,11 @@ def fetch_url():
     if not (url.startswith("http://") or url.startswith("https://")):
         url = "https://" + url
 
+    # SSRF Protection: Validate target hostname and IP addresses against private networks
+    is_safe, safety_error = is_safe_url(url)
+    if not is_safe:
+        return jsonify({"status": "error", "message": safety_error}), 400
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
@@ -166,18 +218,20 @@ def fetch_url():
         ssl_ctx.check_hostname = False
         ssl_ctx.verify_mode = ssl.CERT_NONE
 
+        # Enforce 5MB max download limit to prevent Memory Exhaustion / DoS
+        MAX_FETCH_BYTES = 5 * 1024 * 1024
         with urllib.request.urlopen(req, context=ssl_ctx, timeout=12) as response:
             encoding = response.headers.get("Content-Encoding", "").lower()
-            raw_bytes = response.read()
+            raw_bytes = response.read(MAX_FETCH_BYTES)
 
             if "gzip" in encoding:
                 try:
-                    html_content = gzip.decompress(raw_bytes).decode("utf-8", errors="replace")
+                    html_content = gzip.decompress(raw_bytes)[:MAX_FETCH_BYTES * 2].decode("utf-8", errors="replace")
                 except Exception:
                     html_content = raw_bytes.decode("utf-8", errors="replace")
             elif "deflate" in encoding:
                 try:
-                    html_content = zlib.decompress(raw_bytes).decode("utf-8", errors="replace")
+                    html_content = zlib.decompress(raw_bytes)[:MAX_FETCH_BYTES * 2].decode("utf-8", errors="replace")
                 except Exception:
                     html_content = raw_bytes.decode("utf-8", errors="replace")
             else:
@@ -337,4 +391,5 @@ def export_report():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    debug_mode = os.environ.get("FLASK_DEBUG", "0").lower() in ("1", "true")
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
