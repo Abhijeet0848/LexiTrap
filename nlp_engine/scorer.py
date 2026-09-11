@@ -31,6 +31,7 @@ class AuditReport:
     clause_audit_details: List[Dict[str, Any]]
     executive_summary_points: List[str]
     redlines: List[Dict[str, Any]]
+    readability_profile: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -53,6 +54,7 @@ class AuditReport:
             "clause_audit_details": self.clause_audit_details,
             "executive_summary_points": self.executive_summary_points,
             "redlines": self.redlines,
+            "readability_profile": self.readability_profile,
         }
 
 
@@ -150,6 +152,7 @@ class ContractScorer:
         deontic_profile: Dict[str, Any],
         redlines: List[Dict[str, Any]],
         clause_details: List[Dict[str, Any]],
+        readability_profile: Optional[Dict[str, Any]] = None,
     ) -> AuditReport:
         """Assembles a full AuditReport with calibrated penalty bounds and asymmetry metrics."""
         total_clauses = len(clauses)
@@ -227,4 +230,5 @@ class ContractScorer:
             clause_audit_details=clause_details,
             executive_summary_points=summary_points,
             redlines=redlines,
+            readability_profile=readability_profile or {},
         )

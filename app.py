@@ -16,6 +16,8 @@ from samples.sample_data import SAMPLE_CONTRACTS, load_sample_text, list_samples
 app = Flask(__name__)
 # 16 MB maximum file / request payload limit to prevent unbounded memory allocation DoS
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 auditor = ContractAuditor()
 
 
@@ -26,6 +28,8 @@ def apply_security_headers(response):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
     return response
 
 
@@ -350,9 +354,20 @@ def export_report():
     if not report_dict:
         return jsonify({"status": "error", "message": "Missing audit report data."}), 400
 
+    health = round(report_dict.get('overall_health_score', 0))
+    if health >= 80:
+        verdict_action = "✅ SAFE TO PROCEED — Safe for Website Login, Signup & Agreement"
+    elif health >= 60:
+        verdict_action = "⚠️ PROCEED WITH CAUTION — Review Privacy Settings & Opt Out of Unilateral Terms"
+    elif health >= 40:
+        verdict_action = "⚠️ RISKY — Do NOT Accept Without Review (Avoid Sharing Sensitive Data)"
+    else:
+        verdict_action = "🚫 DO NOT PROCEED / AVOID — Do NOT Create Account, Login, or Agree"
+
     md = []
     md.append(f"# Legal Contract Audit Report: {report_dict.get('document_name')}\n")
-    md.append(f"**Health Score:** {report_dict.get('overall_health_score')}/100 (Grade: **{report_dict.get('letter_grade')}**)")
+    md.append(f"> **Action Recommendation:** {verdict_action}\n")
+    md.append(f"**Health Score:** {health}/100 (Grade: **{report_dict.get('letter_grade')}**)")
     md.append(f"**Risk Level:** {report_dict.get('risk_level')}")
     md.append(f"**Verdict:** {report_dict.get('verdict_title')} — {report_dict.get('verdict_description')}\n")
 
@@ -387,6 +402,111 @@ def export_report():
         mimetype="text/markdown",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+@app.route("/api/clean-contract", methods=["POST"])
+def generate_clean_contract():
+    """
+    Generates a fair, balanced version of the contract where all predatory
+    clauses are replaced with balanced redline wording.
+    """
+    data = request.get_json(silent=True) or {}
+    text = data.get("text", "").strip()
+    name = data.get("name", "Negotiated Agreement").strip() or "Negotiated Agreement"
+
+    if not text:
+        return jsonify({"status": "error", "message": "Contract text cannot be empty."}), 400
+
+    report = auditor.audit(text, document_name=name)
+    clauses = auditor.parser.parse(text, document_name=name)
+
+    # Build redline map: clause_id -> proposed replacement text
+    redline_map = {}
+    for r in report.redlines:
+        c_id = r.get("clause_id")
+        replacement = r.get("recommended_text") or r.get("proposed_text")
+        if c_id and replacement and c_id not in redline_map:
+            redline_map[c_id] = replacement
+
+    cleaned_sections = []
+    replaced_count = 0
+
+    for c in clauses:
+        header = f"### {c.title}" if c.title and not c.title.startswith("Clause ") else ""
+        if c.clause_id in redline_map:
+            body = redline_map[c.clause_id]
+            replaced_count += 1
+            cleaned_sections.append(f"{header}\n{body}" if header else body)
+        else:
+            cleaned_sections.append(f"{header}\n{c.text}" if header else c.text)
+
+    clean_text = "\n\n".join(s.strip() for s in cleaned_sections if s.strip())
+
+    return jsonify({
+        "status": "success",
+        "document_name": name,
+        "clean_text": clean_text,
+        "modifications_count": replaced_count,
+        "total_clauses": len(clauses),
+        "original_risk_score": report.overall_risk_score,
+    })
+
+
+@app.route("/api/compare-drafts", methods=["POST"])
+def compare_drafts():
+    """
+    Performs comparative risk audit between two versions of a contract (Draft A vs Draft B),
+    computing delta risk reduction and eliminated trap categories.
+    """
+    data = request.get_json(silent=True) or {}
+    draft_a = data.get("draft_a", "").strip()
+    draft_b = data.get("draft_b", "").strip()
+    name_a = data.get("name_a", "Initial Draft A").strip() or "Initial Draft A"
+    name_b = data.get("name_b", "Revised Draft B").strip() or "Revised Draft B"
+
+    if not draft_a or not draft_b:
+        return jsonify({"status": "error", "message": "Both Draft A and Draft B text are required for comparison."}), 400
+
+    report_a = auditor.audit(draft_a, document_name=name_a)
+    report_b = auditor.audit(draft_b, document_name=name_b)
+
+    delta_risk = round(report_a.overall_risk_score - report_b.overall_risk_score, 1)
+    delta_health = round(report_b.overall_health_score - report_a.overall_health_score, 1)
+    traps_eliminated_count = max(0, report_a.total_traps_found - report_b.total_traps_found)
+
+    traps_a_cats = set(t["category"] for c in report_a.clause_audit_details for t in c.get("traps", []))
+    traps_b_cats = set(t["category"] for c in report_b.clause_audit_details for t in c.get("traps", []))
+
+    eliminated_categories = list(traps_a_cats - traps_b_cats)
+    retained_categories = list(traps_a_cats & traps_b_cats)
+    new_categories = list(traps_b_cats - traps_a_cats)
+
+    return jsonify({
+        "status": "success",
+        "comparison": {
+            "draft_a_name": name_a,
+            "draft_b_name": name_b,
+            "draft_a_score": report_a.overall_risk_score,
+            "draft_b_score": report_b.overall_risk_score,
+            "draft_a_health": report_a.overall_health_score,
+            "draft_b_health": report_b.overall_health_score,
+            "draft_a_grade": report_a.letter_grade,
+            "draft_b_grade": report_b.letter_grade,
+            "delta_risk": delta_risk,
+            "delta_risk_score": delta_risk,
+            "delta_health": delta_health,
+            "delta_health_score": delta_health,
+            "is_safer": delta_risk > 0,
+            "traps_eliminated_count": traps_eliminated_count,
+            "eliminated_categories": eliminated_categories,
+            "retained_categories": retained_categories,
+            "new_categories": new_categories,
+            "report_a": report_a.to_dict(),
+            "report_b": report_b.to_dict(),
+        },
+        "draft_a_report": report_a.to_dict(),
+        "draft_b_report": report_b.to_dict(),
+    })
 
 
 if __name__ == "__main__":

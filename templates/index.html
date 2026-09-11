@@ -21,6 +21,11 @@
                 <span class="brand-name">LexiTrap</span>
                 <span class="brand-tag">Contract Risk Scanner</span>
             </div>
+            <div class="nav-actions">
+                <button id="open-compare-btn" class="btn btn-outline btn-sm">
+                    <span>⚖️</span> Compare 2 Drafts
+                </button>
+            </div>
         </div>
     </header>
 
@@ -28,9 +33,6 @@
     <main class="container">
         <!-- Hero Section -->
         <section class="hero-section">
-            <div class="hero-chip">
-                <span>🛡️</span> AI Contract Safety Checker
-            </div>
             <h1 class="hero-title">Find Unfair Traps & Risks in Any Contract</h1>
             <p class="hero-subtitle">
                 Paste text, upload a document photo/PDF, or fetch web terms to detect hidden traps, unilateral terms, perpetual data rights, and get fair replacement redlines instantly.
@@ -171,6 +173,26 @@
         <!-- Audit Results (Hidden by default) -->
         <section id="results-section" class="results-container hidden">
             
+            <!-- Interactive Contract DNA Risk Heatmap Strip -->
+            <div id="contract-dna-container" class="contract-dna-card">
+                <div class="dna-header">
+                    <div class="dna-title-wrap">
+                        <span class="dna-icon">🧬</span>
+                        <span class="dna-title">Contract DNA Risk Heatmap</span>
+                        <span class="dna-subtitle">Interactive visual timeline — Click any block to jump to clause</span>
+                    </div>
+                    <div class="dna-legend">
+                        <span class="legend-item"><span class="legend-dot critical"></span> Critical Trap</span>
+                        <span class="legend-item"><span class="legend-dot high"></span> High Risk</span>
+                        <span class="legend-item"><span class="legend-dot medium"></span> Moderate</span>
+                        <span class="legend-item"><span class="legend-dot safe"></span> Fair / Safe</span>
+                    </div>
+                </div>
+                <div id="contract-dna-strip" class="dna-strip">
+                    <!-- Populated dynamically with interactive segments -->
+                </div>
+            </div>
+
             <!-- Health Score & Summary Banner -->
             <div class="results-banner">
                 <div class="score-block">
@@ -185,9 +207,25 @@
                         <div class="badge-row">
                             <span id="grade-badge" class="score-badge badge-grade">Grade --</span>
                             <span id="risk-severity-badge" class="score-badge badge-risk">High Risk</span>
+                            <span id="readability-badge" class="score-badge badge-readability">Readability: --</span>
+                            <span id="obfuscation-badge" class="score-badge badge-obfuscation">Obfuscation: --</span>
                         </div>
                         <h2 id="verdict-title" class="verdict-heading">Contract Summary</h2>
                         <p id="verdict-desc" class="verdict-sub">Audit findings will appear here.</p>
+                        
+                        <!-- Prominent Website & Contract Action Conclusion Box -->
+                        <div id="verdict-decision-box" class="verdict-decision-box decision-danger">
+                            <div class="decision-badge-wrap">
+                                <span id="decision-pill" class="decision-pill pill-danger">🚫 DO NOT PROCEED</span>
+                                <span class="decision-sub-tag">Website & Terms Decision</span>
+                            </div>
+                            <div class="decision-body">
+                                <strong id="decision-title" class="decision-title">Do NOT Proceed / Avoid Account Creation or Login</strong>
+                                <p id="decision-advice" class="decision-advice">
+                                    If this is a website login or account signup, <strong>do not proceed</strong>. These terms contain aggressive clauses and hidden traps that waive your legal rights.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -241,15 +279,18 @@
                 <div class="clauses-header">
                     <div>
                         <h2 class="section-title">Section-by-Section Risk & Redlines</h2>
-                        <p class="section-desc">Review flagged traps, legal risks, and suggested balanced wording.</p>
+                        <p class="section-desc">Review flagged traps, legal risks, plain-English translations, and suggested balanced wording.</p>
                     </div>
                     <div class="clauses-actions">
                         <div class="filter-pills">
-                            <button class="filter-btn active" data-filter="ALL">All (<span id="count-all">0</span>)</button>
-                            <button class="filter-btn" data-filter="TRAPS">Traps Only (<span id="count-traps">0</span>)</button>
-                            <button class="filter-btn" data-filter="CRITICAL">High Risk (<span id="count-critical">0</span>)</button>
+                            <button type="button" class="filter-btn active" data-filter="ALL">All (<span id="count-all">0</span>)</button>
+                            <button type="button" class="filter-btn" data-filter="TRAPS">Traps Only (<span id="count-traps">0</span>)</button>
+                            <button type="button" class="filter-btn" data-filter="CRITICAL">High Risk (<span id="count-critical">0</span>)</button>
                         </div>
-                        <button id="export-md-btn" class="btn btn-secondary btn-sm">
+                        <button type="button" id="generate-clean-btn" class="btn btn-primary btn-sm">
+                            <span>✨</span> Clean & Fair Contract
+                        </button>
+                        <button type="button" id="export-md-btn" class="btn btn-secondary btn-sm">
                             <span>📥</span> Export Report
                         </button>
                     </div>
@@ -353,6 +394,223 @@
             </div>
         </div>
     </footer>
+
+    <!-- Clean & Fair Contract Generator Modal -->
+    <div id="clean-contract-modal" class="custom-modal hidden">
+        <div class="modal-backdrop" id="clean-modal-backdrop"></div>
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-icon">✨</span>
+                    <div>
+                        <h3>Clean & Fair Contract</h3>
+                        <p class="modal-subtitle">Auto-generated contract with all predatory traps replaced by reciprocal, fair standard clauses.</p>
+                    </div>
+                </div>
+                <button id="close-clean-modal-btn" class="btn-close-modal" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="clean-stats-row">
+                    <div class="clean-stat-badge">
+                        <span class="clean-stat-label">Traps Redlined & Replaced:</span>
+                        <strong id="clean-mod-count" class="text-success">0</strong>
+                    </div>
+                    <div class="clean-stat-badge">
+                        <span class="clean-stat-label">Target Standard:</span>
+                        <strong class="text-primary">Balanced Commercial / YC Safe Model</strong>
+                    </div>
+                </div>
+                <div class="clean-editor-wrap">
+                    <textarea id="clean-contract-textarea" class="clean-contract-textarea" readonly spellcheck="false"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-left">
+                    <span id="clean-copy-status" class="copy-status-msg hidden">✓ Copied to clipboard!</span>
+                </div>
+                <div class="modal-footer-right">
+                    <button type="button" id="copy-clean-btn" class="btn btn-secondary">
+                        <span>📋</span> Copy Full Text
+                    </button>
+                    <button type="button" id="download-clean-txt-btn" class="btn btn-secondary">
+                        <span>📄</span> Download .txt
+                    </button>
+                    <button type="button" id="download-clean-md-btn" class="btn btn-primary">
+                        <span>📥</span> Download .md
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Draft A vs Draft B Comparison Modal -->
+    <div id="compare-modal" class="custom-modal hidden">
+        <div class="modal-backdrop" id="compare-modal-backdrop"></div>
+        <div class="modal-dialog modal-xl">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-icon">⚖️</span>
+                    <div>
+                        <h3>Draft A vs. Draft B Version Diff Analyzer</h3>
+                        <p class="modal-subtitle">Compare two contract drafts (e.g. Vendor Original vs Counter-Proposal) to measure risk reduction delta.</p>
+                    </div>
+                </div>
+                <button id="close-compare-modal-btn" class="btn-close-modal" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Dual Input Stage -->
+                <div id="compare-inputs-stage" class="compare-inputs-stage">
+                    <div class="compare-inputs-grid">
+                        <div class="compare-pane">
+                            <div class="compare-pane-header">
+                                <label for="draft-a-text" class="input-label"><strong>Draft A (Original / Vendor Draft)</strong></label>
+                                <button type="button" id="btn-use-current-for-a" class="btn btn-xs btn-outline">Paste Current Text</button>
+                            </div>
+                            <textarea id="draft-a-text" class="compare-textarea" placeholder="Paste original / baseline contract text here..."></textarea>
+                        </div>
+                        <div class="compare-pane">
+                            <div class="compare-pane-header">
+                                <label for="draft-b-text" class="input-label"><strong>Draft B (Revised / Counter-Offer Draft)</strong></label>
+                                <button type="button" id="btn-use-clean-for-b" class="btn btn-xs btn-outline">Use Clean Redline</button>
+                            </div>
+                            <textarea id="draft-b-text" class="compare-textarea" placeholder="Paste revised / counter-proposal contract text here..."></textarea>
+                        </div>
+                    </div>
+                    <div class="compare-actions-bar">
+                        <button type="button" id="run-compare-btn" class="btn btn-primary">
+                            <span>🔍</span> Run Comparative Risk Audit
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Comparison Results Stage (Hidden until compared) -->
+                <div id="compare-results-stage" class="compare-results-stage hidden">
+                    <div class="compare-delta-banner">
+                        <div class="delta-card delta-risk-card">
+                            <span class="delta-label">Risk Score Delta</span>
+                            <div class="delta-value-wrap">
+                                <span id="delta-risk-score" class="delta-number">-0 pts</span>
+                            </div>
+                            <span id="delta-risk-desc" class="delta-desc">Draft B is safer</span>
+                        </div>
+                        <div class="delta-card delta-health-card">
+                            <span class="delta-label">Health Score Gain</span>
+                            <div class="delta-value-wrap">
+                                <span id="delta-health-score" class="delta-number text-success">+0 pts</span>
+                            </div>
+                            <span class="delta-desc">Contract Fairness Improvement</span>
+                        </div>
+                        <div class="delta-card delta-traps-card">
+                            <span class="delta-label">Traps Eliminated</span>
+                            <div class="delta-value-wrap">
+                                <span id="delta-traps-count" class="delta-number text-success">0</span>
+                            </div>
+                            <span class="delta-desc">Dangerous clauses removed</span>
+                        </div>
+                    </div>
+
+                    <!-- Eliminated Traps Tags -->
+                    <div id="eliminated-traps-box" class="eliminated-traps-box hidden">
+                        <strong class="eliminated-title">🛡️ Traps Successfully Eliminated in Draft B:</strong>
+                        <div id="eliminated-badges-list" class="eliminated-badges-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Comparison Side-by-Side Breakdown -->
+                    <div class="compare-metrics-grid">
+                        <div class="compare-metric-col">
+                            <h4 class="col-title text-danger">Draft A Findings</h4>
+                            <div id="draft-a-summary-box" class="draft-summary-box">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                        <div class="compare-metric-col">
+                            <h4 class="col-title text-success">Draft B Findings</h4>
+                            <div id="draft-b-summary-box" class="draft-summary-box">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="compare-reset-bar">
+                        <button type="button" id="reset-compare-btn" class="btn btn-secondary btn-sm">← Compare Another Draft</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Report Format Modal -->
+    <div id="export-modal" class="custom-modal hidden">
+        <div class="modal-backdrop" id="export-modal-backdrop"></div>
+        <div class="modal-dialog modal-md">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-icon">📥</span>
+                    <div>
+                        <h3>Export & Save Audit Report</h3>
+                        <p class="modal-subtitle">Choose your preferred format for sharing, printing, or archiving.</p>
+                    </div>
+                </div>
+                <button id="close-export-modal-btn" class="btn-close-modal" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options-grid">
+                    <!-- Option 1: Print / PDF -->
+                    <div class="export-option-card" id="export-opt-print">
+                        <div class="export-option-icon">🖨️</div>
+                        <div class="export-option-content">
+                            <h4>Print or Save as PDF</h4>
+                            <p>Formatted executive audit report with scorecards, risk charts, and redline tables.</p>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm">Print / PDF</button>
+                    </div>
+
+                    <!-- Option 2: Standalone HTML -->
+                    <div class="export-option-card" id="export-opt-html">
+                        <div class="export-option-icon">🌐</div>
+                        <div class="export-option-content">
+                            <h4>Interactive HTML Document (.html)</h4>
+                            <p>Self-contained styled webpage that opens instantly in any browser.</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm">Download .html</button>
+                    </div>
+
+                    <!-- Option 3: Markdown -->
+                    <div class="export-option-card" id="export-opt-md">
+                        <div class="export-option-icon">📝</div>
+                        <div class="export-option-content">
+                            <h4>Markdown Report (.md)</h4>
+                            <p>Clean GitHub-flavored markdown for developers, documentation, and notes.</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm">Download .md</button>
+                    </div>
+
+                    <!-- Option 4: Plain Text -->
+                    <div class="export-option-card" id="export-opt-txt">
+                        <div class="export-option-icon">📄</div>
+                        <div class="export-option-content">
+                            <h4>Plain Text Summary (.txt)</h4>
+                            <p>Raw text format for fast reading, logs, and email attachments.</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm">Download .txt</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-left">
+                    <span id="export-copy-status" class="copy-status-msg hidden">✓ Copied summary to clipboard!</span>
+                </div>
+                <div class="modal-footer-right">
+                    <button type="button" id="copy-summary-btn" class="btn btn-outline btn-sm">
+                        <span>📋</span> Copy Summary Text
+                    </button>
+                    <button type="button" id="cancel-export-btn" class="btn btn-secondary btn-sm">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Live Camera Viewfinder Modal (Webcam & Mobile Camera Stream) -->
     <div id="camera-modal" class="camera-modal hidden">

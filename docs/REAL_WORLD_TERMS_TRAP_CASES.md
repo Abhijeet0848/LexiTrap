@@ -76,7 +76,3 @@ Here are **real-world cases from India and around the world** showing how blindl
 
 ---
 
-## 💡 How LexiTrap Solves This Problem
-- **Saves You Time:** Reading every agreement would take **250+ hours a year**. LexiTrap scans contracts in **less than 1 second**.
-- **Spots Unfair Rules:** Flags when a contract is completely one-sided against you.
-- **Gives You Fair Wording:** Suggests safer, balanced replacement text you can use.

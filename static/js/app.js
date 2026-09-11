@@ -533,7 +533,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Grade & Risk level color styling
         gradeBadge.textContent = `Grade ${report.letter_grade}`;
-        riskSeverityBadge.textContent = report.risk_level === 'SAFE' ? 'Safe to Sign' : (report.risk_level === 'CRITICAL' ? 'High Risk' : `${report.risk_level} Risk`);
+        
+        let rawRisk = (report.risk_level || 'Moderate Risk').trim();
+        let formattedRisk = rawRisk;
+        if (rawRisk.toUpperCase() === 'SAFE') {
+            formattedRisk = 'Safe to Sign';
+        } else if (rawRisk.toUpperCase() === 'CRITICAL') {
+            formattedRisk = 'Critical Risk';
+        } else if (!rawRisk.toLowerCase().includes('risk')) {
+            formattedRisk = `${rawRisk} Risk`;
+        }
+        riskSeverityBadge.textContent = formattedRisk;
 
         gradeBadge.className = "score-badge badge-grade";
         riskSeverityBadge.className = "score-badge badge-risk";
@@ -558,14 +568,87 @@ document.addEventListener("DOMContentLoaded", () => {
             riskSeverityBadge.style.backgroundColor = "#dc2626";
         }
 
+        // Readability & Language Clarity Badges in Simple English
+        const readBadge = document.getElementById("readability-badge");
+        const obfBadge = document.getElementById("obfuscation-badge");
+        if (report.readability_profile) {
+            const grade = report.readability_profile.flesch_kincaid_grade;
+            const easeLabel = report.readability_profile.reading_ease_label || 'Standard';
+            
+            let gradeCategory = 'Simple';
+            if (grade >= 16) gradeCategory = 'College Level';
+            else if (grade >= 12) gradeCategory = 'High School';
+            else if (grade >= 8) gradeCategory = 'Middle School';
+
+            if (readBadge) {
+                readBadge.textContent = `Reading Level: ${easeLabel} (${gradeCategory} • Grade ${grade})`;
+            }
+            if (obfBadge) {
+                const obfLevel = report.readability_profile.obfuscation_level || 'Clear & Plain English';
+                obfBadge.textContent = `Language Clarity: ${obfLevel}`;
+                let obfClass = 'low-obfuscation';
+                if (obfLevel.toLowerCase().includes('heavy') || obfLevel.toLowerCase().includes('extreme')) {
+                    obfClass = 'high-obfuscation';
+                } else if (obfLevel.toLowerCase().includes('moderate')) {
+                    obfClass = 'medium-obfuscation';
+                }
+                obfBadge.className = `score-badge badge-obfuscation ${obfClass}`;
+            }
+        }
+
         verdictTitle.textContent = report.verdict_title;
         verdictDesc.textContent = report.verdict_description;
+
+        // Dynamic Conclusion & Website/Login Proceed Advice Box
+        const decisionBox = document.getElementById("verdict-decision-box");
+        const decisionPill = document.getElementById("decision-pill");
+        const decisionTitle = document.getElementById("decision-title");
+        const decisionAdvice = document.getElementById("decision-advice");
+
+        if (decisionBox) {
+            if (score >= 80) {
+                decisionBox.className = "verdict-decision-box decision-success";
+                if (decisionPill) {
+                    decisionPill.className = "decision-pill pill-success";
+                    decisionPill.textContent = "✅ SAFE TO PROCEED";
+                }
+                if (decisionTitle) decisionTitle.textContent = "Safe to Agree / Proceed with Website Login & Account Creation";
+                if (decisionAdvice) decisionAdvice.innerHTML = "If you are creating an account, logging in, or accepting these terms, <strong>it is safe to proceed</strong>. This agreement follows balanced industry standards without unilateral traps.";
+            } else if (score >= 60) {
+                decisionBox.className = "verdict-decision-box decision-warning";
+                if (decisionPill) {
+                    decisionPill.className = "decision-pill pill-warning";
+                    decisionPill.textContent = "⚠️ PROCEED WITH CAUTION";
+                }
+                if (decisionTitle) decisionTitle.textContent = "Proceed with Caution / Review Privacy & Sharing Settings";
+                if (decisionAdvice) decisionAdvice.innerHTML = "You can proceed to use this website, but <strong>review your account privacy settings</strong>. Watch out for unilateral term change rights and opt out of optional tracking or auto-renewals.";
+            } else if (score >= 40) {
+                decisionBox.className = "verdict-decision-box decision-warning";
+                if (decisionPill) {
+                    decisionPill.className = "decision-pill pill-warning";
+                    decisionPill.textContent = "⚠️ RISKY — DO NOT ACCEPT BLINDLY";
+                }
+                if (decisionTitle) decisionTitle.textContent = "High Caution — Do NOT Agree Without Review";
+                if (decisionAdvice) decisionAdvice.innerHTML = "Caution advised before signing or clicking 'I Agree'. If using this website, <strong>do not provide confidential files or sensitive personal data</strong> under these terms.";
+            } else {
+                decisionBox.className = "verdict-decision-box decision-danger";
+                if (decisionPill) {
+                    decisionPill.className = "decision-pill pill-danger";
+                    decisionPill.textContent = "🚫 DO NOT PROCEED / AVOID";
+                }
+                if (decisionTitle) decisionTitle.textContent = "Do NOT Proceed / Avoid Account Creation or Login";
+                if (decisionAdvice) decisionAdvice.innerHTML = "If this is a website signup or login screen, <strong>DO NOT PROCEED</strong>. The terms contain predatory dark patterns (e.g. unilateral amendments, aggressive data harvesting, or complete liability waivers).";
+            }
+        }
 
         // Fast animate stats
         animateValue(statTrapsCount, 0, report.total_traps_found, 250);
         animateValue(statCriticalCount, 0, report.critical_traps_count, 250);
         animateValue(statHighCount, 0, report.high_traps_count, 250);
         animateValue(statClausesCount, 0, report.total_clauses, 250);
+
+        // Render Interactive Contract DNA Heatmap Strip
+        renderContractDnaStrip(report.clause_audit_details || []);
 
         // Rule Breakdown
         deonticBarsContainer.innerHTML = "";
@@ -622,6 +705,53 @@ document.addEventListener("DOMContentLoaded", () => {
         renderClausesList();
     }
 
+    // Render Contract DNA Strip
+    function renderContractDnaStrip(clauses) {
+        const dnaStrip = document.getElementById("contract-dna-strip");
+        if (!dnaStrip) return;
+        dnaStrip.innerHTML = "";
+
+        if (!clauses || clauses.length === 0) {
+            dnaStrip.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No sections mapped</span>`;
+            return;
+        }
+
+        clauses.forEach((clause, idx) => {
+            const seg = document.createElement("div");
+            const heatClass = (clause.heat_level || "safe").toLowerCase();
+            const shortLabel = (clause.clause_number && clause.clause_number.length <= 3) ? clause.clause_number : String(idx + 1);
+            
+            seg.className = `dna-segment ${heatClass}`;
+            seg.title = `Section ${shortLabel}: ${clause.title || 'Clause'} • Risk: ${clause.risk_score}/100 • Traps: ${clause.traps ? clause.traps.length : 0}`;
+            
+            // Only show numbers if there are 16 or fewer clauses to avoid visual clutter and smudging
+            if (clauses.length <= 16) {
+                seg.innerHTML = `<span class="dna-segment-num">${escapeHtml(shortLabel)}</span>`;
+            }
+
+            seg.addEventListener("click", () => {
+                // If filter hides this clause, switch to ALL first
+                if (activeFilter !== "ALL") {
+                    filterBtns.forEach(b => b.classList.remove("active"));
+                    const allBtn = document.querySelector(`.filter-btn[data-filter="ALL"]`);
+                    if (allBtn) allBtn.classList.add("active");
+                    activeFilter = "ALL";
+                    renderClausesList();
+                }
+
+                const targetCard = document.getElementById(`clause-card-${clause.clause_id}`);
+                if (targetCard) {
+                    targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+                    targetCard.classList.remove("clause-card-target-highlight");
+                    void targetCard.offsetWidth; // trigger reflow
+                    targetCard.classList.add("clause-card-target-highlight");
+                }
+            });
+
+            dnaStrip.appendChild(seg);
+        });
+    }
+
     // Filter Buttons
     filterBtns.forEach(btn => {
         btn.addEventListener("click", () => {
@@ -655,8 +785,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         clauses.forEach(clause => {
             const card = document.createElement("div");
+            card.id = `clause-card-${clause.clause_id}`;
             const heatClass = (clause.heat_level || "safe").toLowerCase();
             card.className = `clause-card ${heatClass}`;
+
+            // TL;DR Plain English Box
+            let tldrHtml = "";
+            if (clause.tldr_summary) {
+                tldrHtml = `
+                    <div class="clause-tldr-box">
+                        <span class="tldr-icon-wrap">💡</span>
+                        <div class="tldr-content">
+                            <span class="tldr-label">Plain English Summary</span>
+                            <p class="tldr-text">${escapeHtml(clause.tldr_summary)}</p>
+                        </div>
+                    </div>
+                `;
+            }
 
             let trapsHtml = "";
             if (clause.traps && clause.traps.length > 0) {
@@ -690,17 +835,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
 
+            let readabilityBadgeHtml = '';
+            if (clause.readability) {
+                const grade = (typeof clause.readability === 'object' && clause.readability !== null)
+                    ? (clause.readability.flesch_kincaid_grade !== undefined ? clause.readability.flesch_kincaid_grade : clause.readability.grade)
+                    : clause.readability;
+                if (grade !== undefined && grade !== null && String(grade).trim() !== '') {
+                    readabilityBadgeHtml = `<span class="clause-readability-pill">📖 Grade ${escapeHtml(String(grade))}</span>`;
+                }
+            }
+
             card.innerHTML = `
                 <div class="clause-card-header">
                     <div class="clause-title-group">
                         <span class="clause-id">${escapeHtml(clause.clause_id || '')}</span>
                         <h4 class="clause-heading">${escapeHtml(clause.title || '')}</h4>
+                        ${readabilityBadgeHtml}
                     </div>
                     <div class="clause-badge-group">
                         <span class="deontic-pill">${escapeHtml(clause.deontic_profile ? clause.deontic_profile.dominant_category : '')}</span>
                         <span class="risk-pill ${heatClass}">Risk ${escapeHtml(String(clause.risk_score || 0))}</span>
                     </div>
                 </div>
+                ${tldrHtml}
                 <div class="clause-body-text">${highlightClauseDangerText(clause)}</div>
                 ${trapsHtml}
             `;
@@ -767,29 +924,558 @@ document.addEventListener("DOMContentLoaded", () => {
         return div.innerHTML;
     }
 
-    // Export Markdown Report
-    exportMdBtn.addEventListener("click", async () => {
-        if (!currentAuditReport) return;
-        try {
-            const res = await fetch("/api/export", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ report: currentAuditReport })
+    // =========================================================================
+    // Multi-Format Export Report Controller (PDF, HTML, MD, TXT, Clipboard)
+    // =========================================================================
+    const exportModal = document.getElementById("export-modal");
+    const exportModalBackdrop = document.getElementById("export-modal-backdrop");
+    const closeExportModalBtn = document.getElementById("close-export-modal-btn");
+    const cancelExportBtn = document.getElementById("cancel-export-btn");
+    const exportOptPrint = document.getElementById("export-opt-print");
+    const exportOptHtml = document.getElementById("export-opt-html");
+    const exportOptMd = document.getElementById("export-opt-md");
+    const exportOptTxt = document.getElementById("export-opt-txt");
+    const copySummaryBtn = document.getElementById("copy-summary-btn");
+    const exportCopyStatus = document.getElementById("export-copy-status");
+
+    function openExportModal() {
+        if (!currentAuditReport) {
+            alert("Please run a contract audit first.");
+            return;
+        }
+        if (exportModal) exportModal.classList.remove("hidden");
+    }
+
+    function closeExportModal() {
+        if (exportModal) exportModal.classList.add("hidden");
+    }
+
+    if (exportMdBtn) exportMdBtn.addEventListener("click", openExportModal);
+    if (closeExportModalBtn) closeExportModalBtn.addEventListener("click", closeExportModal);
+    if (cancelExportBtn) cancelExportBtn.addEventListener("click", closeExportModal);
+    if (exportModalBackdrop) exportModalBackdrop.addEventListener("click", closeExportModal);
+
+    // Option 1: Print / Save as PDF
+    if (exportOptPrint) {
+        exportOptPrint.addEventListener("click", () => {
+            closeExportModal();
+            setTimeout(() => {
+                window.print();
+            }, 250);
+        });
+    }
+
+    // Option 2: Download Standalone HTML Report
+    if (exportOptHtml) {
+        exportOptHtml.addEventListener("click", () => {
+            if (!currentAuditReport) return;
+            const rep = currentAuditReport;
+            const docTitle = rep.document_name || "Contract";
+            const dateStr = new Date().toLocaleDateString();
+
+            let clausesHtml = "";
+            (rep.clause_audit_details || []).forEach(c => {
+                let trapsList = "";
+                (c.traps || []).forEach(t => {
+                    trapsList += `
+                        <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:10px; margin-top:8px;">
+                            <strong style="color:#991b1b;">⚠️ ${escapeHtml(t.category)} (${t.severity})</strong>
+                            <p style="margin:4px 0; color:#7f1d1d; font-size:13px;"><strong>Risk:</strong> ${escapeHtml(t.legal_danger || '')}</p>
+                            <p style="margin:4px 0; color:#065f46; font-size:13px;"><strong>Mitigation:</strong> ${escapeHtml(t.recommended_mitigation || '')}</p>
+                        </div>
+                    `;
+                });
+
+                clausesHtml += `
+                    <div style="border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:14px; background:#ffffff;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <strong>${escapeHtml(c.clause_id)}: ${escapeHtml(c.title || 'Section')}</strong>
+                            <span style="font-size:12px; padding:2px 8px; border-radius:12px; background:${c.heat_level === 'CRITICAL' ? '#fef2f2; color:#dc2626;' : '#ecfdf5; color:#059669;'}">${c.heat_level || 'SAFE'}</span>
+                        </div>
+                        <p style="font-size:14px; color:#334155; line-height:1.5; font-family:monospace; background:#f8fafc; padding:10px; border-radius:4px;">${escapeHtml(c.text)}</p>
+                        ${trapsList}
+                    </div>
+                `;
             });
 
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `contract_audit_${Date.now()}.md`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        } catch (err) {
-            console.error("Export error:", err);
-            alert("Failed to export report.");
+        let verdictActionHtml = '';
+        let verdictActionTxt = '';
+        const hScore = Math.round(rep.overall_health_score || 0);
+        if (hScore >= 80) {
+            verdictActionHtml = '<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-left:5px solid #16a34a; padding:12px 16px; border-radius:6px; margin:16px 0; color:#166534;"><strong>✅ SAFE TO PROCEED:</strong> Safe to Agree / Proceed with Website Login & Account Creation. This agreement follows balanced standards.</div>';
+            verdictActionTxt = 'CONCLUSION / ACTION: ✅ SAFE TO PROCEED - Safe for Website Login, Signup & Agreement';
+        } else if (hScore >= 60) {
+            verdictActionHtml = '<div style="background:#fffbeb; border:1px solid #fde68a; border-left:5px solid #d97706; padding:12px 16px; border-radius:6px; margin:16px 0; color:#92400e;"><strong>⚠️ PROCEED WITH CAUTION:</strong> Review account privacy settings and opt out of optional tracking or auto-renewals.</div>';
+            verdictActionTxt = 'CONCLUSION / ACTION: ⚠️ PROCEED WITH CAUTION - Review Privacy & Sharing Settings';
+        } else if (hScore >= 40) {
+            verdictActionHtml = '<div style="background:#fffbeb; border:1px solid #fde68a; border-left:5px solid #d97706; padding:12px 16px; border-radius:6px; margin:16px 0; color:#92400e;"><strong>⚠️ RISKY - AVOID AGREEING BLINDLY:</strong> High caution advised. Avoid providing confidential files or sensitive personal data.</div>';
+            verdictActionTxt = 'CONCLUSION / ACTION: ⚠️ RISKY - Do NOT Agree Without Review';
+        } else {
+            verdictActionHtml = '<div style="background:#fef2f2; border:1px solid #fecaca; border-left:5px solid #dc2626; padding:12px 16px; border-radius:6px; margin:16px 0; color:#991b1b;"><strong>🚫 DO NOT PROCEED / AVOID:</strong> Avoid creating an account, logging in, or agreeing. Contains aggressive predatory terms and legal rights waivers.</div>';
+            verdictActionTxt = 'CONCLUSION / ACTION: 🚫 DO NOT PROCEED / AVOID - Avoid Account Creation or Login';
         }
-    });
+
+        const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LexiTrap Audit Report - ${escapeHtml(docTitle)}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#f8fafc; color:#0f172a; padding:30px; margin:0; line-height:1.5; }
+        .container { max-width:860px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:32px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
+        .badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold; }
+        .score-box { display:flex; justify-content:space-between; align-items:center; background:#f1f5f9; padding:20px; border-radius:8px; margin:20px 0; }
+        .stat-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:24px; text-align:center; }
+        .stat-card { background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:6px; }
+        .stat-val { font-size:20px; font-weight:800; display:block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:16px;">
+            <div>
+                <h1 style="margin:0 0 4px 0; font-size:24px;">⚖️ LexiTrap Legal Contract Audit</h1>
+                <p style="margin:0; color:#64748b; font-size:14px;">Document: <strong>${escapeHtml(docTitle)}</strong> • Generated: ${dateStr}</p>
+            </div>
+            <span class="badge" style="background:#2563eb; color:#ffffff;">NLP Audit</span>
+        </div>
+
+        <div class="score-box">
+            <div>
+                <h2 style="margin:0; font-size:28px; color:${rep.overall_health_score >= 80 ? '#059669' : (rep.overall_health_score >= 60 ? '#d97706' : '#dc2626')};">
+                    Health Score: ${Math.round(rep.overall_health_score)}/100 (Grade ${rep.letter_grade})
+                </h2>
+                <p style="margin:4px 0 0 0; color:#475569; font-size:14px;">${escapeHtml(rep.verdict_title || '')} — ${escapeHtml(rep.verdict_description || '')}</p>
+            </div>
+        </div>
+
+        ${verdictActionHtml}
+
+        <div class="stat-grid">
+            <div class="stat-card"><span class="stat-val" style="color:#dc2626;">${rep.total_traps_found}</span><span style="font-size:12px; color:#64748b;">Traps Found</span></div>
+            <div class="stat-card"><span class="stat-val" style="color:#dc2626;">${rep.critical_traps_count}</span><span style="font-size:12px; color:#64748b;">High Risk</span></div>
+            <div class="stat-card"><span class="stat-val" style="color:#d97706;">${rep.high_traps_count}</span><span style="font-size:12px; color:#64748b;">Medium Risk</span></div>
+            <div class="stat-card"><span class="stat-val" style="color:#2563eb;">${rep.total_clauses}</span><span style="font-size:12px; color:#64748b;">Total Sections</span></div>
+        </div>
+
+        <h3 style="border-bottom:1px solid #e2e8f0; padding-bottom:6px;">Executive Summary</h3>
+        <ul>
+            ${(rep.executive_summary_points || []).map(p => `<li>${escapeHtml(p)}</li>`).join('')}
+        </ul>
+
+        <h3 style="border-bottom:1px solid #e2e8f0; padding-bottom:6px; margin-top:28px;">Section-by-Section Findings</h3>
+        ${clausesHtml}
+    </div>
+</body>
+</html>`;
+
+            downloadTextFile(`LexiTrap_Audit_${docTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}.html`, htmlContent);
+            closeExportModal();
+        });
+    }
+
+    // Option 3: Download Markdown
+    if (exportOptMd) {
+        exportOptMd.addEventListener("click", async () => {
+            if (!currentAuditReport) return;
+            try {
+                const res = await fetch("/api/export", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ report: currentAuditReport })
+                });
+
+                const text = await res.text();
+                const safeName = (currentAuditReport.document_name || "Report").replace(/[^a-zA-Z0-9_-]/g, "_");
+                downloadTextFile(`LexiTrap_Audit_${safeName}.md`, text);
+                closeExportModal();
+            } catch (err) {
+                console.error("Export error:", err);
+                alert("Failed to export Markdown report.");
+            }
+        });
+    }
+
+    // Option 4: Download Plain Text
+    function generateCleanPlainTextSummary(rep) {
+        let actLine = 'CONCLUSION / ACTION: 🚫 DO NOT PROCEED / AVOID - Avoid Account Creation or Login';
+        const sc = Math.round(rep.overall_health_score || 0);
+        if (sc >= 80) actLine = 'CONCLUSION / ACTION: ✅ SAFE TO PROCEED - Safe for Website Login, Signup & Agreement';
+        else if (sc >= 60) actLine = 'CONCLUSION / ACTION: ⚠️ PROCEED WITH CAUTION - Review Privacy & Sharing Settings';
+        else if (sc >= 40) actLine = 'CONCLUSION / ACTION: ⚠️ RISKY - Do NOT Agree Without Review';
+
+        const lines = [
+            `========================================================================`,
+            `LEXITRAP LEGAL CONTRACT AUDIT REPORT`,
+            `Document: ${rep.document_name || 'Contract'}`,
+            `Date: ${new Date().toLocaleDateString()}`,
+            `========================================================================`,
+            ``,
+            `HEALTH SCORE: ${Math.round(rep.overall_health_score)}/100 (Grade ${rep.letter_grade})`,
+            `RISK LEVEL: ${rep.risk_level}`,
+            `VERDICT: ${rep.verdict_title} - ${rep.verdict_description}`,
+            ``,
+            `>>> ${actLine} <<<`,
+            ``,
+            `STATISTICS:`,
+            `- Total Sections Analyzed: ${rep.total_clauses}`,
+            `- Predatory Traps Found: ${rep.total_traps_found}`,
+            `- Critical Risk Traps: ${rep.critical_traps_count}`,
+            `- Medium Risk Traps: ${rep.high_traps_count}`,
+            ``,
+            `EXECUTIVE SUMMARY:`,
+            ...(rep.executive_summary_points || []).map(p => `* ${p}`),
+            ``,
+            `========================================================================`,
+            `FLAGGED CLAUSES & MITIGATIONS`,
+            `========================================================================`,
+        ];
+
+        (rep.clause_audit_details || []).forEach(c => {
+            if (c.has_traps) {
+                lines.push(``);
+                lines.push(`SECTION ${c.clause_id}: ${c.title || 'Clause'} [Risk: ${c.risk_score}/100 - ${c.heat_level}]`);
+                lines.push(`Original Text: ${c.text}`);
+                (c.traps || []).forEach(t => {
+                    lines.push(`  * Trap: ${t.category} (${t.severity})`);
+                    lines.push(`    Danger: ${t.legal_danger}`);
+                    lines.push(`    Mitigation: ${t.recommended_mitigation}`);
+                });
+            }
+        });
+
+        return lines.join('\n');
+    }
+
+    if (exportOptTxt) {
+        exportOptTxt.addEventListener("click", () => {
+            if (!currentAuditReport) return;
+            const plainTxt = generateCleanPlainTextSummary(currentAuditReport);
+            const safeName = (currentAuditReport.document_name || "Report").replace(/[^a-zA-Z0-9_-]/g, "_");
+            downloadTextFile(`LexiTrap_Audit_${safeName}.txt`, plainTxt);
+            closeExportModal();
+        });
+    }
+
+    // Copy Summary to Clipboard
+    if (copySummaryBtn) {
+        copySummaryBtn.addEventListener("click", async () => {
+            if (!currentAuditReport) return;
+            const plainTxt = generateCleanPlainTextSummary(currentAuditReport);
+            try {
+                await navigator.clipboard.writeText(plainTxt);
+                if (exportCopyStatus) {
+                    exportCopyStatus.classList.remove("hidden");
+                    setTimeout(() => exportCopyStatus.classList.add("hidden"), 3000);
+                }
+            } catch (err) {
+                console.error("Copy error:", err);
+            }
+        });
+    }
+
+
+    // =========================================================================
+    // Feature 3: Clean & Fair Contract Generator Modal Controller
+    // =========================================================================
+    const generateCleanBtn = document.getElementById("generate-clean-btn");
+    const cleanContractModal = document.getElementById("clean-contract-modal");
+    const cleanModalBackdrop = document.getElementById("clean-modal-backdrop");
+    const closeCleanModalBtn = document.getElementById("close-clean-modal-btn");
+    const cleanContractTextarea = document.getElementById("clean-contract-textarea");
+    const cleanModCount = document.getElementById("clean-mod-count");
+    const copyCleanBtn = document.getElementById("copy-clean-btn");
+    const cleanCopyStatus = document.getElementById("clean-copy-status");
+    const downloadCleanTxtBtn = document.getElementById("download-clean-txt-btn");
+    const downloadCleanMdBtn = document.getElementById("download-clean-md-btn");
+
+    function closeCleanModal() {
+        if (cleanContractModal) cleanContractModal.classList.add("hidden");
+    }
+
+    if (closeCleanModalBtn) closeCleanModalBtn.addEventListener("click", closeCleanModal);
+    if (cleanModalBackdrop) cleanModalBackdrop.addEventListener("click", closeCleanModal);
+
+    if (generateCleanBtn) {
+        generateCleanBtn.addEventListener("click", async () => {
+            const text = contractTextarea.value.trim();
+            const docName = docNameInput.value.trim() || "Clean Contract";
+            if (!text) {
+                alert("Please input or audit a contract first.");
+                return;
+            }
+
+            const originalBtnText = generateCleanBtn.innerHTML;
+            generateCleanBtn.innerHTML = "<span>⏳</span> Generating Clean Draft...";
+            generateCleanBtn.disabled = true;
+
+            try {
+                const res = await fetch("/api/clean-contract", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: text, name: docName })
+                });
+
+                const data = await res.json();
+                if (data.status === "success") {
+                    cleanContractTextarea.value = data.clean_text;
+                    cleanModCount.textContent = data.modifications_count || 0;
+                    if (cleanCopyStatus) cleanCopyStatus.classList.add("hidden");
+                    cleanContractModal.classList.remove("hidden");
+                } else {
+                    alert("Failed to generate clean contract: " + (data.message || "Unknown error"));
+                }
+            } catch (err) {
+                console.error("Clean contract generation error:", err);
+                alert("An error occurred while generating the clean contract.");
+            } finally {
+                generateCleanBtn.innerHTML = originalBtnText;
+                generateCleanBtn.disabled = false;
+            }
+        });
+    }
+
+    if (copyCleanBtn) {
+        copyCleanBtn.addEventListener("click", async () => {
+            if (!cleanContractTextarea.value) return;
+            try {
+                await navigator.clipboard.writeText(cleanContractTextarea.value);
+                if (cleanCopyStatus) {
+                    cleanCopyStatus.classList.remove("hidden");
+                    setTimeout(() => cleanCopyStatus.classList.add("hidden"), 3000);
+                }
+            } catch (err) {
+                console.error("Copy error:", err);
+                cleanContractTextarea.select();
+                document.execCommand("copy");
+                if (cleanCopyStatus) cleanCopyStatus.classList.remove("hidden");
+            }
+        });
+    }
+
+    function downloadTextFile(filename, content) {
+        const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    if (downloadCleanTxtBtn) {
+        downloadCleanTxtBtn.addEventListener("click", () => {
+            const text = cleanContractTextarea.value;
+            if (!text) return;
+            downloadTextFile(`clean_contract_${Date.now()}.txt`, text);
+        });
+    }
+
+    if (downloadCleanMdBtn) {
+        downloadCleanMdBtn.addEventListener("click", () => {
+            const text = cleanContractTextarea.value;
+            if (!text) return;
+            const mdContent = `# Clean & Fair Contract Agreement\n\n*Generated by LexiTrap NLP System on ${new Date().toLocaleDateString()}*\n\n---\n\n${text}\n`;
+            downloadTextFile(`clean_contract_${Date.now()}.md`, mdContent);
+        });
+    }
+
+    // =========================================================================
+    // Feature 4: Draft A vs Draft B Version Diff Analyzer Modal Controller
+    // =========================================================================
+    const openCompareBtn = document.getElementById("open-compare-btn");
+    const compareModal = document.getElementById("compare-modal");
+    const compareModalBackdrop = document.getElementById("compare-modal-backdrop");
+    const closeCompareModalBtn = document.getElementById("close-compare-modal-btn");
+    const draftAText = document.getElementById("draft-a-text");
+    const draftBText = document.getElementById("draft-b-text");
+    const btnUseCurrentForA = document.getElementById("btn-use-current-for-a");
+    const btnUseCleanForB = document.getElementById("btn-use-clean-for-b");
+    const runCompareBtn = document.getElementById("run-compare-btn");
+    const compareInputsStage = document.getElementById("compare-inputs-stage");
+    const compareResultsStage = document.getElementById("compare-results-stage");
+    const deltaRiskScore = document.getElementById("delta-risk-score");
+    const deltaRiskDesc = document.getElementById("delta-risk-desc");
+    const deltaHealthScore = document.getElementById("delta-health-score");
+    const deltaTrapsCount = document.getElementById("delta-traps-count");
+    const eliminatedTrapsBox = document.getElementById("eliminated-traps-box");
+    const eliminatedBadgesList = document.getElementById("eliminated-badges-list");
+    const draftASummaryBox = document.getElementById("draft-a-summary-box");
+    const draftBSummaryBox = document.getElementById("draft-b-summary-box");
+    const resetCompareBtn = document.getElementById("reset-compare-btn");
+
+    function openCompareModal() {
+        if (compareModal) {
+            compareModal.classList.remove("hidden");
+            // Auto populate Draft A if current text exists and Draft A is empty
+            if (contractTextarea.value && !draftAText.value) {
+                draftAText.value = contractTextarea.value;
+            }
+        }
+    }
+
+    function closeCompareModal() {
+        if (compareModal) compareModal.classList.add("hidden");
+    }
+
+    if (openCompareBtn) openCompareBtn.addEventListener("click", openCompareModal);
+    if (closeCompareModalBtn) closeCompareModalBtn.addEventListener("click", closeCompareModal);
+    if (compareModalBackdrop) compareModalBackdrop.addEventListener("click", closeCompareModal);
+
+    if (btnUseCurrentForA) {
+        btnUseCurrentForA.addEventListener("click", () => {
+            draftAText.value = contractTextarea.value;
+        });
+    }
+
+    if (btnUseCleanForB) {
+        btnUseCleanForB.addEventListener("click", async () => {
+            const baseText = draftAText.value.trim() || contractTextarea.value.trim();
+            if (!baseText) {
+                alert("Please paste text into Draft A first.");
+                return;
+            }
+
+            btnUseCleanForB.textContent = "⏳ Generating...";
+            btnUseCleanForB.disabled = true;
+
+            try {
+                const res = await fetch("/api/clean-contract", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: baseText })
+                });
+                const data = await res.json();
+                if (data.status === "success") {
+                    draftBText.value = data.clean_text;
+                } else {
+                    alert("Could not generate clean draft: " + (data.message || ""));
+                }
+            } catch (err) {
+                console.error("Clean error:", err);
+            } finally {
+                btnUseCleanForB.textContent = "Use Clean Redline";
+                btnUseCleanForB.disabled = false;
+            }
+        });
+    }
+
+    if (runCompareBtn) {
+        runCompareBtn.addEventListener("click", async () => {
+            const textA = draftAText.value.trim();
+            const textB = draftBText.value.trim();
+
+            if (!textA || !textB) {
+                alert("Please enter text for both Draft A and Draft B to compare.");
+                return;
+            }
+
+            const origHtml = runCompareBtn.innerHTML;
+            runCompareBtn.innerHTML = "<span>⏳</span> Analyzing Both Drafts...";
+            runCompareBtn.disabled = true;
+
+            try {
+                const res = await fetch("/api/compare-drafts", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ draft_a: textA, draft_b: textB })
+                });
+
+                const data = await res.json();
+                if (data.status === "success") {
+                    renderCompareResults(data);
+                } else {
+                    alert("Comparison audit failed: " + (data.message || "Unknown error"));
+                }
+            } catch (err) {
+                console.error("Compare error:", err);
+                alert("Failed to compare drafts.");
+            } finally {
+                runCompareBtn.innerHTML = origHtml;
+                runCompareBtn.disabled = false;
+            }
+        });
+    }
+
+    function renderCompareResults(data) {
+        const delta = data.comparison || {};
+        const repA = data.draft_a_report || delta.report_a || {};
+        const repB = data.draft_b_report || delta.report_b || {};
+
+        // Render Delta Banner
+        // delta_risk = report_a.risk - report_b.risk
+        // If positive (e.g. 35), Draft B reduced risk by 35 points (Safer)
+        const riskDelta = delta.delta_risk !== undefined ? delta.delta_risk : (delta.delta_risk_score !== undefined ? delta.delta_risk_score : 0);
+        const healthDelta = delta.delta_health !== undefined ? delta.delta_health : (delta.delta_health_score !== undefined ? delta.delta_health_score : 0);
+
+        deltaRiskScore.textContent = `${riskDelta > 0 ? '-' : (riskDelta < 0 ? '+' : '')}${Math.abs(riskDelta)} pts`;
+        deltaRiskScore.className = `delta-number ${riskDelta >= 0 ? 'text-success' : 'text-danger'}`;
+        deltaRiskDesc.textContent = riskDelta > 0 
+            ? `Draft B reduced risk by ${riskDelta} points 🎉` 
+            : (riskDelta === 0 ? 'Risk is identical across drafts' : `Draft B increased risk by ${Math.abs(riskDelta)} points ⚠️`);
+
+        deltaHealthScore.textContent = `${healthDelta > 0 ? '+' : (healthDelta < 0 ? '-' : '')}${Math.abs(healthDelta)} pts`;
+        deltaHealthScore.className = `delta-number ${healthDelta >= 0 ? 'text-success' : 'text-danger'}`;
+
+        deltaTrapsCount.textContent = delta.traps_eliminated_count || 0;
+
+        // Eliminated Badges
+        if (delta.eliminated_categories && delta.eliminated_categories.length > 0) {
+            eliminatedTrapsBox.classList.remove("hidden");
+            eliminatedBadgesList.innerHTML = "";
+            delta.eliminated_categories.forEach(cat => {
+                const badge = document.createElement("span");
+                badge.className = "eliminated-badge";
+                badge.innerHTML = `<span>✓</span> ${escapeHtml(cat)}`;
+                eliminatedBadgesList.appendChild(badge);
+            });
+        } else {
+            eliminatedTrapsBox.classList.add("hidden");
+        }
+
+        // Draft A Findings Box
+        const healthA = Math.round(repA.overall_health_score || 0);
+        const gradeA = repA.letter_grade || 'N/A';
+        const readGradeA = repA.readability_profile ? repA.readability_profile.flesch_kincaid_grade : 'N/A';
+        const obfA = repA.readability_profile ? repA.readability_profile.obfuscation_level : 'N/A';
+
+        draftASummaryBox.innerHTML = `
+            <div class="draft-stat-row"><span>Health Score:</span> <strong>${healthA}/100 (Grade ${gradeA})</strong></div>
+            <div class="draft-stat-row"><span>Risk Severity:</span> <strong class="text-danger">${escapeHtml(repA.risk_level || 'Moderate')}</strong></div>
+            <div class="draft-stat-row"><span>Traps Flagged:</span> <strong class="text-danger">${repA.total_traps_found || 0}</strong></div>
+            <div class="draft-stat-row"><span>Critical Traps:</span> <strong>${repA.critical_traps_count || 0}</strong></div>
+            <div class="draft-stat-row"><span>Readability Grade:</span> <strong>Grade ${readGradeA}</strong></div>
+            <div class="draft-stat-row"><span>Language Clarity:</span> <strong>${escapeHtml(obfA)}</strong></div>
+        `;
+
+        // Draft B Findings Box
+        const healthB = Math.round(repB.overall_health_score || 0);
+        const gradeB = repB.letter_grade || 'N/A';
+        const readGradeB = repB.readability_profile ? repB.readability_profile.flesch_kincaid_grade : 'N/A';
+        const obfB = repB.readability_profile ? repB.readability_profile.obfuscation_level : 'N/A';
+
+        draftBSummaryBox.innerHTML = `
+            <div class="draft-stat-row"><span>Health Score:</span> <strong class="text-success">${healthB}/100 (Grade ${gradeB})</strong></div>
+            <div class="draft-stat-row"><span>Risk Severity:</span> <strong class="${repB.risk_level === 'SAFE' ? 'text-success' : 'text-warning'}">${escapeHtml(repB.risk_level || 'Safe')}</strong></div>
+            <div class="draft-stat-row"><span>Traps Flagged:</span> <strong class="text-success">${repB.total_traps_found || 0}</strong></div>
+            <div class="draft-stat-row"><span>Critical Traps:</span> <strong>${repB.critical_traps_count || 0}</strong></div>
+            <div class="draft-stat-row"><span>Readability Grade:</span> <strong>Grade ${readGradeB}</strong></div>
+            <div class="draft-stat-row"><span>Language Clarity:</span> <strong>${escapeHtml(obfB)}</strong></div>
+        `;
+
+        compareInputsStage.classList.add("hidden");
+        compareResultsStage.classList.remove("hidden");
+    }
+
+    if (resetCompareBtn) {
+        resetCompareBtn.addEventListener("click", () => {
+            compareResultsStage.classList.add("hidden");
+            compareInputsStage.classList.remove("hidden");
+        });
+    }
 
     updateTextStats();
 });
+

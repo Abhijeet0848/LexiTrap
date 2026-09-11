@@ -8,6 +8,7 @@ from .trap_detector import TrapDetector, TrapMatch, TrapCategory
 from .benchmarks import BenchmarkMatcher, BenchmarkClause
 from .redliner import RedlineGenerator, RedlineResult
 from .scorer import ContractScorer, AuditReport
+from .readability import ReadabilityAnalyzer
 from .auditor import ContractAuditor
 
 __all__ = [
@@ -24,5 +25,6 @@ __all__ = [
     "RedlineResult",
     "ContractScorer",
     "AuditReport",
+    "ReadabilityAnalyzer",
     "ContractAuditor",
 ]
