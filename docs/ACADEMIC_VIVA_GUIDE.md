@@ -6,12 +6,14 @@
 
 ## 1. Executive Abstract & Motivation
 
-Standard Natural Language Processing (NLP) applications in industry frequently focus on generic text classification (sentiment analysis, topic modeling, spam detection). However, **Legal NLP (LegalTech)** poses unique linguistic challenges characterized by:
-1. **Extreme syntactic complexity**: Multi-clause conditional sentences exceeding 80+ words.
-2. **Dense Deontic Modality**: Heavy usage of normative speech acts governing obligations, prohibitions, permissions, and warranties.
-3. **Information Asymmetry & Predatory "Dark Patterns"**: Consumer Terms of Service (ToS), NDAs, and SaaS contracts often hide dangerous one-sided provisions (unilateral amendment rights, perpetual AI training on proprietary data, complete liability disclaimers, and class action waivers).
+Standard Natural Language Processing (NLP) applications in industry frequently focus on generic text classification (sentiment analysis, topic modeling, spam detection). However, **Legal NLP (LegalTech)** addresses a critical societal crisis: **The "Click-to-Agree" Trap**. 
 
-**LexAudit** is a specialized cognitive LegalTech NLP system designed to parse, analyze, detect, benchmark, and redline predatory legal clauses in real time.
+Over **97% of internet users click 'Agree' to Terms of Service without reading**. This blind acceptance has caused severe real-world consequences:
+- **The Disney+ 2024 Wrongful Death Case:** Disney attempted to dismiss a medical doctor's wrongful death lawsuit and force private arbitration simply because her widower had signed up for a 1-month Disney+ free trial 4 years earlier.
+- **Adobe Creative Cloud 2024 AI Ingestion:** Creative professionals found that updated terms granted Adobe rights to access and train machine learning models on active client video/PSD projects.
+- **Jimmy John's Sandwich Non-Compete:** Minimum-wage employees trapped by 2-year non-competes barring them from working at competing sandwich shops.
+
+**LexiTrap** is a specialized cognitive LegalTech NLP system designed to parse, analyze, detect, benchmark, and redline predatory legal clauses in under 50 milliseconds.
 
 ---
 
