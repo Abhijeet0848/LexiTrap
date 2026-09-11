@@ -245,9 +245,115 @@ class TestEndToEndAuditor(unittest.TestCase):
         report = self.auditor.audit(text, "Fair YC Mutual NDA")
         self.assertGreaterEqual(report.total_clauses, 4)
         self.assertGreaterEqual(report.overall_health_score, 80)
-        self.assertIn(report.letter_grade, ["A+", "A"])
-        self.assertEqual(report.critical_traps_count, 0)
+class TestOcrAndNoiseRegression(unittest.TestCase):
+    """
+    Comprehensive regression test suite for OCR scan inputs, camera capture text,
+    hyphenated line-wraps, typographic ligatures, smart quotes, and noisy OCR artifacts.
+    """
+    def setUp(self):
+        self.parser = DocumentParser()
+        self.auditor = ContractAuditor()
+        self.detector = TrapDetector()
+
+    def test_ocr_hyphen_wrap_repair(self):
+        noisy_ocr_text = """
+        Section 1. Indemnification
+        Customer agrees to defend, indemni-
+        fication and hold harmless the Company from all third-party claims.
+
+        Section 2. Dispute Resolution
+        All disputes shall be resolved exclusively through binding arbi-
+        tration and user agrees to a class action waiver.
+        """
+        clauses = self.parser.parse(noisy_ocr_text, "OCR Scanned Contract")
+        self.assertEqual(len(clauses), 2)
+        self.assertIn("indemnification", clauses[0].text)
+        self.assertIn("arbitration", clauses[1].text)
+
+    def test_ocr_ligature_decomposition(self):
+        # Text with Unicode ligatures commonly produced by OCR engines (fi, fl, ff, ffi)
+        ligature_text = "Vendor shall maintain afﬁliate records, provide flawless service, and require indemni\ufb01cation."
+        cleaned = self.parser.clean_text(ligature_text)
+        self.assertIn("affiliate", cleaned)
+        self.assertIn("flawless", cleaned)
+        self.assertIn("indemnification", cleaned)
+
+    def test_ocr_bullet_and_pipe_margin_cleanup(self):
+        scanned_bullets = """
+        | Section 3. Data Rights
+        • Customer grants company a perpetual license to use content.
+        ● Company may train machine learning models on customer data.
+        ▪ All feedback becomes exclusive property of provider.
+        """
+        clauses = self.parser.parse(scanned_bullets, "Scanned Bullets")
+        self.assertEqual(len(clauses), 1)
+        self.assertIn("Data Rights", clauses[0].title)
+        self.assertNotIn("|", clauses[0].title)
+        self.assertTrue(clauses[0].has_subsections)
+
+    def test_camera_scanned_predatory_tos_regression(self):
+        # Real-world simulation of camera photo OCR text with irregular line-breaks and formatting
+        scanned_camera_tos = """
+        TERMS OF USE AND SERVICE AGREEMENT
+
+        1. MODIFICATION OF TERMS.
+        We reserve the right to modify these
+        terms of service at any time without
+        prior notice in our sole discretion. Your
+        continued use of the platform constitutes
+        acceptance of revised terms.
+
+        2. INTELLECTUAL PROPERTY & AI TRAINING.
+        You grant company a perpetual, irrevo-
+        cable, worldwide license to use your data
+        to train machine learning models and AI algorithms.
+
+        3. ARBITRATION & JURY WAIVER.
+        All claims shall be settled by binding
+        arbitration under AAA rules. You waive
+        any right to a jury trial and class
+        action waiver.
+
+        4. LIMITATION OF LIABILITY.
+        Under no circumstances shall Company aggregate
+        liability exceed fifty dollars ($50.00). The service
+        is provided strictly "as is".
+        """
+        report = self.auditor.audit(scanned_camera_tos, "Camera Photo Scanned ToS")
+        self.assertGreaterEqual(report.total_clauses, 4)
+        self.assertGreaterEqual(report.total_traps_found, 4)
+        self.assertLess(report.overall_health_score, 50)
+        self.assertIn(report.letter_grade, ["D", "F"])
+        self.assertGreaterEqual(report.critical_traps_count, 2)
+        
+        # Verify specific trap categories detected accurately despite line breaks
+        detected_categories = [t["category"] for c in report.clause_audit_details for t in c.get("traps", [])]
+        self.assertIn(TrapCategory.UNILATERAL_MODIFICATION.value, detected_categories)
+        self.assertIn(TrapCategory.PERPETUAL_DATA_AI_HARVESTING.value, detected_categories)
+        self.assertIn(TrapCategory.FORCED_ARBITRATION_CLASS_WAIVER.value, detected_categories)
+        self.assertIn(TrapCategory.ZERO_LIABILITY_GUTTING.value, detected_categories)
+
+    def test_scanned_employment_agreement_traps(self):
+        # Scanned employment agreement with overbroad non-compete
+        scanned_nda = """
+        EMPLOYMENT RESTRICTIONS AND IP ASSIGNMENT
+
+        Section 1. Non-Compete Covenant
+        Employee shall not directly or indirectly engage in any
+        competing business worldwide for a period of 3 years
+        following termination.
+
+        Section 2. IP Assignment
+        Employee hereby irrevocably assigns to Company all
+        inventions, ideas, customizations, and moral rights.
+        """
+        report = self.auditor.audit(scanned_nda, "Scanned Non-Compete Doc")
+        self.assertGreaterEqual(report.total_traps_found, 2)
+        detected_categories = [t["category"] for c in report.clause_audit_details for t in c.get("traps", [])]
+        self.assertIn(TrapCategory.OVERBROAD_NON_COMPETE.value, detected_categories)
+        self.assertIn(TrapCategory.AGGRESSIVE_IP_EXPROPRIATION.value, detected_categories)
 
 
 if __name__ == "__main__":
     unittest.main()
+

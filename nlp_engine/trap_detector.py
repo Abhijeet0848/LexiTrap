@@ -140,11 +140,11 @@ class TrapDetector:
             "impact": "Loss of trade secret protections and inadvertent assignment of your proprietary inventions to the vendor.",
             "mitigation": "Restrict grant to a non-exclusive license solely needed to operate the service; clarify all customer IP remains customer property.",
             "patterns": [
-                (re.compile(r"\b(?:you\s+irrevocably\s+assign\s+to\s+(?:us|company|provider)|all\s+feedback\s+shall\s+be\s+the\s+sole\s+(?:and\s+exclusive\s+)?property\s+of)\b", re.I), 0.98),
+                (re.compile(r"\b(?:(?:you|employee|contractor|user|customer)\s+(?:hereby\s+)?(?:irrevocably\s+)?assigns?\s+to\s+(?:us|company|the\s+company|provider)|all\s+feedback\s+shall\s+be\s+the\s+sole\s+(?:and\s+exclusive\s+)?property\s+of)\b", re.I), 0.98),
                 (re.compile(r"\b(?:grant\s+(?:us|the\s+company|provider)\s+a\s+perpetual,\s*irrevocable,\s*royalty-free,\s*worldwide\s+(?:transferable,\s*sublicensable\s+)?license\s+to\s+(?:use|reproduce|modify|distribute|exploit|display|create\s+derivative))\b", re.I), 0.94),
                 (re.compile(r"\b(?:all\s+improvements,\s*modifications,\s*customizations\s+or\s+derivative\s+works\s+shall\s+belong\s+exclusively\s+to\s+company)\b", re.I), 0.90),
                 (re.compile(r"\b(?:waive\s+all\s+moral\s+rights|waives?\s+(?:any\s+)?moral\s+rights|work\s+made\s+for\s+hire\s+for\s+all\s+customer\s+submissions)\b", re.I), 0.88),
-                (re.compile(r"\b(?:hereby\s+assign\s+and\s+agree\s+to\s+assign\s+all\s+right,\s*title,\s*and\s+interest)\b", re.I), 0.90),
+                (re.compile(r"\b(?:hereby\s+(?:irrevocably\s+)?assigns?\s+(?:and\s+agree\s+to\s+assign\s+)?all\s+(?:right,\s*title,\s*and\s+interest|inventions|ideas|customizations|intellectual\s+property|moral\s+rights))\b", re.I), 0.92),
                 (re.compile(r"\b(?:free\s+of\s+any\s+moral\s+rights,\s*intellectual\s+property\s+rights\s+or\s+compensation)\b", re.I), 0.86),
             ],
             "safeguards": [
@@ -219,10 +219,10 @@ class TrapDetector:
             "impact": "You have zero financial recovery if the vendor causes catastrophic data loss or business downtime.",
             "mitigation": "Add a standard cap equal to 12 months fees paid, with carve-outs for data breach, confidentiality, and gross negligence.",
             "patterns": [
-                (re.compile(r"\b(?:in\s+no\s+event\s+shall\s+.*?\b(?:aggregate|total|cumulative)?\s*liability\s+exceed\s+(?:\$|usd\s*|inr\s*)[0-9]{1,3}(?:\.00)?)\b", re.I), 0.98),
-                (re.compile(r"\b(?:liability\s+shall\s+not\s+exceed\s+(?:fifty\s+dollars|one\s+hundred\s+dollars|\$50|\$100|\$0|the\s+amount\s+of\s+\$0|zero\s+dollars))\b", re.I), 0.96),
-                (re.compile(r"\b(?:exceed\s+\$50\s+\(fifty\s+dollars\)|\$100\s+\(one\s+hundred\s+dollars\))\b", re.I), 0.99),
-                (re.compile(r"\b(?:provided\s+strictly\s+[\"']as\s+is[\"']\s+and\s+[\"']as\s+available[\"']\s+without\s+warranty)\b", re.I), 0.90),
+                (re.compile(r"\b(?:in\s+no\s+event\s+shall|under\s+no\s+circumstances\s+shall)\s+.*?\b(?:aggregate|total|cumulative)?\s*liability\s+(?:shall\s+not\s+exceed|exceed)\s+(?:fifty\s+dollars|one\s+hundred\s+dollars|\$|usd\s*|inr\s*|[0-9]{1,3})", re.I), 0.98),
+                (re.compile(r"\b(?:liability\s+shall\s+not\s+exceed|liability\s+exceed)\s+(?:fifty\s+dollars|one\s+hundred\s+dollars|\$50|\$100|\$0|the\s+amount\s+of\s+\$0|zero\s+dollars|\$[0-9]{1,3})\b", re.I), 0.96),
+                (re.compile(r"\b(?:exceed\s+\$50\s+\(fifty\s+dollars\)|\$100\s+\(one\s+hundred\s+dollars\)|fifty\s+dollars\s+\(\$50(?:\.00)?\))\b", re.I), 0.99),
+                (re.compile(r"\b(?:provided\s+strictly\s+[\"']as\s+is[\"']\s+and\s+[\"']as\s+available[\"']\s+without\s+warranty|strictly\s+[\"']as\s+is[\"'])\b", re.I), 0.90),
                 (re.compile(r"\b(?:disclaims\s+all\s+liability\s+for\s+any\s+loss\s+of\s+data,\s*outage|security\s+breaches|unauthorized\s+access)\b", re.I), 0.94),
                 (re.compile(r"\b(?:under\s+no\s+circumstances\s+shall\s+(?:company|us|vendor)\s+be\s+liable\s+for\s+any\s+direct,\s*indirect,\s*incidental)\b", re.I), 0.92),
                 (re.compile(r"\b(?:total\s+cumulative\s+liability\s+shall\s+be\s+limited\s+to\s+the\s+amount\s+paid\s+by\s+you\s+in\s+the\s+preceding\s+one\s+\(1\)\s+month)\b", re.I), 0.88),

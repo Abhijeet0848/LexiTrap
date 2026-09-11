@@ -53,7 +53,7 @@ class DocumentParser:
     """
 
     # Sub-item patterns that belong inside a clause (should NOT start a new major clause)
-    SUB_ITEM_PATTERN = re.compile(r"^(?:\([a-z0-9]+\)|[a-z]\.|\([ivxlcdm]+\))\s+", re.I)
+    SUB_ITEM_PATTERN = re.compile(r"^(?:[•●▪■◆►✓✔○▫\-*]|\([a-z0-9]+\)|[a-z]\.|\([ivxlcdm]+\))\s+", re.I)
 
     # Abbreviations that must not trigger a sentence split
     LEGAL_ABBREVIATIONS = {
@@ -100,29 +100,61 @@ class DocumentParser:
 
     def clean_text(self, text: str) -> str:
         """
-        Cleans and normalizes raw text:
+        Cleans and normalizes raw text and OCR scan output:
         - Unescapes HTML entities (&amp;, &lt;, &gt;, &quot;)
         - Strips HTML tags (e.g. <p>, <div>, <br>)
+        - Decomposes typographic ligatures (ﬁ -> fi, ﬂ -> fl, ﬀ -> ff, etc.)
+        - Normalizes smart quotes, apostrophes, and dashes
+        - Reconstructs broken hyphenated line-wraps from OCR scans (e.g. "indemni-\n fication" -> "indemnification")
+        - Strips stray OCR margin pipes
         - Normalizes Windows (CRLF) and Unix (LF) line endings
-        - Strips zero-width unicode artifacts
+        - Strips zero-width unicode artifacts and collapses whitespace
         """
         if not text:
             return ""
         
-        # HTML unescape
+        # 1. HTML unescape
         cleaned = html.unescape(text)
         
-        # Strip basic HTML tags while maintaining newlines
+        # 2. Strip basic HTML tags while maintaining newlines
         cleaned = re.sub(r"<(?:br|p|div|li|h[1-6])\s*/?>", "\n", cleaned, flags=re.I)
         cleaned = re.sub(r"<[^>]+>", " ", cleaned)
         
-        # Normalize line endings
+        # 3. Normalize line endings
         cleaned = cleaned.replace("\r\n", "\n").replace("\r", "\n")
         
-        # Remove zero-width spaces and BOMs
+        # 4. Decompose Unicode typographic ligatures from OCR
+        ligature_map = {
+            "\ufb00": "ff",
+            "\ufb01": "fi",
+            "\ufb02": "fl",
+            "\ufb03": "ffi",
+            "\ufb04": "ffl",
+            "\ufb05": "st",
+            "\ufb06": "st",
+            "œ": "oe",
+            "æ": "ae",
+            "Œ": "OE",
+            "Æ": "AE",
+        }
+        for lig, repl in ligature_map.items():
+            cleaned = cleaned.replace(lig, repl)
+            
+        # 5. Smart quotes, apostrophes, and dashes
+        cleaned = re.sub(r"[\u201c\u201d\u201e\u201f\u2033\u2036«»]", '"', cleaned)
+        cleaned = re.sub(r"[\u2018\u2019\u201a\u201b\u2032\u2035\u00b4\u02bc`]", "'", cleaned)
+        cleaned = re.sub(r"[\u2013\u2014\u2015\u2212]", "-", cleaned)
+        
+        # 6. Reconstruct broken hyphenated line wraps (e.g. "indemni-\n fication" -> "indemnification")
+        cleaned = re.sub(r"(\b[A-Za-z]+)-\s*\n\s*([A-Za-z]+\b)", r"\1\2", cleaned)
+        
+        # 7. Strip stray OCR margin pipe artifacts
+        cleaned = re.sub(r"(?:^|\n)\s*\|\s*", "\n", cleaned)
+        
+        # 8. Remove zero-width spaces, BOMs, and non-breaking spaces
         cleaned = re.sub(r"[\ufeff\u200b\u200c\u200d\u00a0]", " ", cleaned)
         
-        # Collapse excessive blank lines
+        # 9. Collapse excessive blank lines
         cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
         
         return cleaned.strip()
@@ -145,8 +177,8 @@ class DocumentParser:
         # 3. Protect subsection numbers inside text (e.g. Section 4.2.1 or Cl. 3(a))
         protected = re.sub(r"\b(Section|Article|Clause|Sec|Art|Cl)\s+(\d+)\.(\d+)\b", r"\1 \2_sdot_\3", protected, flags=re.I)
 
-        # 4. Split on sentence terminal marks (. ? !) followed by whitespace and capital letter / quote / digit
-        raw_sentences = re.split(r"(?<=[.?!])\s+(?=[A-Z0-9\"'\(])", protected)
+        # 4. Split on sentence terminal marks (. ? !) or bullet line markers followed by capital letter / quote / digit / bullet
+        raw_sentences = re.split(r"(?<=[.?!])\s+(?=[A-Z0-9\"'\(\[•●▪■◆►✓✔○▫\-])|(?<=\n)(?=[•●▪■◆►✓✔○▫\-])", protected)
 
         sentences = []
         for s in raw_sentences:
@@ -207,9 +239,9 @@ class DocumentParser:
                 title = f"Section {num}"
             return ("STANDALONE", num, title, "")
 
-        # 4. Numbered Standalone Header e.g. '1. Definitions' or '1.1 Scope of Work'
+        # 4. Numbered Standalone Header e.g. '1. Definitions', '1.1 Scope of Work', '1. MODIFICATION OF TERMS.'
         num_match = re.match(
-            r"^(\d+(?:\.\d+)*)\.?\s+([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{1,60})$",
+            r"^(\d+(?:\.\d+)*)\.?\s+([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{1,80})[:.]?$",
             line_clean
         )
         if num_match:
@@ -259,8 +291,8 @@ class DocumentParser:
             if not stripped:
                 continue
 
-            # Check if this line is a sub-bullet item like (a), (b), (i) inside an existing clause
-            if self.SUB_ITEM_PATTERN.match(stripped) and current_lines:
+            # Check if this line is a sub-bullet item like (a), (b), (i), •, - inside an existing clause
+            if self.SUB_ITEM_PATTERN.match(stripped) and (current_lines or current_header):
                 current_lines.append(stripped)
                 continue
 

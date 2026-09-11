@@ -247,7 +247,80 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Shared OCR Image Processor
+    // High-Accuracy Image Preprocessing for OCR (Grayscale & Contrast Normalization)
+    async function preprocessImageForOcr(imageFile) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                let width = img.width;
+                let height = img.height;
+
+                // Scale up small photos for sharper OCR character boundary detection
+                if (width < 1400 && height < 1400) {
+                    const scale = 2;
+                    width *= scale;
+                    height *= scale;
+                } else if (width > 2800 || height > 2800) {
+                    const maxDim = 2800;
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Pixel-level Grayscale & Adaptive Contrast Stretching
+                try {
+                    const imgData = ctx.getImageData(0, 0, width, height);
+                    const d = imgData.data;
+                    for (let i = 0; i < d.length; i += 4) {
+                        const gray = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+                        const contrast = 1.35; // 35% contrast boost
+                        const enhanced = Math.min(255, Math.max(0, (gray - 128) * contrast + 128));
+                        d[i] = enhanced;
+                        d[i + 1] = enhanced;
+                        d[i + 2] = enhanced;
+                    }
+                    ctx.putImageData(imgData, 0, 0);
+                    canvas.toBlob((blob) => {
+                        resolve(blob || imageFile);
+                    }, "image/png");
+                } catch (e) {
+                    resolve(imageFile);
+                }
+            };
+            img.onerror = () => resolve(imageFile);
+            img.src = URL.createObjectURL(imageFile);
+        });
+    }
+
+    // Post-OCR Legal Text Sanitizer & Artifact Fixer
+    function cleanOcrExtractedText(rawText) {
+        if (!rawText) return "";
+        let text = rawText;
+        // Reconstruct broken hyphenated line wraps (e.g. "indemni-\n fication" -> "indemnification")
+        text = text.replace(/(\w+)-\s*\n\s*(\w+)/g, "$1$2");
+        // Normalize smart quotes and apostrophes
+        text = text.replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"');
+        text = text.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'");
+        // Normalize bullet points
+        text = text.replace(/^[•●▪■◆]\s*/gm, "(a) ");
+        // Collapse multiple spaces
+        text = text.replace(/[ \t]+/g, " ");
+        // Clean excessive line breaks
+        text = text.replace(/\n{3,}/g, "\n\n");
+        return text.trim();
+    }
+
+    // Shared OCR Image Processor with Preprocessing & Multi-Stage Status
     async function processImageFile(file) {
         if (!file) return;
 
@@ -265,36 +338,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Show OCR progress banner
         ocrStatusBanner.classList.remove("hidden");
-        ocrProgressBar.style.width = "10%";
-        ocrStatusTitle.textContent = "Scanning contract photo with OCR...";
-        ocrStatusSub.textContent = "Initializing Optical Character Recognition engine...";
+        ocrProgressBar.style.width = "15%";
+        ocrStatusTitle.textContent = "Preprocessing contract photo...";
+        ocrStatusSub.textContent = "Enhancing contrast and sharpening legal character boundaries...";
 
         try {
+            // Stage 1: Preprocessing
+            const processedBlob = await preprocessImageForOcr(file);
+            ocrProgressBar.style.width = "30%";
+            ocrStatusTitle.textContent = "Loading Optical Character Recognition (OCR)...";
+            ocrStatusSub.textContent = "Scanning document lines and legal terminology...";
+
             if (typeof Tesseract === "undefined") {
-                throw new Error("OCR library could not be loaded from CDN. Please check your internet connection.");
+                throw new Error("OCR engine library could not be loaded. Please check your internet connection.");
             }
 
+            // Stage 2: Tesseract Recognition
             const result = await Tesseract.recognize(
-                file,
+                processedBlob,
                 'eng',
                 {
                     logger: (m) => {
                         if (m.status === "recognizing text") {
                             const progress = Math.round((m.progress || 0) * 100);
-                            ocrProgressBar.style.width = `${progress}%`;
+                            ocrProgressBar.style.width = `${Math.max(30, progress)}%`;
                             ocrStatusTitle.textContent = `Reading contract text... (${progress}%)`;
-                            ocrStatusSub.textContent = `Processing image lines and characters...`;
+                            ocrStatusSub.textContent = `Extracting words, clauses, and definitions...`;
                         }
                     }
                 }
             );
 
-            const extractedText = (result && result.data && result.data.text) ? result.data.text.trim() : "";
+            const rawText = (result && result.data && result.data.text) ? result.data.text : "";
+            const cleanText = cleanOcrExtractedText(rawText);
 
-            if (!extractedText || extractedText.length < 20) {
-                alert("Could not detect clear legal text in this photo. Please ensure the image is clear and well-lit.");
+            if (!cleanText || cleanText.length < 20) {
+                alert("Could not detect sufficient legal text in this photo. Please ensure the document is clear, well-lit, and in focus.");
+                ocrStatusBanner.classList.add("hidden");
             } else {
-                contractTextarea.value = extractedText;
+                contractTextarea.value = cleanText;
                 const baseName = (file.name || "contract").replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
                 docNameInput.value = `Scanned: ${baseName}`;
                 updateTextStats();
@@ -306,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 setTimeout(async () => {
                     ocrStatusBanner.classList.add("hidden");
                     await runAudit();
-                }, 400);
+                }, 350);
             }
         } catch (err) {
             console.error("OCR scanning error:", err);
