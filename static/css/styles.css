@@ -951,6 +951,71 @@ body {
     border-radius: 3px;
 }
 
+/* Footer Guide Section */
+.footer-guide-section {
+    margin-top: 40px;
+    background-color: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 26px;
+    box-shadow: var(--shadow-sm);
+}
+
+.footer-guide-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    margin-bottom: 16px;
+}
+
+.footer-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 860px) {
+    .footer-guide-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-guide-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.guide-card {
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+
+.guide-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.guide-icon {
+    font-size: 1.1rem;
+}
+
+.guide-card h4 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text-heading);
+}
+
+.guide-card p {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
 /* Footer */
 .footer {
     border-top: 1px solid var(--border);

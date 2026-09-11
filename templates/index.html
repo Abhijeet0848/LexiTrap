@@ -46,7 +46,7 @@
                         <span class="example-type">SaaS Terms</span>
                     </div>
                     <h3 class="example-title">Toxic SaaS Terms</h3>
-                    <p class="example-hint">Unilateral changes, AI data rights & $50 liability cap</p>
+                    <p class="example-hint">Unilateral changes, AI data rights & zero liability cap</p>
                 </div>
 
                 <div class="example-card load-sample-btn" data-id="unbalanced_nda">
@@ -107,13 +107,6 @@
                 </div>
             </div>
         </section>
-
-        <!-- Loading State -->
-        <div id="loading-overlay" class="loading-state hidden">
-            <div class="loading-spinner"></div>
-            <h3 class="loading-title">Scanning Contract Clauses...</h3>
-            <p class="loading-sub">Checking for unfair rules, legal risks, and generating safe alternatives.</p>
-        </div>
 
         <!-- Audit Results (Hidden by default) -->
         <section id="results-section" class="results-container hidden">
@@ -199,6 +192,44 @@
                 <!-- Filled dynamically by JS -->
             </div>
 
+        </section>
+
+        <!-- Brief Description & Guide Section in Footer -->
+        <section class="footer-guide-section">
+            <h2 class="footer-guide-title">📖 Guide: What Each Contract Example Checks</h2>
+            <div class="footer-guide-grid">
+                <div class="guide-card">
+                    <div class="guide-card-header">
+                        <span class="guide-icon">🚨</span>
+                        <h4>Toxic SaaS Terms</h4>
+                    </div>
+                    <p>Scans for vendors altering terms or prices without notice, using your uploaded data to train commercial AI models, and eliminating liability for data loss.</p>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-header">
+                        <span class="guide-icon">⚠️</span>
+                        <h4>One-Sided Vendor NDA</h4>
+                    </div>
+                    <p>Detects one-way confidentiality burdens, involuntary transfer of customer inventions, unlimited legal indemnity, and 2-year industry non-compete locks.</p>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-header">
+                        <span class="guide-icon">🛡️</span>
+                        <h4>Fair Mutual NDA</h4>
+                    </div>
+                    <p>Industry-standard benchmark (YC model) with equal protections for both parties, clear confidentiality timeframes, and standard mutual court rights.</p>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-header">
+                        <span class="guide-icon">🚨</span>
+                        <h4>Employment Contract</h4>
+                    </div>
+                    <p>Flags overbroad restrictive covenants such as 3-year worldwide non-compete bans and company claims over inventions made on personal time or devices.</p>
+                </div>
+            </div>
         </section>
     </main>
 

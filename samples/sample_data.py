@@ -13,7 +13,7 @@ SAMPLE_CONTRACTS: Dict[str, Dict[str, Any]] = {
         "name": "Toxic SaaS Terms of Service (CloudSphere)",
         "type": "Terms of Service",
         "filename": "predatory_saas_tos.txt",
-        "description": "High-risk SaaS agreement containing unilateral amendments, perpetual AI training on user data, $50 liability cap, and forced arbitration.",
+        "description": "High-risk SaaS agreement containing unilateral amendments, perpetual AI training on user data, zero liability cap, and forced arbitration.",
         "expected_risk": "CRITICAL",
     },
     "unbalanced_nda": {
