@@ -91,6 +91,57 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // URL Fetcher Handler
+    const urlInput = document.getElementById("url-input");
+    const fetchUrlBtn = document.getElementById("fetch-url-btn");
+
+    async function handleFetchUrl() {
+        const url = urlInput.value.trim();
+        if (!url) {
+            alert("Please paste a valid Terms of Service URL.");
+            return;
+        }
+
+        const originalText = fetchUrlBtn.textContent;
+        fetchUrlBtn.textContent = "Fetching...";
+        fetchUrlBtn.disabled = true;
+
+        try {
+            const res = await fetch("/api/fetch-url", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: url })
+            });
+            const data = await res.json();
+            if (data.status === "success") {
+                contractTextarea.value = data.text;
+                docNameInput.value = data.title;
+                updateTextStats();
+                await runAudit();
+            } else {
+                alert("Could not fetch URL: " + (data.message || "Unknown error"));
+            }
+        } catch (err) {
+            console.error("Fetch URL error:", err);
+            alert("Failed to connect to the provided URL.");
+        } finally {
+            fetchUrlBtn.textContent = originalText;
+            fetchUrlBtn.disabled = false;
+        }
+    }
+
+    if (fetchUrlBtn) {
+        fetchUrlBtn.addEventListener("click", handleFetchUrl);
+    }
+    if (urlInput) {
+        urlInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                handleFetchUrl();
+            }
+        });
+    }
+
     loadSampleBtns.forEach(btn => {
         btn.addEventListener("click", () => {
             const id = btn.getAttribute("data-id");

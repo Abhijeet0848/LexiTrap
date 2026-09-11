@@ -296,6 +296,35 @@ body {
     margin-bottom: 28px;
 }
 
+.url-fetch-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+}
+
+.url-icon {
+    font-size: 1.1rem;
+}
+
+.url-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    font-family: var(--font-main);
+    color: var(--text-heading);
+    outline: none;
+}
+
+.url-input::placeholder {
+    color: var(--text-light);
+}
+
 .editor-header {
     display: flex;
     justify-content: space-between;

@@ -43,6 +43,77 @@ def get_sample_content(sample_id):
     })
 
 
+@app.route("/api/fetch-url", methods=["POST"])
+def fetch_url():
+    """Fetches and extracts clean text from a live Terms of Service URL."""
+    import urllib.request
+    import re
+    from html.parser import HTMLParser
+
+    class TextExtractor(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.text_parts = []
+            self.ignore_tags = {"script", "style", "nav", "footer", "header", "noscript", "svg"}
+            self.current_tag = None
+
+        def handle_starttag(self, tag, attrs):
+            self.current_tag = tag.lower()
+
+        def handle_endtag(self, tag):
+            self.current_tag = None
+            if tag.lower() in {"p", "div", "h1", "h2", "h3", "h4", "li", "section", "article"}:
+                self.text_parts.append("\n")
+
+        def handle_data(self, data):
+            if self.current_tag not in self.ignore_tags:
+                clean = data.strip()
+                if clean:
+                    self.text_parts.append(clean + " ")
+
+        def get_text(self):
+            raw = "".join(self.text_parts)
+            return re.sub(r"\n{3,}", "\n\n", raw).strip()
+
+    data = request.get_json(silent=True) or {}
+    url = data.get("url", "").strip()
+
+    if not url:
+        return jsonify({"status": "error", "message": "URL cannot be empty."}), 400
+
+    if not (url.startswith("http://") or url.startswith("https://")):
+        url = "https://" + url
+
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        )
+        with urllib.request.urlopen(req, timeout=8) as response:
+            html_content = response.read().decode("utf-8", errors="replace")
+
+        extractor = TextExtractor()
+        extractor.feed(html_content)
+        extracted_text = extractor.get_text()
+
+        if len(extracted_text) < 50:
+            return jsonify({"status": "error", "message": "Could not extract sufficient text from this URL."}), 400
+
+        # Extract page title from URL or domain
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        doc_title = f"{parsed.netloc} Terms of Service"
+
+        return jsonify({
+            "status": "success",
+            "title": doc_title,
+            "text": extracted_text,
+            "url": url,
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Failed to fetch URL: {str(e)}"}), 500
+
+
 @app.route("/api/audit", methods=["POST"])
 def audit_contract():
     """Performs full NLP audit on submitted contract text."""
