@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Any, Optional
 from .parser import ContractClause
+from .ml_classifier import LegalClauseMLClassifier
 
 
 class TrapCategory(str, Enum):
@@ -246,10 +247,18 @@ class TrapDetector:
         },
     }
 
+    def __init__(self, ml_classifier: Optional[LegalClauseMLClassifier] = None):
+        self.ml_classifier = ml_classifier or LegalClauseMLClassifier()
+
     def detect_traps_in_clause(self, clause: ContractClause) -> List[TrapMatch]:
-        """Scans a single clause for all trap categories with safeguard checking."""
+        """
+        Scans a single clause for all trap categories using a Hybrid Architecture:
+        1. Contextual weighted expert rule matching with false-positive safeguards.
+        2. Supervised TF-IDF multi-gram Machine Learning probability estimation.
+        """
         matches: List[TrapMatch] = []
         clause_text = clause.text
+        matched_categories = set()
 
         for trap_cat, rule in self.TRAP_RULES.items():
             matched_pats = []
@@ -309,6 +318,55 @@ class TrapDetector:
                     penalty_score=calc_penalty,
                 )
                 matches.append(match)
+                matched_categories.add(trap_cat.value)
+
+        # 2. Hybrid ML Classification Pass for Novel/Paraphrased Trap Formulations
+        if self.ml_classifier and self.ml_classifier.is_trained:
+            try:
+                ml_pred = self.ml_classifier.predict_clause(clause_text)
+                pred_cat_str = ml_pred.get("predicted_category")
+                conf = ml_pred.get("confidence", 0.0)
+                
+                if ml_pred.get("is_trap") and conf >= 0.50 and pred_cat_str not in matched_categories:
+                    # Map string label to TrapCategory enum
+                    target_enum = None
+                    for cat_enum in TrapCategory:
+                        if cat_enum.value == pred_cat_str:
+                            target_enum = cat_enum
+                            break
+                    
+                    if target_enum and target_enum in self.TRAP_RULES:
+                        rule = self.TRAP_RULES[target_enum]
+                        
+                        # Safeguard verification
+                        safeguards_found = []
+                        for sf_pat, sf_desc in rule.get("safeguards", []):
+                            if sf_pat.search(clause_text):
+                                safeguards_found.append(sf_desc)
+                        
+                        if len(safeguards_found) < 2:
+                            eff_conf = conf if not safeguards_found else conf * 0.6
+                            trap_id = f"trap_{clause.clause_id}_{target_enum.name.lower()}_ml"
+                            calc_penalty = round(rule["penalty"] * eff_conf, 1)
+                            
+                            ml_match = TrapMatch(
+                                trap_id=trap_id,
+                                category=target_enum,
+                                severity=rule["severity"],
+                                confidence=round(eff_conf, 2),
+                                clause_id=clause.clause_id,
+                                clause_title=clause.title,
+                                flagged_text=clause_text,
+                                matched_patterns=[f"Machine Learning Classifier Confidence: {int(eff_conf * 100)}%"],
+                                safeguards_found=safeguards_found,
+                                legal_danger=rule["danger"],
+                                business_impact=rule["impact"],
+                                recommended_mitigation=rule["mitigation"],
+                                penalty_score=calc_penalty,
+                            )
+                            matches.append(ml_match)
+            except Exception:
+                pass
 
         return matches
 
