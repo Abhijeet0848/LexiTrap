@@ -4,6 +4,7 @@ Calculates overall contract health (0-100), letter grade (A+ to F), and clause r
 using category-saturation penalty caps and structural deontic asymmetry weighting.
 """
 
+import math
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 from .parser import ContractClause
@@ -186,9 +187,20 @@ class ContractScorer:
             total_penalty += asym_penalty
             category_penalties["Structural Duty Asymmetry"] = asym_penalty
 
-        # Calculate overall scores
-        health_score = max(0.0, min(100.0, round(100.0 - total_penalty, 1)))
-        risk_score = round(100.0 - health_score, 1)
+        # Calibrated Proportional Health Score Calculation
+        if len(traps) == 0:
+            health_score = 100.0
+            risk_score = 0.0
+        else:
+            trapped_clause_count = sum(1 for c in clause_details if c.get("has_traps", False))
+            safe_clause_count = max(0, total_clauses - trapped_clause_count)
+            safe_ratio = safe_clause_count / max(1, total_clauses)
+            
+            # Composite formula: 30% safe clause ratio + 70% exponential penalty decay
+            penalty_decay = math.exp(-total_penalty / 75.0)
+            raw_health = 100.0 * (0.30 * safe_ratio + 0.70 * penalty_decay)
+            health_score = round(max(10.0, min(92.0, raw_health)), 1)
+            risk_score = round(100.0 - health_score, 1)
 
         letter_grade, risk_level, verdict_title, verdict_desc = self.compute_health_grade(health_score)
 
