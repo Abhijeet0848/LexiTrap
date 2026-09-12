@@ -57,6 +57,21 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeFilter = "ALL";
 
     // Text counters
+    function autoDetectContractTitle(text) {
+        if (!text || !text.trim()) return "";
+        if (!docNameInput.value || docNameInput.value.trim() === "" || docNameInput.value.trim() === "Contract Agreement" || docNameInput.value.trim() === "Submitted Contract") {
+            const lines = text.trim().split("\n");
+            for (let line of lines.slice(0, 5)) {
+                const clean = line.replace(/^[#*`_\s]+|[#*`_\s]+$/g, "").trim();
+                if (clean && clean.length >= 3 && clean.length <= 80 && !clean.toLowerCase().startsWith("last updated") && !clean.toLowerCase().startsWith("dated:") && !clean.toLowerCase().startsWith("version") && !clean.toLowerCase().startsWith("this is an agreement")) {
+                    docNameInput.value = clean;
+                    return clean;
+                }
+            }
+        }
+        return docNameInput.value.trim();
+    }
+
     function updateTextStats() {
         const text = contractTextarea.value;
         charCountEl.textContent = text.length.toLocaleString();
@@ -66,9 +81,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const clauses = (text.match(/(?:Section|Article|Clause|\b\d+\.)/gi) || []).length || Math.max(1, Math.floor(words / 60));
         estClausesEl.textContent = text.trim() ? clauses : 0;
+
+        if (text.trim().length > 5) {
+            autoDetectContractTitle(text);
+        }
     }
 
     contractTextarea.addEventListener("input", updateTextStats);
+    contractTextarea.addEventListener("paste", () => {
+        setTimeout(updateTextStats, 50);
+    });
 
     // Number Counting Animation (Fast 250ms)
     function animateValue(element, start, end, duration = 250) {

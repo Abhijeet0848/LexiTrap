@@ -32,6 +32,15 @@ class ContractAuditor:
 
     def audit(self, text: str, document_name: str = "Legal Agreement") -> AuditReport:
         """Runs end-to-end NLP audit pipeline on contract text."""
+        # Auto-detect document title if generic or unspecified
+        if not document_name or document_name in ("Legal Agreement", "Submitted Contract", "Contract Document"):
+            lines = text.strip().split("\n")
+            for line in lines[:5]:
+                clean = line.strip().strip("#*`_")
+                if clean and 3 <= len(clean) <= 85 and not clean.lower().startswith(("last updated", "dated:", "version", "this is an agreement", "between")):
+                    document_name = clean
+                    break
+
         # 1. Parse document into hierarchical clauses
         clauses = self.parser.parse(text, document_name=document_name)
         if not clauses:
