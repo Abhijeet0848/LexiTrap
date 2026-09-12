@@ -582,7 +582,7 @@ document.addEventListener("DOMContentLoaded", () => {
         verdictTitle.textContent = report.verdict_title;
         verdictDesc.textContent = report.verdict_description;
 
-        // Dynamic Conclusion & Website/Login Proceed Advice Box
+        // Dynamic Executive Verdict & Security Advice Box
         const decisionBox = document.getElementById("verdict-decision-box");
         const decisionPill = document.getElementById("decision-pill");
         const decisionTitle = document.getElementById("decision-title");
@@ -593,34 +593,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 decisionBox.className = "verdict-decision-box decision-success";
                 if (decisionPill) {
                     decisionPill.className = "decision-pill pill-success";
-                    decisionPill.textContent = "✅ SAFE TO PROCEED";
+                    decisionPill.textContent = "🛡️ BALANCED & FAIR";
                 }
-                if (decisionTitle) decisionTitle.textContent = "Safe to Agree / Proceed with Website Login & Account Creation";
-                if (decisionAdvice) decisionAdvice.innerHTML = "If you are creating an account, logging in, or accepting these terms, <strong>it is safe to proceed</strong>. This agreement follows balanced industry standards without unilateral traps.";
+                if (decisionTitle) decisionTitle.textContent = "Standard Commercial Terms (Low Risk)";
+                if (decisionAdvice) decisionAdvice.innerHTML = "This document aligns with industry standard protections and contains no aggressive unilateral trap clauses.";
             } else if (score >= 60) {
                 decisionBox.className = "verdict-decision-box decision-warning";
                 if (decisionPill) {
                     decisionPill.className = "decision-pill pill-warning";
                     decisionPill.textContent = "⚠️ PROCEED WITH CAUTION";
                 }
-                if (decisionTitle) decisionTitle.textContent = "Proceed with Caution / Review Privacy & Sharing Settings";
-                if (decisionAdvice) decisionAdvice.innerHTML = "You can proceed to use this website, but <strong>review your account privacy settings</strong>. Watch out for unilateral term change rights and opt out of optional tracking or auto-renewals.";
+                if (decisionTitle) decisionTitle.textContent = "Customary Disclaimers / Telemetry Detected";
+                if (decisionAdvice) decisionAdvice.innerHTML = "Contains typical big-tech clauses (e.g. cloud diagnostic telemetry or standard liability waivers). Review account privacy preferences before consenting.";
             } else if (score >= 40) {
                 decisionBox.className = "verdict-decision-box decision-warning";
                 if (decisionPill) {
                     decisionPill.className = "decision-pill pill-warning";
-                    decisionPill.textContent = "⚠️ RISKY — DO NOT ACCEPT BLINDLY";
+                    decisionPill.textContent = "⚠️ ELEVATED RISK";
                 }
-                if (decisionTitle) decisionTitle.textContent = "High Caution — Do NOT Agree Without Review";
-                if (decisionAdvice) decisionAdvice.innerHTML = "Caution advised before signing or clicking 'I Agree'. If using this website, <strong>do not provide confidential files or sensitive personal data</strong> under these terms.";
+                if (decisionTitle) decisionTitle.textContent = "One-Sided Provisions Identified";
+                if (decisionAdvice) decisionAdvice.innerHTML = "Material risk factors detected (e.g. unilateral change rights, mandatory arbitration, or limited liability). Review carefully before agreeing.";
             } else {
                 decisionBox.className = "verdict-decision-box decision-danger";
                 if (decisionPill) {
                     decisionPill.className = "decision-pill pill-danger";
-                    decisionPill.textContent = "🚫 DO NOT PROCEED / AVOID";
+                    decisionPill.textContent = "🚫 CRITICAL RISK / PREDATORY TRAPS";
                 }
-                if (decisionTitle) decisionTitle.textContent = "Do NOT Proceed / Avoid Account Creation or Login";
-                if (decisionAdvice) decisionAdvice.innerHTML = "If this is a website signup or login screen, <strong>DO NOT PROCEED</strong>. The terms contain predatory dark patterns (e.g. unilateral amendments, aggressive data harvesting, or complete liability waivers).";
+                if (decisionTitle) decisionTitle.textContent = "Predatory Terms Detected — Do Not Agree Blindly";
+                if (decisionAdvice) decisionAdvice.innerHTML = "Critical dark patterns found (e.g. $50 liability cap, silent unilateral amendments, immediate access termination, or forced arbitration). Redlines strongly recommended.";
             }
         }
 

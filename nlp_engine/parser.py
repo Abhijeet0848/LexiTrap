@@ -311,17 +311,18 @@ class DocumentParser:
             if not lower.startswith(not_starters) and (is_title_case or has_policy_kw) and lower not in self.NON_CLAUSE_HEADER_TOKENS:
                 return ("STANDALONE", "", line_clean, "")
 
-        # 7. Inline Section with body e.g. '1. INDEMNIFICATION. Customer agrees to defend...' or 'Section 1: Indemnity - Customer shall...'
+        # 7. Inline Section with body e.g. '1. INDEMNIFICATION. Customer agrees to defend...', '3.e Disputes/Binding Arbitration. Any dispute...', or 'a. Use of Services. To use...'
         inline_match = re.match(
-            r"^(?:(?:Section|Article|Clause|Paragraph)\s+)?(\d+(?:\.\d+)*|[IVXLCDM]+\.)?\s*[:.\-–—]?\s*([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{1,40})[:.\-–—]\s+(.+)$",
+            r"^(?:(?:Section|Article|Clause|Paragraph)\s+)?([a-z0-9]+(?:\.[a-z0-9]+)*|\([a-z0-9]+\)|[IVXLCDM]+\.)?\s*[:.\-–—]?\s*([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{2,75})[:.\-–—]\s+(.+)$",
             line_clean, re.I
         )
         if inline_match:
-            num = (inline_match.group(1) or "").replace(".", "").strip()
+            num = (inline_match.group(1) or "").replace(".", "").replace("(", "").replace(")", "").strip()
             title = inline_match.group(2).strip()
             body = inline_match.group(3).strip()
-            if len(title.split()) <= 7 and title.lower() not in self.NON_CLAUSE_HEADER_TOKENS and not title.lower().startswith((
-                "if ", "the ", "in the event", "provided that", "neither party", "each party", "you agree", "customer shall"
+            words = title.split()
+            if len(words) <= 9 and title.lower() not in self.NON_CLAUSE_HEADER_TOKENS and not title.lower().startswith((
+                "if ", "the ", "in the event", "provided that", "neither party", "each party", "you agree", "customer shall", "we reserve", "we will", "when you"
             )):
                 return ("INLINE", num, title, body)
 
@@ -349,12 +350,7 @@ class DocumentParser:
             if not stripped:
                 continue
 
-            # Check if this line is a sub-bullet item like (a), (b), (i), •, - inside an existing clause
-            if self.SUB_ITEM_PATTERN.match(stripped) and (current_lines or current_header):
-                current_lines.append(stripped)
-                continue
-
-            # Classify line as a clause header
+            # Classify line as a clause or named subclause header first
             header_info = self.parse_header_line(stripped)
 
             if header_info is not None:
@@ -383,8 +379,14 @@ class DocumentParser:
                 current_header = matched_title
                 current_lines = [inline_body] if inline_body else []
                 start_line_idx = i
-            else:
+                continue
+
+            # Check if this line is a sub-bullet item like (a), (b), (i), •, - inside an existing clause
+            if self.SUB_ITEM_PATTERN.match(stripped) and (current_lines or current_header):
                 current_lines.append(stripped)
+                continue
+
+            current_lines.append(stripped)
 
         # Flush the final block
         if current_lines:

@@ -354,6 +354,31 @@ class TestOcrAndNoiseRegression(unittest.TestCase):
         self.assertIn(TrapCategory.AGGRESSIVE_IP_EXPROPRIATION.value, detected_categories)
 
 
+    def test_real_world_amazon_services_terms(self):
+        amazon_terms = """
+        Amazon Services Terms of Use
+        1. Amazon Services, Amazon Software
+        a. Use of Amazon Services on a Product. To use certain Amazon Services, you must have an account.
+        c. Voice Services. When you use voice services, we process your voice input and other information in the cloud.
+        3. General
+        c. Changes to Amazon Services; Amendments. We may change, suspend, or discontinue the Amazon Services at any time without notice. We may amend any of this Agreement's terms at our sole discretion. Your continued use of Amazon Services constitutes acceptance.
+        d. Termination. Your rights under this Agreement will automatically terminate without notice if you fail to comply.
+        e. Disputes/Binding Arbitration. Any dispute or claim is subject to the binding arbitration and governing law.
+        f. Disclaimer of Warranties and Limitation of Liability. In no event will our aggregate liability exceed fifty dollars ($50.00).
+        """
+        report = self.auditor.audit(amazon_terms, "Amazon Services Terms")
+        self.assertGreaterEqual(report.total_clauses, 5)
+        self.assertGreaterEqual(report.total_traps_found, 4)
+        self.assertLess(report.overall_health_score, 40)
+        self.assertIn(report.letter_grade, ["D", "F"])
+
+        detected_categories = [t["category"] for c in report.clause_audit_details for t in c.get("traps", [])]
+        self.assertIn(TrapCategory.UNILATERAL_MODIFICATION.value, detected_categories)
+        self.assertIn(TrapCategory.ZERO_LIABILITY_GUTTING.value, detected_categories)
+        self.assertIn(TrapCategory.FORCED_ARBITRATION_CLASS_WAIVER.value, detected_categories)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
