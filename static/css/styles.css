@@ -3138,4 +3138,191 @@ input, button, textarea, select {
     display: block;
 }
 
+/* ==========================================================================
+   Modern 3-Card Footer & Feature Hub
+   ========================================================================== */
+.footer {
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    padding: clamp(28px, 4vw, 40px) 0 clamp(20px, 3vw, 28px) 0;
+    margin-top: clamp(32px, 5vw, 48px);
+    width: 100%;
+}
+
+.footer-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 clamp(14px, 3vw, 24px);
+    width: 100%;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr;
+    gap: clamp(12px, 2vw, 20px);
+    width: 100%;
+}
+
+@media (max-width: 920px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.footer-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    padding: clamp(16px, 2.5vw, 22px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.footer-brand-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.footer-brand-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.footer-brand-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.03em;
+}
+
+.footer-description {
+    font-size: 0.84rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    flex: 1;
+}
+
+.footer-badges-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: auto;
+}
+
+.footer-mini-chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #2563eb;
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.footer-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.footer-header-icon {
+    font-size: 1.05rem;
+}
+
+.footer-card-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 0;
+}
+
+.footer-tiles-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-tile-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease;
+}
+
+.footer-tile-item:hover {
+    background-color: #f8fafc;
+}
+
+.tile-icon {
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.step-num-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    font-size: 0.72rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.tile-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.tile-label {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.83rem;
+}
+
+.tile-sub {
+    font-size: 0.74rem;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.footer-bottom-bar {
+    text-align: center;
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
 

@@ -414,87 +414,121 @@
 
     </main>
 
-    <!-- Clean Modern 3-Column Footer -->
+    <!-- Clean Modern 3-Column Feature Hub & Footer -->
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-grid">
-                <!-- Brand Column -->
-                <div class="footer-brand-col">
+                <!-- Brand Info Card -->
+                <div class="footer-card footer-brand-card">
                     <div class="footer-brand-header">
-                        <span class="brand-icon">⚖️</span>
+                        <div class="brand-icon-wrapper">
+                            <span class="brand-icon">⚖️</span>
+                        </div>
                         <span class="footer-brand-title">LexiTrap</span>
                     </div>
                     <p class="footer-description">
-                        Empowering users, freelancers, and businesses to understand what they sign. Automatically scans legal contracts and terms of service for hidden predatory clauses, asymmetrical duties, and dark patterns.
+                        Free AI-powered contract scanner. Upload agreements or scan web terms to uncover hidden traps, asymmetrical liabilities, and get fair replacement clauses.
                     </p>
-                    <div class="footer-meta-badge">
-                        <span>🛡️</span> Zero Data Retention • NLP Audit
+                    <div class="footer-badges-list">
+                        <span class="footer-mini-chip"><span>🛡️</span> Zero Data Retention</span>
+                        <span class="footer-mini-chip"><span>⚡</span> Real-Time NLP</span>
+                        <span class="footer-mini-chip"><span>📑</span> Free & Open Source</span>
                     </div>
                 </div>
 
-                <!-- Column 1: What We Check (Mobile Accordion / Desktop Column) -->
-                <details class="footer-col footer-accordion" open>
-                    <summary class="footer-col-title">
-                        <span>What We Check</span>
-                        <span class="accordion-arrow">▾</span>
-                    </summary>
-                    <ul class="footer-links-list">
-                        <li>
-                            <span class="link-label">Unilateral Changes</span>
-                            <span class="link-sub">Changing prices or rules anytime without notice</span>
+                <!-- Column 1: What We Check Card -->
+                <div class="footer-card">
+                    <div class="footer-card-header">
+                        <span class="footer-header-icon">🔍</span>
+                        <h4 class="footer-card-title">What We Check</h4>
+                    </div>
+                    <ul class="footer-tiles-list">
+                        <li class="footer-tile-item">
+                            <span class="tile-icon">🔄</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Unilateral Changes</strong>
+                                <span class="tile-sub">Changing prices or rules anytime without notice</span>
+                            </div>
                         </li>
-                        <li>
-                            <span class="link-label">Forced Arbitration</span>
-                            <span class="link-sub">Blocking your right to go to a real court</span>
+                        <li class="footer-tile-item">
+                            <span class="tile-icon">⚖️</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Forced Arbitration</strong>
+                                <span class="tile-sub">Blocking your right to go to a real court</span>
+                            </div>
                         </li>
-                        <li>
-                            <span class="link-label">Uncapped Indemnity</span>
-                            <span class="link-sub">Making you pay all the company's legal bills</span>
+                        <li class="footer-tile-item">
+                            <span class="tile-icon">💸</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Uncapped Indemnity</strong>
+                                <span class="tile-sub">Making you pay all the company's legal bills</span>
+                            </div>
                         </li>
-                        <li>
-                            <span class="link-label">Zero Liability</span>
-                            <span class="link-sub">Company pays nothing if they get hacked</span>
+                        <li class="footer-tile-item">
+                            <span class="tile-icon">🛡️</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Zero Liability</strong>
+                                <span class="tile-sub">Company pays nothing if they get hacked</span>
+                            </div>
                         </li>
-                        <li>
-                            <span class="link-label">Overbroad Non-Competes</span>
-                            <span class="link-sub">Banning you from working at future jobs</span>
+                        <li class="footer-tile-item">
+                            <span class="tile-icon">🚫</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Non-Competes</strong>
+                                <span class="tile-sub">Banning you from working at future jobs</span>
+                            </div>
                         </li>
                     </ul>
-                </details>
+                </div>
 
-                <!-- Column 2: How It Works (Mobile Accordion / Desktop Column) -->
-                <details class="footer-col footer-accordion" open>
-                    <summary class="footer-col-title">
-                        <span>How It Works</span>
-                        <span class="accordion-arrow">▾</span>
-                    </summary>
-                    <ul class="footer-links-list">
-                        <li>
-                            <span class="link-label">1. Read & Split Document</span>
-                            <span class="link-sub">Breaks long contracts into clear sections & headings</span>
+                <!-- Column 2: How It Works Card -->
+                <div class="footer-card">
+                    <div class="footer-card-header">
+                        <span class="footer-header-icon">⚙️</span>
+                        <h4 class="footer-card-title">How It Works</h4>
+                    </div>
+                    <ul class="footer-tiles-list">
+                        <li class="footer-tile-item">
+                            <span class="step-num-badge">1</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Read & Split Document</strong>
+                                <span class="tile-sub">Breaks long text into clear legal sections</span>
+                            </div>
                         </li>
-                        <li>
-                            <span class="link-label">2. Check Power Imbalance</span>
-                            <span class="link-sub">Spots if one side has all rights and zero duties</span>
+                        <li class="footer-tile-item">
+                            <span class="step-num-badge">2</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Check Power Balance</strong>
+                                <span class="tile-sub">Spots if one side has all rights and zero duties</span>
+                            </div>
                         </li>
-                        <li>
-                            <span class="link-label">3. Detect Legal Traps</span>
-                            <span class="link-sub">Scans for hidden risks, unfair penalties & fee waivers</span>
+                        <li class="footer-tile-item">
+                            <span class="step-num-badge">3</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Detect Legal Traps</strong>
+                                <span class="tile-sub">Highlights risky penalties & fee waivers</span>
+                            </div>
                         </li>
-                        <li>
-                            <span class="link-label">4. Compare to Fair Standards</span>
-                            <span class="link-sub">Checks how far the contract is from safe industry norms</span>
+                        <li class="footer-tile-item">
+                            <span class="step-num-badge">4</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Compare to Standards</strong>
+                                <span class="tile-sub">Measures contract against safe industry norms</span>
+                            </div>
                         </li>
-                        <li>
-                            <span class="link-label">5. Rewrite Fair Redlines</span>
-                            <span class="link-sub">Suggests balanced replacement terms with negotiation tips</span>
+                        <li class="footer-tile-item">
+                            <span class="step-num-badge">5</span>
+                            <div class="tile-text">
+                                <strong class="tile-label">Rewrite Fair Redlines</strong>
+                                <span class="tile-sub">Suggests balanced wording with negotiation tips</span>
+                            </div>
                         </li>
                     </ul>
-                </details>
+                </div>
             </div>
 
             <div class="footer-bottom-bar">
-                <span>© 2026 LexiTrap NLP System • Built for legal contract transparency & fairness.</span>
+                <span>© 2026 LexiTrap • Legal Contract Risk & Trap Analyzer • Built for transparency & fairness.</span>
             </div>
         </div>
     </footer>
