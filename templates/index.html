@@ -186,52 +186,54 @@
 
             <!-- Health Score & Summary Banner -->
             <div class="results-banner">
-                <div class="score-block">
-                    <div class="score-circle-wrap">
-                        <div class="score-circle" id="score-circle">
-                            <span id="health-score-val" class="score-number">0</span>
-                            <span class="score-total">/ 100</span>
+                <div class="score-card-main">
+                    <div class="score-header-row">
+                        <div class="score-circle-wrap">
+                            <div class="score-circle" id="score-circle">
+                                <span id="health-score-val" class="score-number">0</span>
+                                <span class="score-total">/ 100</span>
+                            </div>
+                        </div>
+                        
+                        <div class="score-header-info">
+                            <div class="badge-row">
+                                <span id="grade-badge" class="score-badge badge-grade">Grade --</span>
+                                <span id="risk-severity-badge" class="score-badge badge-risk">High Risk</span>
+                            </div>
+                            <h2 id="verdict-title" class="verdict-heading">Contract Summary</h2>
+                            <p id="verdict-desc" class="verdict-sub">Audit findings will appear here.</p>
                         </div>
                     </div>
                     
-                    <div class="score-text">
-                        <div class="badge-row">
-                            <span id="grade-badge" class="score-badge badge-grade">Grade --</span>
-                            <span id="risk-severity-badge" class="score-badge badge-risk">High Risk</span>
+                    <!-- Executive Security Action Box -->
+                    <div id="verdict-decision-box" class="verdict-decision-box decision-danger">
+                        <div class="decision-badge-wrap">
+                            <span id="decision-pill" class="decision-pill pill-danger">🚫 CRITICAL RISK</span>
+                            <span class="decision-sub-tag">Risk & Legal Assessment</span>
                         </div>
-                        <h2 id="verdict-title" class="verdict-heading">Contract Summary</h2>
-                        <p id="verdict-desc" class="verdict-sub">Audit findings will appear here.</p>
-                        
-                        <!-- Executive Security Action Box -->
-                        <div id="verdict-decision-box" class="verdict-decision-box decision-danger">
-                            <div class="decision-badge-wrap">
-                                <span id="decision-pill" class="decision-pill pill-danger">🚫 AUDIT REQUIRED</span>
-                                <span class="decision-sub-tag">Risk & Legal Assessment</span>
-                            </div>
-                            <div class="decision-body">
-                                <strong id="decision-title" class="decision-title">Awaiting Contract Submission</strong>
-                                <p id="decision-advice" class="decision-advice">
-                                    Paste contract text, fetch a live policy URL, or upload a document to generate instant clause audit and risk assessment.
-                                </p>
-                            </div>
+                        <div class="decision-body">
+                            <strong id="decision-title" class="decision-title">Awaiting Contract Submission</strong>
+                            <p id="decision-advice" class="decision-advice">
+                                Paste contract text, fetch a live policy URL, or upload a document to generate instant clause audit and risk assessment.
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 <div class="stat-boxes-grid">
-                    <div class="stat-card">
+                    <div class="stat-card stat-card-high">
                         <span class="stat-count text-danger" id="stat-critical-count">0</span>
                         <span class="stat-name">High Risk</span>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card stat-card-med">
                         <span class="stat-count text-warning" id="stat-high-count">0</span>
                         <span class="stat-name">Medium Risk</span>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card stat-card-low">
                         <span class="stat-count text-success" id="stat-low-count">0</span>
                         <span class="stat-name">Low Risk</span>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card stat-card-total">
                         <span class="stat-count text-primary" id="stat-clauses-count">0</span>
                         <span class="stat-name">Total Sections</span>
                     </div>
