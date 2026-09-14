@@ -79,15 +79,18 @@ class TrapDetector:
             "impact": "You could face sudden price hikes, downgraded SLAs, or feature removals with no breach-of-contract recourse.",
             "mitigation": "Demand 30-day prior written notice for material changes, with right to terminate and receive a pro-rata refund.",
             "patterns": [
-                (re.compile(r"\b(?:modify|change|update|alter|amend|revise|suspend|discontinue)\s+(?:any\s+of\s+)?(?:these\s+terms(?:\s+of\s+service)?|this\s+agreement(?:['’]?s\s+terms)?|the\s+(?:[a-z0-9]+\s+)?services?|terms|policies)\b.*?\b(?:at\s+any\s+time|without\s+(?:prior\s+)?notice|in\s+(?:our|its)\s+sole\s+discretion|from\s+time\s+to\s+time\s+without\s+notice)\b", re.I), 1.0),
-                (re.compile(r"\b(?:change,\s*suspend,\s*or\s*discontinue\s+.*?\s+at\s+any\s+time\s+without\s+notice)\b", re.I), 0.98),
-                (re.compile(r"\b(?:amend\s+(?:any\s+of\s+)?(?:this\s+agreement['’]?s\s+terms|these\s+terms|the\s+agreement))\b.*?\b(?:sole\s+discretion|by\s+posting|without\s+notice)\b", re.I), 0.96),
-                (re.compile(r"\b(?:reserves\s+the\s+right\s+to\s+(?:modify|change|alter|update|revise|amend|suspend|discontinue))\b.*?\b(?:without\s+prior\s+notice|effective\s+immediately|sole\s+(?:and\s+absolute\s+)?discretion|at\s+any\s+time)\b", re.I), 0.95),
-                (re.compile(r"\b(?:reserves?\s+the\s+right\s+to\s+(?:accept|reject|cancel|waive(?:\s+off)?|modify|alter|change|amend|update))\b.*?\b(?:time\s+window|fee|fees|pricing|terms|policies|policy|cancellation|cancellations|order|orders)\b.*?\b(?:from\s+time\s+to\s+time|at\s+(?:our|its)\s+discretion|without\s+(?:prior\s+)?notice)?", re.I), 0.90),
+                (re.compile(r"\b(?:modify|change|update|alter|amend|revise|suspend|discontinue|terminate|cancel|end)\b.*?\b(?:terms(?:\s+of\s+(?:service|use|this\s+agreement))?|(?:this|the|an)?\s*(?:agreement|contract|services?|policies|relationship))\b.*?\b(?:at\s+any\s+time|without\s+(?:prior\s+|providing\s+|further\s+|advance\s+)?notice|(?:at|in)\s+(?:our|its)\s+sole\s+(?:and\s+absolute\s+)?discretion|from\s+time\s+to\s+time\s+without\s+notice)\b", re.I), 1.0),
+                (re.compile(r"\b(?:provider|company|we|us|vendor|licensor)\s+may\s+(?:modify|change|update|alter|amend|revise|terminate|cancel|end)\b.*?\b(?:without\s+(?:prior\s+|providing\s+|further\s+|advance\s+)?notice|(?:at|in)\s+(?:our|its)\s+sole\s+discretion|at\s+any\s+time)\b", re.I), 1.0),
+                (re.compile(r"\b(?:provider|company|we|us|vendor|licensor)\s+may\s+terminate\s+(?:this|the|an)?\s*(?:agreement|contract|services?)\b.*?\bwithout\s+(?:prior\s+|providing\s+|further\s+|advance\s+)?notice\b", re.I), 1.0),
+                (re.compile(r"\bterminate\b.*?\b(?:at\s+any\s+time|immediately)\b.*?\bwithout\s+(?:prior\s+|providing\s+|further\s+|advance\s+)?notice\b", re.I), 1.0),
+                (re.compile(r"\b(?:change,\s*suspend,\s*or\s*discontinue\s+.*?\s+at\s+any\s+time\s+without\s+(?:prior\s+|providing\s+)?notice)\b", re.I), 0.98),
+                (re.compile(r"\b(?:amend\s+(?:any\s+of\s+)?(?:this\s+agreement['’]?s\s+terms|these\s+terms|the\s+agreement|the\s+terms))\b.*?\b(?:sole\s+discretion|by\s+posting|without\s+notice)\b", re.I), 0.96),
+                (re.compile(r"\b(?:reserves\s+the\s+right\s+to\s+(?:modify|change|alter|update|revise|amend|suspend|discontinue|terminate)(?:\s+or\s+(?:amend|modify|change|alter|update|cancel|terminate))?)\b.*?\b(?:without\s+prior\s+notice|effective\s+immediately|sole\s+(?:and\s+absolute\s+)?discretion|at\s+any\s+time)\b", re.I), 0.95),
+                (re.compile(r"\b(?:reserves?\s+the\s+right\s+to\s+(?:accept|reject|cancel|waive(?:\s+off)?|modify|alter|change|amend|update))\b.*?\b(?:time\s+window|fee|fees|pricing|terms|policies|policy|cancellation|cancellations|order|orders)\b.*?\b(?:from\s+time\s+to\s+time|at\s+(?:our|its)\s+discretion|without\s+(?:prior\s+|providing\s+)?notice)?", re.I), 0.90),
                 (re.compile(r"\b(?:communicated\s+to\s+you\s+periodically|determined\s+by\s+the\s+(?:company|platform))\b", re.I), 0.85),
                 (re.compile(r"\b(?:your\s+continued\s+use\s+(?:of\s+.*?|after\s+.*?)\s*(?:constitutes|shall\s+be\s+deemed|implies)\s+(?:your\s+)?acceptance\s+of\s+(?:the\s+)?(?:modified|new|updated|revised)\s+terms)\b", re.I), 0.94),
                 (re.compile(r"\b(?:we\s+may\s+revise|we\s+may\s+update|we\s+may\s+change)\s+(?:these\s+terms|this\s+agreement)\s+(?:periodically\s+)?without\s+(?:prior\s+)?(?:obligation\s+to\s+notify|notice)\b", re.I), 0.90),
-                (re.compile(r"\b(?:subject\s+to\s+change\s+without\s+(?:prior\s+)?notice)\b", re.I), 0.85),
+                (re.compile(r"\b(?:subject\s+to\s+change\s+without\s+(?:prior\s+|providing\s+)?notice)\b", re.I), 0.85),
                 (re.compile(r"\b(?:modifications\s+shall\s+become\s+effective\s+immediately\s+upon\s+posting)\b", re.I), 0.88),
                 (re.compile(r"\b(?:by\s+continuing\s+to\s+access\s+or\s+use\s+.*?after\s+(?:those\s+)?revisions\s+become\s+effective,\s+you\s+agree\s+to\s+be\s+bound)\b", re.I), 0.90),
             ],
@@ -104,7 +107,8 @@ class TrapDetector:
             "impact": "Exposure to uncapped third-party lawsuit defense costs and unlimited financial liability.",
             "mitigation": "Convert to a mutual indemnification with an explicit aggregate dollar liability cap (e.g., 12 months of fees paid).",
             "patterns": [
-                (re.compile(r"\b(?:customer|user|you|subscriber|client)\s+(?:shall|agrees?\s+to)\s+(?:indemnify,\s*defend\s+and\s+hold\s+harmless|defend,\s*indemnify\s+and\s+hold\s+harmless)\b.*?\b(?:from\s+any\s+and\s+all\s+claims|against\s+all\s+losses|from\s+all\s+damages|against\s+any\s+claims)\b", re.I), 0.98),
+                (re.compile(r"\b(?:customer|user|you|subscriber|client)\s+(?:shall|agrees?\s+to)\s+(?:indemnify,\s*defend\s+and\s+hold\s+harmless|defend,\s*indemnify\s+and\s+hold\s+harmless|be\s+liable\s+for)\b.*?\b(?:from\s+any\s+and\s+all\s+claims|against\s+all\s+losses|from\s+all\s+damages|against\s+any\s+claims|all\s+losses\s+without\s+limitation|without\s+limitation)\b", re.I), 0.98),
+                (re.compile(r"\b(?:customer|user|you)\s+shall\s+be\s+liable\s+for\s+all\s+losses\s+without\s+limitation\b", re.I), 0.98),
                 (re.compile(r"\b(?:hold\s+harmless\s+(?:company|vendor|us|licensor|platform|provider|affiliates))\s+from\s+and\s+against\s+any\s+(?:damages|liabilities|costs|losses|judgments|attorney['’]?s\s+fees|claims)\b", re.I), 0.92),
                 (re.compile(r"\b(?:indemnify\s+(?:us|the\s+company|licensor|provider)\s+for\s+any\s+(?:breach|violation|misuse))\b", re.I), 0.85),
                 (re.compile(r"\b(?:uncapped\s+indemnification|solely\s+responsible\s+for\s+all\s+third-party\s+claims)\b", re.I), 0.90),
@@ -146,8 +150,8 @@ class TrapDetector:
             "impact": "Loss of trade secret protections and inadvertent assignment of your proprietary inventions to the vendor.",
             "mitigation": "Restrict grant to a non-exclusive license solely needed to operate the service; clarify all customer IP remains customer property.",
             "patterns": [
-                (re.compile(r"\b(?:(?:you|employee|contractor|user|customer)\s+(?:hereby\s+)?(?:irrevocably\s+)?assigns?\s+to\s+(?:us|company|the\s+company|provider)|all\s+feedback\s+shall\s+be\s+the\s+sole\s+(?:and\s+exclusive\s+)?property\s+of)\b", re.I), 0.98),
-                (re.compile(r"\b(?:grant\s+(?:us|the\s+company|provider)\s+a\s+perpetual,\s*irrevocable,\s*royalty-free,\s*worldwide\s+(?:transferable,\s*sublicensable\s+)?license\s+to\s+(?:use|reproduce|modify|distribute|exploit|display|create\s+derivative))\b", re.I), 0.94),
+                (re.compile(r"\b(?:(?:you|employee|contractor|user|customer)\s+(?:hereby\s+)?(?:irrevocably\s+)?assigns?\s+(?:to\s+(?:us|company|the\s+company|provider)\s+)?all\s+(?:inventions|ideas|customizations|feedback|right,\s*title,\s*and\s+interest|intellectual\s+property)|all\s+feedback\s+shall\s+be\s+the\s+sole\s+(?:and\s+exclusive\s+)?property\s+of)\b", re.I), 0.98),
+                (re.compile(r"\b(?:grant\s+(?:us|the\s+company|provider|company)\s+a\s+perpetual,\s*irrevocable,\s*(?:royalty-free,\s*)?worldwide\s+(?:transferable,\s*sublicensable\s+)?license\s+to\s+(?:use|reproduce|modify|distribute|exploit|display|create\s+derivative|train))\b", re.I), 0.94),
                 (re.compile(r"\b(?:all\s+improvements,\s*modifications,\s*customizations\s+or\s+derivative\s+works\s+shall\s+belong\s+exclusively\s+to\s+company)\b", re.I), 0.90),
                 (re.compile(r"\b(?:waive\s+all\s+moral\s+rights|waives?\s+(?:any\s+)?moral\s+rights|work\s+made\s+for\s+hire\s+for\s+all\s+customer\s+submissions)\b", re.I), 0.88),
                 (re.compile(r"\b(?:hereby\s+(?:irrevocably\s+)?assigns?\s+(?:and\s+agree\s+to\s+assign\s+)?all\s+(?:right,\s*title,\s*and\s+interest|inventions|ideas|customizations|intellectual\s+property|moral\s+rights))\b", re.I), 0.92),
@@ -167,7 +171,8 @@ class TrapDetector:
             "mitigation": "Explicit Zero-Data-Retention & No-AI-Training clause for customer proprietary content.",
             "patterns": [
                 (re.compile(r"\b(?:use\s+(?:your\s+data|customer\s+content|user\s+submissions|data|content|inputs|prompts)\b.*?\b(?:train|fine-tune|develop|improve|calibrate|train\s+and\s+improve)\b.*?\b(?:machine\s+learning|ai|artificial\s+intelligence|algorithms|neural\s+networks|large\s+language\s+models|models|generative\s+ai))\b", re.I), 0.98),
-                (re.compile(r"\b(?:train|fine-tune|retrain|evaluate)\b.*?\b(?:our|third-party|proprietary)?\s*(?:models|ai|llms|neural\s+networks|algorithms|generative\s+models)\b", re.I), 0.95),
+                (re.compile(r"\b(?:train|fine-tune|retrain|evaluate)\b.*?\b(?:our|third-party|proprietary)?\s*(?:models|ai|llms|neural\s+networks|algorithms|generative\s+models|artificial\s+intelligence|machine\s+learning(?:\s+models)?)\b", re.I), 0.95),
+                (re.compile(r"\b(?:train\s+(?:artificial\s+intelligence|ai|machine\s+learning(?:\s+models)?|models))\b", re.I), 0.96),
                 (re.compile(r"\b(?:process\s+(?:your\s+)?(?:voice\s+input|voice\s+recordings?|location|biometric|search\s+queries|viewing\s+and\s+usage\s+data)\s+in\s+the\s+cloud\s+to\s+(?:respond|improve|train))\b", re.I), 0.92),
                 (re.compile(r"\b(?:stored\s+on\s+servers\s+outside\s+the\s+country\s+in\s+which\s+you\s+live)\b", re.I), 0.88),
                 (re.compile(r"\b(?:read|access|collect|scrape)\s+(?:your\s+)?(?:private\s+)?(?:contacts|contact\s+list|address\s+book|photo\s+gallery|camera|microphone)\b", re.I), 0.98),
@@ -183,12 +188,13 @@ class TrapDetector:
             ],
         },
         TrapCategory.TRAPPED_AUTO_RENEWAL: {
-            "severity": RiskSeverity.MEDIUM,
-            "penalty": 20.0,
-            "danger": "Locks you into automatic multi-year renewals or immediate unilateral access termination without a cure period.",
-            "impact": "Unplanned recurring expenditures and sudden termination of service access.",
-            "mitigation": "Require vendor reminder notification 30 days prior to renewal with easy 1-click in-app cancellation.",
+            "severity": RiskSeverity.HIGH,
+            "penalty": 25.0,
+            "danger": "Locks you into automatic renewals or allows the vendor to seize/retain all prepaid fees without refund upon unilateral cancellation.",
+            "impact": "Unplanned recurring expenditures and immediate financial loss of all deposited/paid funds.",
+            "mitigation": "Require vendor reminder notification 30 days prior to renewal with easy 1-click in-app cancellation and pro-rata refunds.",
             "patterns": [
+                (re.compile(r"\b(?:retain\s+all\s+fees(?:\s+paid(?:\s+by\s+the\s+customer)?)?|keep\s+all\s+fees|forfeiture\s+of\s+all\s+fees|retain\s+all\s+prepaid\s+amounts)\b", re.I), 0.98),
                 (re.compile(r"\b(?:automatically\s+renews?|auto-renews?|automatically\s+extend)\b.*?\b(?:successive|multi-year|additional\s+period|equal\s+length|subsequent\s+term)\b", re.I), 0.92),
                 (re.compile(r"\b(?:at\s+least\s+(?:30|60|90|120)\s+days\s+prior\s+to\s+(?:the\s+end\s+of\s+the\s+(?:current\s+)?term|expiration|renewal))\b", re.I), 0.88),
                 (re.compile(r"\b(?:fees\s+paid\s+are\s+strictly\s+non-refundable|strictly\s+non-refundable|non-refundable\s+under\s+any\s+circumstances?|no\s+refunds\s+or\s+credits)\b", re.I), 0.90),
@@ -226,10 +232,11 @@ class TrapDetector:
         TrapCategory.ZERO_LIABILITY_GUTTING: {
             "severity": RiskSeverity.CRITICAL,
             "penalty": 30.0,
-            "danger": "Vendor totally disclaims all direct and indirect liability, capping total exposure to $0, $50, or trivial amounts even in cases of gross negligence, data breach, or service collapse.",
-            "impact": "You have zero financial recovery if the vendor causes catastrophic data loss or business downtime.",
-            "mitigation": "Add a standard cap equal to 12 months fees paid, with carve-outs for data breach, confidentiality, and gross negligence.",
+            "danger": "Vendor totally disclaims liability or forces an irrevocable waiver of refunds, damages, and legal remedies even upon unilateral termination.",
+            "impact": "You have zero financial recovery or refund recourse if the vendor terminates service or breaches commitments.",
+            "mitigation": "Add a standard cap equal to 12 months fees paid with explicit refund and dispute carve-outs.",
             "patterns": [
+                (re.compile(r"\b(?:(?:irrevocably\s+)?waives?\s+(?:any\s+right\s+to\s+(?:seek\s+a\s+)?refund|any\s+right\s+to\s+seek\s+.*?compensation|all\s+rights\s+to\s+refunds?|all\s+claims\s+for\s+compensation))\b", re.I), 0.99),
                 (re.compile(r"\b(?:in\s+no\s+event\s+(?:shall|will)|under\s+no\s+circumstances\s+(?:shall|will))\s+.*?\b(?:aggregate|total|cumulative)?\s*liability\s+(?:shall\s+not\s+exceed|exceed|be\s+limited\s+to)\s+(?:fifty\s+dollars|one\s+hundred\s+dollars|\$|usd\s*|inr\s*|[0-9]{1,3}|\$[0-9]+)\b", re.I), 0.98),
                 (re.compile(r"\b(?:liability\s+(?:shall\s+not\s+exceed|exceed|is\s+limited\s+to))\s+(?:fifty\s+dollars|one\s+hundred\s+dollars|\$50|\$100|\$0|the\s+amount\s+of\s+\$0|zero\s+dollars|\$[0-9]{1,3})\b", re.I), 0.96),
                 (re.compile(r"\b(?:exceed\s+fifty\s+dollars\s*(?:\(\$50(?:\.00)?\))?|\$50\s*\(fifty\s+dollars\)|\$100\s*\(one\s+hundred\s+dollars\)|fifty\s+dollars\s+\(\$50(?:\.00)?\))\b", re.I), 0.99),
@@ -289,8 +296,14 @@ class TrapDetector:
                     # Discount confidence and penalty
                     effective_conf = max(0.40, effective_conf * 0.6)
 
-                # Deduplicate matched patterns
-                unique_pats = list(dict.fromkeys(matched_pats))[:5]
+                # Deduplicate matched patterns cleanly (filter out substrings / superstrings)
+                clean_pats = []
+                # Sort longest first so we can remove redundant substrings
+                for p in sorted(set(matched_pats), key=lambda x: -len(x)):
+                    p_clean = " ".join(p.split()).strip()
+                    if p_clean and not any(p_clean in other or other in p_clean for other in clean_pats):
+                        clean_pats.append(p_clean)
+                unique_pats = clean_pats[:1] or list(dict.fromkeys(matched_pats))[:1]
                 
                 # Dynamic severity adjustment based on confidence
                 severity = rule["severity"]
@@ -298,6 +311,16 @@ class TrapDetector:
                     severity = RiskSeverity.HIGH
                 elif effective_conf < 0.50:
                     severity = RiskSeverity.MEDIUM
+
+                danger_desc = rule["danger"]
+                impact_desc = rule["impact"]
+
+                if trap_cat == TrapCategory.UNILATERAL_MODIFICATION and re.search(r"\b(?:terminate|cancellation|shut\s+down)\b", clause_text, re.I):
+                    danger_desc = "Allows the provider to terminate service at any time without prior notice or cure period."
+                    impact_desc = "Sudden loss of access with no advance warning or transition window."
+                elif trap_cat == TrapCategory.ASYMMETRIC_INDEMNIFICATION and re.search(r"\b(?:liable\s+for\s+all\s+losses|without\s+limitation|unlimited\s+liability)\b", clause_text, re.I):
+                    danger_desc = "Imposes potentially unlimited liability on the customer for all losses, damages, and expenses without any liability cap or reciprocal vendor protection."
+                    impact_desc = "Exposure to uncapped financial liability and unlimited damages arising from service usage."
 
                 trap_id = f"trap_{clause.clause_id}_{trap_cat.name.lower()}"
                 calc_penalty = round(rule["penalty"] * effective_conf, 1)
@@ -312,8 +335,8 @@ class TrapDetector:
                     flagged_text=clause_text,
                     matched_patterns=unique_pats,
                     safeguards_found=safeguards_found,
-                    legal_danger=rule["danger"],
-                    business_impact=rule["impact"],
+                    legal_danger=danger_desc,
+                    business_impact=impact_desc,
                     recommended_mitigation=rule["mitigation"],
                     penalty_score=calc_penalty,
                 )
@@ -323,21 +346,20 @@ class TrapDetector:
         # 2. Hybrid ML Classification Pass for Novel/Paraphrased Trap Formulations
         if self.ml_classifier and self.ml_classifier.is_trained:
             try:
-                ml_pred = self.ml_classifier.predict_clause(clause_text)
+                ml_pred = self.ml_classifier.predict(clause_text)
                 pred_cat_str = ml_pred.get("predicted_category")
-                conf = ml_pred.get("confidence", 0.0)
+                conf = ml_pred.get("confidence_score", 0.0)
                 
-                if ml_pred.get("is_trap") and conf >= 0.50 and pred_cat_str not in matched_categories:
-                    # Map string label to TrapCategory enum
-                    target_enum = None
-                    for cat_enum in TrapCategory:
-                        if cat_enum.value == pred_cat_str:
-                            target_enum = cat_enum
-                            break
-                    
-                    if target_enum and target_enum in self.TRAP_RULES:
-                        rule = self.TRAP_RULES[target_enum]
-                        
+                # Check if predicted category corresponds to a known trap
+                target_enum = None
+                for cat_enum in TrapCategory:
+                    if cat_enum.value.lower() in pred_cat_str.lower() or pred_cat_str.lower() in cat_enum.value.lower():
+                        target_enum = cat_enum
+                        break
+                
+                if target_enum and conf >= 0.45 and target_enum.value not in matched_categories:
+                    rule = self.TRAP_RULES.get(target_enum)
+                    if rule:
                         # Safeguard verification
                         safeguards_found = []
                         for sf_pat, sf_desc in rule.get("safeguards", []):
@@ -357,7 +379,7 @@ class TrapDetector:
                                 clause_id=clause.clause_id,
                                 clause_title=clause.title,
                                 flagged_text=clause_text,
-                                matched_patterns=[f"Machine Learning Classifier Confidence: {int(eff_conf * 100)}%"],
+                                matched_patterns=[f"Machine Learning Classifier Confidence: {int(eff_conf * 100)}% ({pred_cat_str})"],
                                 safeguards_found=safeguards_found,
                                 legal_danger=rule["danger"],
                                 business_impact=rule["impact"],

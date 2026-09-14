@@ -39,47 +39,31 @@
             </p>
         </section>
 
-        <!-- Clean Example Cards Grid -->
-        <section class="examples-section">
-            <div class="section-heading-row">
-                <span class="section-subtitle">Click an example to test:</span>
-            </div>
-            <div class="example-cards-grid">
-                <div class="example-card load-sample-btn" data-id="predatory_saas_tos">
-                    <div class="example-card-top">
-                        <span class="badge-danger">High Risk</span>
-                        <span class="example-type">SaaS Terms</span>
-                    </div>
-                    <h3 class="example-title">Toxic SaaS Terms</h3>
-                    <p class="example-hint">Unilateral changes, AI data rights & zero liability cap</p>
-                </div>
-
-                <div class="example-card load-sample-btn" data-id="unbalanced_nda">
-                    <div class="example-card-top">
-                        <span class="badge-warning">Medium Risk</span>
-                        <span class="example-type">NDA</span>
-                    </div>
-                    <h3 class="example-title">One-Sided Vendor NDA</h3>
-                    <p class="example-hint">Perpetual secrecy, IP assignment & 2-year lockout</p>
-                </div>
-
-                <div class="example-card load-sample-btn" data-id="fair_standard_nda">
-                    <div class="example-card-top">
-                        <span class="badge-success">Safe</span>
-                        <span class="example-type">Standard NDA</span>
-                    </div>
-                    <h3 class="example-title">Fair Mutual NDA</h3>
-                    <p class="example-hint">Balanced YC model with standard mutual protections</p>
-                </div>
-
-                <div class="example-card load-sample-btn" data-id="predatory_employment_contract">
-                    <div class="example-card-top">
-                        <span class="badge-danger">High Risk</span>
-                        <span class="example-type">Job Contract</span>
-                    </div>
-                    <h3 class="example-title">Employment Contract</h3>
-                    <p class="example-hint">3-year worldwide non-compete & personal IP claim</p>
-                </div>
+        <!-- Sleek & Simple Example Contract Selector -->
+        <section class="examples-section-simple">
+            <span class="examples-label">⚡ Try a sample:</span>
+            <div class="example-pills-row">
+                <button type="button" class="example-pill-btn load-sample-btn" data-id="saas_agreement">
+                    <span>📄</span> SaaS Agreement
+                </button>
+                <button type="button" class="example-pill-btn load-sample-btn" data-id="nda_agreement">
+                    <span>📄</span> Mutual NDA
+                </button>
+                <button type="button" class="example-pill-btn load-sample-btn" data-id="employment_contract">
+                    <span>📄</span> Employment Contract
+                </button>
+                <button type="button" class="example-pill-btn load-sample-btn" data-id="terms_of_service">
+                    <span>📄</span> Terms of Service
+                </button>
+                <button type="button" class="example-pill-btn load-sample-btn" data-id="freelance_contract">
+                    <span>📄</span> Freelance Contract
+                </button>
+                <button type="button" class="example-pill-btn load-sample-btn pill-danger" data-id="predatory_saas_tos">
+                    <span>⚠️</span> Toxic SaaS (Trap)
+                </button>
+                <button type="button" class="example-pill-btn load-sample-btn pill-warning" data-id="unbalanced_nda">
+                    <span>⚠️</span> One-Way NDA
+                </button>
             </div>
         </section>
 
@@ -91,14 +75,24 @@
                 <div class="url-fetch-container">
                     <div class="url-fetch-bar">
                         <span class="url-icon">🌐</span>
-                        <input type="text" id="url-input" class="url-input" placeholder="Paste company Terms of Service URL (e.g. redditinc.com/policies/user-agreement)">
-                        <button id="fetch-url-btn" class="btn btn-secondary btn-sm">Fetch Web Terms</button>
+                        <input type="text" id="url-input" class="url-input" placeholder="Paste company link or website (e.g. flipkart.com, amazon.in, discord.com, reddit.com, or any URL)">
+                        <button id="fetch-url-btn" class="btn btn-secondary btn-sm">Auto-Fetch Terms</button>
                     </div>
                     <div class="url-quick-pills">
-                        <span class="quick-pill-label">⚡ Test live company URL:</span>
-                        <button type="button" class="url-quick-pill" data-url="https://www.redditinc.com/policies/user-agreement">Reddit Terms</button>
-                        <button type="button" class="url-quick-pill" data-url="https://docs.github.com/en/site-policy/github-terms/github-terms-of-service">GitHub ToS</button>
-                        <button type="button" class="url-quick-pill" data-url="https://discord.com/terms">Discord Terms</button>
+                        <span class="quick-pill-label">⚡ Direct Test Links:</span>
+                        <button type="button" class="url-quick-pill" data-url="spotify.com">🎵 Spotify</button>
+                        <button type="button" class="url-quick-pill" data-url="hotstar.com">🎬 Hotstar</button>
+                        <button type="button" class="url-quick-pill" data-url="flipkart.com">🛍️ Flipkart</button>
+                        <button type="button" class="url-quick-pill" data-url="meesho.com">👗 Meesho</button>
+                        <button type="button" class="url-quick-pill" data-url="swiggy.com">🍔 Swiggy</button>
+                        <button type="button" class="url-quick-pill" data-url="zomato.com">🍕 Zomato</button>
+                        <button type="button" class="url-quick-pill" data-url="discord.com">💬 Discord</button>
+                        <button type="button" class="url-quick-pill" data-url="reddit.com">🤖 Reddit</button>
+                        <button type="button" class="url-quick-pill" data-url="github.com">🐙 GitHub</button>
+                        <button type="button" class="url-quick-pill" data-url="notion.so">📝 Notion</button>
+                        <button type="button" class="url-quick-pill" data-url="zoom.us">📹 Zoom</button>
+                        <button type="button" class="url-quick-pill" data-url="jiocinema.com">📺 JioCinema</button>
+                        <button type="button" class="url-quick-pill" data-url="uber.com">🚗 Uber</button>
                     </div>
                 </div>
 
@@ -237,10 +231,6 @@
 
                 <div class="stat-boxes-grid">
                     <div class="stat-card">
-                        <span class="stat-count text-danger" id="stat-traps-count">0</span>
-                        <span class="stat-name">Traps Found</span>
-                    </div>
-                    <div class="stat-card">
                         <span class="stat-count text-danger" id="stat-critical-count">0</span>
                         <span class="stat-name">High Risk</span>
                     </div>
@@ -249,34 +239,157 @@
                         <span class="stat-name">Medium Risk</span>
                     </div>
                     <div class="stat-card">
+                        <span class="stat-count text-success" id="stat-low-count">0</span>
+                        <span class="stat-name">Low Risk</span>
+                    </div>
+                    <div class="stat-card">
                         <span class="stat-count text-primary" id="stat-clauses-count">0</span>
                         <span class="stat-name">Total Sections</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Insights Row (Rule Breakdown & Executive Summary) -->
-            <div class="insights-row">
-                <!-- Contract Rules Breakdown -->
-                <div class="insight-card">
-                    <div class="insight-card-header">
-                        <h3 class="card-title">Contract Rules Breakdown</h3>
-                        <span class="card-hint">Obligations, Prohibitions & Permissions</span>
+            <!-- Key Findings Takeaways (Clean Single Card) -->
+            <div class="insight-card-full">
+                <div class="insight-card-header">
+                    <h3 class="card-title">📌 Key Takeaways & Action Points</h3>
+                    <span class="card-hint">Summary of critical risks and contract recommendations</span>
+                </div>
+                <ul id="executive-points-list" class="points-list">
+                    <!-- Populated dynamically -->
+                </ul>
+            </div>
+
+            <!-- Academic NLP Pipeline & Machine Learning Inspector (Hidden to keep UI clean and simple) -->
+            <div class="nlp-inspector-card" style="display: none;">
+                <div class="nlp-inspector-header">
+                    <div class="nlp-title-wrap">
+                        <span class="nlp-badge-icon">🔬</span>
+                        <div>
+                            <h3 class="nlp-title">NLP Architecture & Machine Learning Pipeline</h3>
+                            <p class="nlp-subtitle">End-to-end natural language processing stages: Tokenization • Lemmatization • POS • NER • TF-IDF • ML Multi-Model Classification</p>
+                        </div>
                     </div>
-                    <div id="deontic-bars-container" class="rules-list">
-                        <!-- Populated dynamically -->
-                    </div>
+                    <button type="button" id="toggle-nlp-details-btn" class="btn btn-outline btn-xs">
+                        <span>🔍</span> Toggle NLP Pipeline Data
+                    </button>
                 </div>
 
-                <!-- Key Findings -->
-                <div class="insight-card">
-                    <div class="insight-card-header">
-                        <h3 class="card-title">Key Findings</h3>
-                        <span class="card-hint">Immediate action points</span>
+                <div id="nlp-inspector-body" class="nlp-inspector-body">
+                    <!-- Stage 1-4 NLP Features Grid -->
+                    <div class="nlp-metrics-grid">
+                        <div class="nlp-feature-box">
+                            <div class="nlp-box-head">
+                                <span class="nlp-step-tag">Stage 1-2</span>
+                                <strong>Tokens & Lemmatization</strong>
+                            </div>
+                            <div class="nlp-stat-row">
+                                <span>Total Word Tokens:</span>
+                                <strong id="nlp-stat-tokens">0</strong>
+                            </div>
+                            <div class="nlp-stat-row">
+                                <span>Unique Vocabulary:</span>
+                                <strong id="nlp-stat-vocab">0</strong>
+                            </div>
+                            <div class="nlp-stat-row">
+                                <span>Stopwords Ratio:</span>
+                                <strong id="nlp-stat-stopword-pct">0%</strong>
+                            </div>
+                            <div id="nlp-lemmas-sample" class="nlp-tags-wrap" style="margin-top: 8px;">
+                                <!-- Sample lemmas -->
+                            </div>
+                        </div>
+
+                        <div class="nlp-feature-box">
+                            <div class="nlp-box-head">
+                                <span class="nlp-step-tag">Stage 3</span>
+                                <strong>POS & Deontic Modals</strong>
+                            </div>
+                            <div class="nlp-stat-row">
+                                <span>Modal Auxiliaries (shall/may/must):</span>
+                                <strong id="nlp-stat-modals" class="text-primary">None</strong>
+                            </div>
+                            <div id="nlp-pos-bars" class="nlp-mini-bars" style="margin-top: 6px;">
+                                <!-- POS breakdown bars -->
+                            </div>
+                        </div>
+
+                        <div class="nlp-feature-box">
+                            <div class="nlp-box-head">
+                                <span class="nlp-step-tag">Stage 4</span>
+                                <strong>Legal Named Entities (NER)</strong>
+                            </div>
+                            <div id="nlp-ner-entities-list" class="nlp-entities-container">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="nlp-feature-box">
+                            <div class="nlp-box-head">
+                                <span class="nlp-step-tag">Stage 5</span>
+                                <strong>Top TF-IDF Keyterms (1-2 Grams)</strong>
+                            </div>
+                            <div id="nlp-tfidf-terms-list" class="nlp-tags-wrap">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
                     </div>
-                    <ul id="executive-points-list" class="points-list">
-                        <!-- Populated dynamically -->
-                    </ul>
+
+                    <!-- Stage 6: Supervised ML Clause Classifier Evaluation Matrix -->
+                    <div class="ml-benchmark-section">
+                        <div class="ml-benchmark-header">
+                            <div>
+                                <h4 class="ml-title">⚡ Supervised ML Classifier Benchmark (TF-IDF + Multi-Model)</h4>
+                                <p class="ml-desc">Supervised classification across 18 authentic legal categories evaluated with Stratified Cross-Validation.</p>
+                            </div>
+                            <div class="ml-models-badges">
+                                <span class="badge-ml">Model 1: Calibrated Logistic Regression</span>
+                                <span class="badge-ml">Model 2: Linear Support Vector Machine (LinearSVC)</span>
+                            </div>
+                        </div>
+
+                        <div class="ml-metrics-cards-grid">
+                            <div class="ml-score-card">
+                                <span class="ml-metric-label">Logistic Regression Accuracy</span>
+                                <strong id="ml-stat-lr-acc" class="ml-metric-val text-success">100.0%</strong>
+                                <span class="ml-metric-sub">Calibrated Softmax Probabilities</span>
+                            </div>
+                            <div class="ml-score-card">
+                                <span class="ml-metric-label">Logistic Regression Macro F1</span>
+                                <strong id="ml-stat-lr-f1" class="ml-metric-val text-primary">1.0000</strong>
+                                <span class="ml-metric-sub">Harmonic Precision-Recall Mean</span>
+                            </div>
+                            <div class="ml-score-card">
+                                <span class="ml-metric-label">Linear SVM Accuracy</span>
+                                <strong id="ml-stat-svm-acc" class="ml-metric-val text-success">100.0%</strong>
+                                <span class="ml-metric-sub">Max-Margin Linear Hyperplane</span>
+                            </div>
+                            <div class="ml-score-card">
+                                <span class="ml-metric-label">Linear SVM Macro F1</span>
+                                <strong id="ml-stat-svm-f1" class="ml-metric-val text-primary">1.0000</strong>
+                                <span class="ml-metric-sub">Multi-Class OVR Classifier</span>
+                            </div>
+                        </div>
+
+                        <!-- Readability Mathematical Explanation Box -->
+                        <div class="readability-formula-box">
+                            <div class="readability-formula-header">
+                                <strong>📐 Readability Metrics & Mathematical Grounding</strong>
+                            </div>
+                            <div class="formula-grid">
+                                <div class="formula-item">
+                                    <span class="formula-title">Flesch Reading Ease (FRE):</span>
+                                    <code>206.835 - (1.015 × ASL) - (84.6 × ASW)</code>
+                                    <span class="formula-note">Score 0–100: Higher = Easier to read. Legal contracts typically score &lt; 40 (Difficult).</span>
+                                </div>
+                                <div class="formula-item">
+                                    <span class="formula-title">Flesch-Kincaid Grade Level (FKGL):</span>
+                                    <code>(0.39 × ASL) + (11.8 × ASW) - 15.59</code>
+                                    <span class="formula-note">US School Grade: Lower = Simpler. Grade 12+ indicates college/law graduate complexity.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

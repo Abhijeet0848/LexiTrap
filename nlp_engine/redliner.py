@@ -3,6 +3,7 @@ Automated Redline & Safe Alternative Generator
 Generates balanced, reciprocal replacement clauses with highlighted diffs and legal rationales.
 """
 
+import re
 import difflib
 import html
 from dataclasses import dataclass, field
@@ -196,6 +197,19 @@ class RedlineGenerator:
         )
 
         replacement_text = template_info["template"]
+        rationale = template_info["rationale"]
+        negotiation = template_info["negotiation"]
+
+        # Context-aware concise termination replacement
+        if trap.category == TrapCategory.UNILATERAL_MODIFICATION and re.search(r"\b(?:terminate|cancellation|shut\s+down)\b", clause.text, re.I):
+            replacement_text = "Either party may terminate this Agreement at any time by providing at least thirty (30) calendar days' prior written notice to the other party."
+            rationale = "Replaces unilateral termination with reciprocal 30-day advance written notice."
+            negotiation = "State: 'We require bilateral termination rights with standard 30-day prior written notice.'"
+        elif trap.category == TrapCategory.ASYMMETRIC_INDEMNIFICATION and re.search(r"\b(?:liable\s+for\s+all\s+losses|without\s+limitation|unlimited\s+liability)\b", clause.text, re.I):
+            replacement_text = "Except for gross negligence or willful misconduct, neither party's total aggregate liability arising under this Agreement shall exceed the total fees paid by Customer in the twelve (12) months preceding the claim."
+            rationale = "Replaces uncapped customer liability with a balanced mutual aggregate liability cap equal to 12 months of fees."
+            negotiation = "State: 'We cannot accept uncapped liability; customer liability must be capped at 12 months fees paid in accordance with standard commercial practice.'"
+
         diff_html = self.generate_diff_html(clause.text, replacement_text)
 
         redline_id = f"redline_{trap.trap_id}"
@@ -211,6 +225,6 @@ class RedlineGenerator:
             diff_html=diff_html,
             strike_through_summary=template_info["strikes"],
             additions_summary=template_info["adds"],
-            legal_rationale=template_info["rationale"],
-            negotiation_talking_point=template_info["negotiation"],
+            legal_rationale=rationale,
+            negotiation_talking_point=negotiation,
         )

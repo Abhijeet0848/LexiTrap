@@ -1,7 +1,8 @@
 """
 Advanced Document Parser & Hierarchical Legal Clause Segmenter
 Handles extraction, boundary segmentation, inline title isolation,
-HTML/Markdown cleanup, and abbreviation-safe sentence tokenization for legal agreements.
+HTML/Markdown cleanup, abbreviation-safe sentence tokenization,
+and strict legal content validation / web noise rejection.
 """
 
 import re
@@ -47,9 +48,10 @@ class DocumentParser:
     High-precision legal agreement parser with:
     - Multi-tier section & article detection (Section 1.1, Article IV, 1., 1.1)
     - Inline title extraction (e.g. '1. INDEMNITY. Customer shall defend...')
-    - HTML and markdown markup cleaning
+    - Web noise, navigation, and category listing filtering
     - Sub-clause preservation (preventing fragmented (a), (b), (i) splitting)
     - Protected legal abbreviation sentence boundary tokenizer
+    - Legal validity verification
     """
 
     # Sub-item patterns that belong inside a clause (should NOT start a new major clause)
@@ -95,35 +97,35 @@ class DocumentParser:
         r"\bw\.r\.t\.\s*": "wrt_placeholder ",
     }
 
+    WEB_NOISE_TOKENS = {
+        "explore plus", "login", "become a seller", "more", "cart", "download app", 
+        "sign in", "sign up", "register", "menu", "search", "back to top", "help center",
+        "24x7 customer care", "security", "sitemap", "about us", "contact us", "careers", 
+        "press", "corporate information", "wishlist", "orders", "rewards", "flipkart plus",
+        "sports & fitness", "fashion", "mobiles", "electronics", "beauty", "home appliances",
+        "toys, baby", "advertise on flipkart", "gift cards", "help center", "consumer policy",
+        "mail us", "registered office address", "social", "facebook", "twitter", "youtube",
+        "for you", "top offers", "appliances", "grocery", "new customer? sign up", "my profile",
+        "mobiles electronics beauty home appliances toys", "flipkart plus zone", "advertise"
+    }
+
+    LEGAL_CONTENT_MARKERS = [
+        r"\b(?:shall|must|may|covenants?|undertakes?|agrees?|hereby|parties|party)\b",
+        r"\b(?:liability|indemnif\w+|warrant\w+|disclaim\w+|terminat\w+|confidential\w*)\b",
+        r"\b(?:arbitration|dispute|governed\s+by|jurisdiction|infringement|intellectual\s+property|ip\b)\b",
+        r"\b(?:non-compete|non-disclosure|damages|breach|remedy|severability|waiver)\b",
+        r"\b(?:agreement|contract|terms\s+of\s+(?:use|service)|user\s+agreement|subscription)\b",
+        r"\b(?:force\s+majeure|assign\w*|invention\w*|proprietary|patent\w*|copyright\w*|entire\s+agreement|statutory|in\s+witness\s+whereof)\b",
+        r"\b(?:employee|employer|contractor|consultant|confidentiality|non-solicitation)\b",
+    ]
+
     def __init__(self):
         pass
 
-    NON_CLAUSE_HEADER_TOKENS = {
-        "days", "day", "hours", "weeks", "months", "additional cost", "free", "refund",
-        "replacement", "exchange", "lifestyle", "no", "yes", "na", "n/a", "etc", "none",
-        "furniture", "home", "books", "electronics", "fashion", "mobiles", "appliances",
-        "grocery", "toys", "sports", "auto", "beauty", "music", "category", "about",
-        "consumer policy", "mail us", "registered office address", "karnataka, india"
-    }
-
-    WEB_NOISE_LINES = {
-        "explore plus", "login", "become a seller", "more", "cart", "download app", 
-        "sign in", "sign up", "register", "menu", "search", "back to top", "help center",
-        "24x7 customer care", "terms of use", "security", "privacy", "sitemap", "about us",
-        "contact us", "careers", "press", "corporate information"
-    }
-
     def clean_text(self, text: str) -> str:
         """
-        Cleans and normalizes raw text, web scrapes, and OCR scan output:
-        - Unescapes HTML entities (&amp;, &lt;, &gt;, &quot;)
-        - Strips HTML tags (e.g. <p>, <div>, <br>)
-        - Decomposes typographic ligatures (ﬁ -> fi, ﬂ -> fl, ﬀ -> ff, etc.)
-        - Normalizes smart quotes, apostrophes, and dashes
-        - Reconstructs broken hyphenated line-wraps from OCR scans (e.g. "indemni-\n fication" -> "indemnification")
-        - Strips web layout noise, SEO title bars, and orphan footer markers
-        - Normalizes Windows (CRLF) and Unix (LF) line endings
-        - Strips zero-width unicode artifacts and collapses whitespace
+        Cleans and normalizes raw text, web scrapes, and OCR scan output.
+        Strips navigation noise, orphan UI labels, and HTML artifacts.
         """
         if not text:
             return ""
@@ -140,17 +142,9 @@ class DocumentParser:
         
         # 4. Decompose Unicode typographic ligatures from OCR
         ligature_map = {
-            "\ufb00": "ff",
-            "\ufb01": "fi",
-            "\ufb02": "fl",
-            "\ufb03": "ffi",
-            "\ufb04": "ffl",
-            "\ufb05": "st",
-            "\ufb06": "st",
-            "œ": "oe",
-            "æ": "ae",
-            "Œ": "OE",
-            "AE": "AE",
+            "\ufb00": "ff", "\ufb01": "fi", "\ufb02": "fl", "\ufb03": "ffi",
+            "\ufb04": "ffl", "\ufb05": "st", "\ufb06": "st", "œ": "oe",
+            "æ": "ae", "Œ": "OE", "AE": "AE",
         }
         for lig, repl in ligature_map.items():
             cleaned = cleaned.replace(lig, repl)
@@ -163,30 +157,27 @@ class DocumentParser:
         # 6. Reconstruct broken hyphenated line wraps (e.g. "indemni-\n fication" -> "indemnification")
         cleaned = re.sub(r"(\b[A-Za-z]+)-\s*\n\s*([A-Za-z]+\b)", r"\1\2", cleaned)
         
-        # 7. Strip stray OCR margin pipe artifacts
-        cleaned = re.sub(r"(?:^|\n)\s*\|\s*", "\n", cleaned)
-
-        # 8. Remove zero-width spaces, BOMs, and non-breaking spaces
+        # 7. Strip zero-width spaces, BOMs, and non-breaking spaces
         cleaned = re.sub(r"[\ufeff\u200b\u200c\u200d\u00a0]", " ", cleaned)
         
-        # 9. Filter web noise, SEO title bars, and standalone corporate footer artifacts
+        # 8. Filter web noise, SEO title bars, and standalone corporate footer artifacts
         lines = cleaned.split("\n")
         filtered_lines = []
         for line in lines:
             s = line.strip()
             if not s:
                 continue
-            if re.search(r"\b(?:Store Online|Best Price in India|Flipkart\.com)\b", s, re.I):
+            if s.lower() in self.WEB_NOISE_TOKENS:
                 continue
-            if s.lower() in self.WEB_NOISE_LINES:
+            if re.search(r"\b(?:Store Online|Best Price in India|Flipkart\.com|Explore Plus|Download App)\b", s, re.I) and len(s.split()) < 8:
+                continue
+            # Filter navigation breadcrumbs (e.g. "Home > Mobiles > Accessories")
+            if " > " in s and len(s.split()) < 10:
                 continue
             filtered_lines.append(s)
         
         cleaned = "\n".join(filtered_lines)
-
-        # 10. Collapse excessive blank lines
         cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
-        
         return cleaned.strip()
 
     def segment_sentences(self, text: str) -> List[str]:
@@ -207,7 +198,7 @@ class DocumentParser:
         # 3. Protect subsection numbers inside text (e.g. Section 4.2.1 or Cl. 3(a))
         protected = re.sub(r"\b(Section|Article|Clause|Sec|Art|Cl)\s+(\d+)\.(\d+)\b", r"\1 \2_sdot_\3", protected, flags=re.I)
 
-        # 4. Split on sentence terminal marks (. ? !) or bullet line markers followed by capital letter / quote / digit / bullet
+        # 4. Split on sentence terminal marks (. ? !) or bullet line markers followed by capital letter
         raw_sentences = re.split(r"(?<=[.?!])\s+(?=[A-Z0-9\"'\(\[•●▪■◆►✓✔○▫\-])|(?<=\n)(?=[•●▪■◆►✓✔○▫\-])", protected)
 
         sentences = []
@@ -228,22 +219,73 @@ class DocumentParser:
 
         return sentences if sentences else [text.strip()]
 
+    def is_legal_sentence(self, sentence: str) -> bool:
+        """Determines if a sentence contains substantive legal terminology."""
+        s = sentence.strip()
+        if len(s.split()) < 4:
+            return False
+        return any(re.search(pat, s, re.IGNORECASE) for pat in self.LEGAL_CONTENT_MARKERS)
+
+    def is_valid_legal_clause(self, text: str, title: str = "") -> bool:
+        """
+        Validates whether a text block is a genuine legal contract clause
+        versus random webpage noise or product catalogue fragments.
+        """
+        words = text.strip().split()
+        if len(words) < 3:
+            return False
+        
+        # Check for web noise headings
+        t_low = title.lower().strip()
+        if t_low in self.WEB_NOISE_TOKENS or any(t_low == w for w in self.WEB_NOISE_TOKENS):
+            return False
+
+        has_legal_marker = any(re.search(pat, text, re.IGNORECASE) for pat in self.LEGAL_CONTENT_MARKERS)
+
+        # Fallback headings ("Preamble & Recitals", "Clause 1", "Section 1") must have substantive legal markers
+        is_fallback_heading = bool(re.match(r"^(?:Clause|Section|Part|Paragraph)\s+\d+$", title.strip(), re.I) or t_low in ("preamble & recitals", "preamble", "recitals"))
+
+        if not is_fallback_heading:
+            legal_heading_keywords = [
+                "definition", "scope", "payment", "liability", "warranty", "indemnif",
+                "confidential", "dispute", "govern", "amend", "renew", "non-compete",
+                "intellectual", "property", "arbitration", "assignment", "ip", "invention",
+                "cancellation", "termination", "user account", "eligibility", "license",
+                "obligation", "data rights", "privacy", "terms of use", "terms of service"
+            ]
+            if any(w in t_low for w in legal_heading_keywords):
+                # Has explicit legal heading - require at least 3 words and no noise tokens
+                return True
+
+        # Must contain at least one legal content pattern
+        if has_legal_marker:
+            return True
+
+        # If length >= 20 words with complete legal sentence punctuation and modal verbs
+        if len(words) >= 20 and re.search(r"\b(?:shall|may|must|agrees?|covenants?|undertakes?)\b", text, re.I) and (text.strip().endswith((".", ";", ":", ")", '"', "'")) or ";" in text):
+            return True
+
+        return False
+
     def parse_header_line(self, line: str) -> Optional[Tuple[str, str, str, str]]:
         """
         Classifies a line into (HEADER_TYPE, NUM, TITLE, BODY) or None.
-        HEADER_TYPE is either 'STANDALONE' or 'INLINE'.
         """
         line_clean = line.strip()
+        # Clean OCR pipe margin artifact at start of line
+        if line_clean.startswith("|") and not line_clean.startswith("|---"):
+            line_clean = line_clean.lstrip("| \t")
+
         if not line_clean:
             return None
 
-        # Ignore bullet items, table rows, and pipe lines (while allowing bold markdown headers starting with **)
-        if (line_clean.startswith(("•", "|")) or (line_clean.startswith(("-", "*")) and not line_clean.startswith("**"))) or " | " in line_clean:
+        # Ignore bullet items and table rows
+        if (line_clean.startswith("•") or (line_clean.startswith(("-", "*")) and not line_clean.startswith("**"))) or " | " in line_clean:
             return None
 
-        # 1. Part / Section / Article / Chapter / Schedule / Annexure standalone header
+        # 1. Part / Section / Article / Clause / Schedule standalone header
         part_match = re.match(
-            r"^(?:Part|Section|Article|Clause|Paragraph|Chapter|Appendix|Schedule|Annexure|Exhibit)\s+([0-9IVXLCDMA-Z]+(?:\.\d+)*)\s*[:.\-–—]?\s*(.*)$",
+            r"^(?:Part|Section|Article|Clause|Paragraph|Chapter|Appendix|Schedule|Annexure)\s+([0-9IVXLCDMA-Z]+(?:\.\d+)*)\s*[:.\-–—]?\s*(.*)$",
             line_clean, re.I
         )
         if part_match:
@@ -252,11 +294,20 @@ class DocumentParser:
             prefix = part_match.group(0).split()[0]
             if not title:
                 title = f"{prefix} {num}"
-            elif prefix.lower() in {"part", "chapter", "schedule", "annexure"}:
-                title = f"{prefix} {num}: {title}"
             return ("STANDALONE", num, title, "")
 
-        # 2. Markdown headers e.g. '### 1. Scope of Service' or '## Dispute Resolution'
+        # 2. Numbered Standalone Header e.g. '1. Definitions', '2. User Account', '3. LIMITATION OF LIABILITY'
+        num_match = re.match(
+            r"^(\d+(?:\.\d+)*)\.?\s+([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{1,65})[:.]?$",
+            line_clean
+        )
+        if num_match:
+            num = num_match.group(1).strip()
+            title = num_match.group(2).strip().rstrip(".:")
+            if title.lower() not in self.WEB_NOISE_TOKENS:
+                return ("STANDALONE", num, title, "")
+
+        # 3. Markdown headers e.g. '### 1. Scope of Service' or '## Dispute Resolution'
         md_match = re.match(
             r"^(#{1,6})\s*(?:(?:Section|Article|Clause|Paragraph)\s+)?(?:(\d+(?:\.\d+)*|[IVXLCDM]+\.)\s*)?[:.\-–—]?\s*(.+)$",
             line_clean, re.I
@@ -264,10 +315,10 @@ class DocumentParser:
         if md_match:
             num = (md_match.group(2) or "").replace(".", "").strip()
             title = re.sub(r"[*#_`]", "", md_match.group(3)).strip()
-            if title.lower() not in self.NON_CLAUSE_HEADER_TOKENS:
+            if title.lower() not in self.WEB_NOISE_TOKENS:
                 return ("STANDALONE", num, title, "")
 
-        # 3. Bold Markdown headers e.g. '**1. Title**' or '**Section 1: Indemnity**'
+        # 4. Bold Markdown headers e.g. '**1. Title**' or '**Section 1: Indemnity**'
         bold_match = re.match(
             r"^\*\*(?:(?:Section|Article|Clause|Paragraph)\s+)?(?:(\d+(?:\.\d+)*|[IVXLCDM]+\.)\s*)?[:.\-–—]?\s*([^*]+)\*\*$",
             line_clean, re.I
@@ -275,62 +326,60 @@ class DocumentParser:
         if bold_match:
             num = (bold_match.group(1) or "").replace(".", "").strip()
             title = bold_match.group(2).strip()
-            if title.lower() not in self.NON_CLAUSE_HEADER_TOKENS:
-                return ("STANDALONE", num, title, "")
-
-        # 4. Numbered Standalone Header e.g. '1. Definitions', '1.1 Scope of Work', '1. MODIFICATION OF TERMS.'
-        num_match = re.match(
-            r"^(\d+(?:\.\d+)*)\.?\s+([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{1,70})[:.]?$",
-            line_clean
-        )
-        if num_match:
-            num = num_match.group(1).strip()
-            title = num_match.group(2).strip().rstrip(".:")
-            if title.lower() not in self.NON_CLAUSE_HEADER_TOKENS:
+            if title.lower() not in self.WEB_NOISE_TOKENS:
                 return ("STANDALONE", num, title, "")
 
         # 5. ALL-CAPS standalone header e.g. 'LIMITATION OF LIABILITY'
-        if re.match(r"^[A-Z\s,;/\-–—]{4,60}:?$", line_clean) and len(line_clean.split()) <= 8:
+        if re.match(r"^[A-Z\s,;/\-–—]{4,60}:?$", line_clean) and len(line_clean.split()) <= 7:
             title = line_clean.rstrip(":")
-            if title.lower() not in self.NON_CLAUSE_HEADER_TOKENS:
+            if title.lower() not in self.WEB_NOISE_TOKENS and any(w in title for w in ["TERMS", "LIABILITY", "INDEMNITY", "TERMINATION", "WARRANTY", "DISPUTE", "CONFIDENTIAL", "PAYMENT", "GOVERNING", "MODIFICATION", "RENEWAL", "GENERAL", "DEFINITIONS"]):
                 return ("STANDALONE", "", title, "")
 
-        # 6. Standalone Policy Title Lines (e.g. 'Cancellation Policy - Hyperlocal', 'Easy Doorstep Cancellation', 'Returns Policy')
-        words = line_clean.split()
-        if 1 <= len(words) <= 7 and len(line_clean) <= 65 and not line_clean.endswith((".", ";", ",")) and not line_clean[0].islower():
-            lower = line_clean.lower()
-            not_starters = (
-                "the ", "if ", "you ", "we ", "in ", "for ", "any ", "all ", "each ",
-                "either ", "neither ", "customer ", "user ", "by ", "except ", "subject ",
-                "such ", "this ", "these ", "under ", "provided ", "whereas ", "now therefore", 
-                "do read", "refer ", "our ", "free ", "brand ", "please "
-            )
-            is_title_case = all(w[0].isupper() or w.lower() in {"and", "or", "of", "the", "in", "on", "for", "to", "with", "a", "an", "-", "/", "&"} for w in words if w)
-            has_policy_kw = bool(re.search(r"\b(?:Policy|Terms|Cancellation|Returns|Guidelines|Rules|Agreement|Provisions|Notice|Dispute|Warranty|Delivery|Hyperlocal|Conditions|Exceptions|Obligations|Liability|Indemnity)\b", line_clean, re.I))
-            
-            if not lower.startswith(not_starters) and (is_title_case or has_policy_kw) and lower not in self.NON_CLAUSE_HEADER_TOKENS:
-                return ("STANDALONE", "", line_clean, "")
-
-        # 7. Inline Section with body e.g. '1. INDEMNIFICATION. Customer agrees to defend...', '3.e Disputes/Binding Arbitration. Any dispute...', or 'a. Use of Services. To use...'
+        # 6. Inline Section with body e.g. '1. INDEMNIFICATION. Customer agrees to defend...'
         inline_match = re.match(
-            r"^(?:(?:Section|Article|Clause|Paragraph)\s+)?([a-z0-9]+(?:\.[a-z0-9]+)*|\([a-z0-9]+\)|[IVXLCDM]+\.)?\s*[:.\-–—]?\s*([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{2,75})[:.\-–—]\s+(.+)$",
+            r"^(?:(?:Section|Article|Clause|Paragraph)\s+)?([a-z0-9]+(?:\.[a-z0-9]+)*|\([a-z0-9]+\)|[IVXLCDM]+\.)?\s*[:.\-–—]?\s*([A-Za-z][A-Za-z0-9\s/&,;'\(\)\-–—]{2,65})[:.\-–—]\s+(.+)$",
             line_clean, re.I
         )
         if inline_match:
             num = (inline_match.group(1) or "").replace(".", "").replace("(", "").replace(")", "").strip()
             title = inline_match.group(2).strip()
             body = inline_match.group(3).strip()
-            words = title.split()
-            if len(words) <= 9 and title.lower() not in self.NON_CLAUSE_HEADER_TOKENS and not title.lower().startswith((
-                "if ", "the ", "in the event", "provided that", "neither party", "each party", "you agree", "customer shall", "we reserve", "we will", "when you"
+            if title.lower() not in self.WEB_NOISE_TOKENS and not title.lower().startswith((
+                "if ", "the ", "in the event", "provided that", "neither party", "each party", "you agree", "customer shall"
             )):
                 return ("INLINE", num, title, body)
 
         return None
 
+    def infer_clause_title(self, text: str, fallback: str = "Clause") -> str:
+        """Infers a domain-accurate title for standalone clauses without explicit headings."""
+        t_low = text.lower()
+        if re.search(r"\b(?:liability|damages|shall\s+not\s+exceed|capped\s+at)\b", t_low):
+            return "Limitation of Liability"
+        elif re.search(r"\b(?:terminate|termination|cancellation)\b", t_low):
+            return "Termination Clause"
+        elif re.search(r"\b(?:indemnif\w+|hold\s+harmless|defend\s+and\s+indemnify)\b", t_low):
+            return "Indemnification"
+        elif re.search(r"\b(?:confidential\w*|non-disclosure|proprietary\s+information)\b", t_low):
+            return "Confidentiality"
+        elif re.search(r"\b(?:arbitration|dispute\s+resolution|governing\s+law|jurisdiction)\b", t_low):
+            return "Dispute Resolution"
+        elif re.search(r"\b(?:payment|invoicing|fees|pricing|billing)\b", t_low):
+            return "Payment & Fees"
+        elif re.search(r"\b(?:warrant\w*|disclaim\w*|as\s+is)\b", t_low):
+            return "Warranties & Disclaimers"
+        elif re.search(r"\b(?:non-compete|non-solicitation)\b", t_low):
+            return "Restrictive Covenants"
+        elif re.search(r"\b(?:intellectual\s+property|inventions?|copyright|patent)\b", t_low):
+            return "Intellectual Property"
+        elif re.search(r"\b(?:whereas|recitals?|entered\s+into\s+by\s+and\s+between)\b", t_low):
+            return "Preamble & Recitals"
+        return fallback
+
     def parse(self, text: str, document_name: str = "Contract Document") -> List[ContractClause]:
         """
-        Parses full legal agreement text into a structured list of ContractClause objects.
+        Parses full legal agreement text into a structured list of verified ContractClause objects.
+        Filters out non-legal webpage noise and orphan fragments.
         """
         cleaned = self.clean_text(text)
         if not cleaned:
@@ -350,7 +399,6 @@ class DocumentParser:
             if not stripped:
                 continue
 
-            # Classify line as a clause or named subclause header first
             header_info = self.parse_header_line(stripped)
 
             if header_info is not None:
@@ -360,11 +408,7 @@ class DocumentParser:
                 if current_lines:
                     block_text = " ".join(current_lines).strip()
                     if block_text:
-                        block_title = current_header
-                        if not block_title and is_preamble:
-                            block_title = "Preamble & Recitals"
-                        elif not block_title:
-                            block_title = f"Clause {len(raw_blocks) + 1}"
+                        block_title = current_header or self.infer_clause_title(block_text, "Preamble & Recitals" if is_preamble else f"Section {len(raw_blocks) + 1}")
 
                         raw_blocks.append({
                             "number": current_num or str(len(raw_blocks) + 1),
@@ -373,30 +417,26 @@ class DocumentParser:
                             "start_line": start_line_idx,
                             "end_line": i - 1,
                         })
-                        is_preamble = False
 
-                current_num = matched_num
+                # Start new block
+                is_preamble = False
                 current_header = matched_title
+                current_num = matched_num
                 current_lines = [inline_body] if inline_body else []
                 start_line_idx = i
                 continue
 
-            # Check if this line is a sub-bullet item like (a), (b), (i), •, - inside an existing clause
             if self.SUB_ITEM_PATTERN.match(stripped) and (current_lines or current_header):
                 current_lines.append(stripped)
                 continue
 
             current_lines.append(stripped)
 
-        # Flush the final block
+        # Flush final block
         if current_lines:
             block_text = " ".join(current_lines).strip()
             if block_text:
-                block_title = current_header
-                if not block_title and is_preamble:
-                    block_title = "Preamble & Recitals"
-                elif not block_title:
-                    block_title = f"Clause {len(raw_blocks) + 1}"
+                block_title = current_header or self.infer_clause_title(block_text, "Preamble & Recitals" if is_preamble else f"Section {len(raw_blocks) + 1}")
 
                 raw_blocks.append({
                     "number": current_num or str(len(raw_blocks) + 1),
@@ -418,31 +458,35 @@ class DocumentParser:
                     "end_line": len(lines),
                 })
 
+        # Filter out non-legal blocks
         clauses: List[ContractClause] = []
-        for idx, block in enumerate(raw_blocks, 1):
+        clause_counter = 1
+
+        for block in raw_blocks:
             clause_text = block["text"]
+            title = block["title"].strip()
+            
+            # Strict Legal Content Validation
+            if not self.is_valid_legal_clause(clause_text, title=title):
+                continue
+
             sentences = self.segment_sentences(clause_text)
             words = clause_text.split()
             
             # Clean and sanitize title
-            title = block["title"]
-            title = re.sub(r"[*#_`]", "", title).strip()
-            if not title:
-                title = f"Clause {idx}"
-            if len(title) > 65:
-                title = title[:62] + "..."
+            clean_title = re.sub(r"[*#_`]", "", title).strip()
+            if not clean_title or clean_title.lower() in self.WEB_NOISE_TOKENS:
+                clean_title = f"Section {clause_counter}"
+            if len(clean_title) > 60:
+                clean_title = clean_title[:57] + "..."
 
-            # Extract subclauses (e.g. (a), (b), (i))
-            subsections = []
-            for s in sentences:
-                if self.SUB_ITEM_PATTERN.match(s):
-                    subsections.append(s)
+            subsections = [s for s in sentences if self.SUB_ITEM_PATTERN.match(s)]
 
             clauses.append(
                 ContractClause(
-                    clause_id=f"clause_{idx:03d}",
-                    clause_number=block["number"],
-                    title=title,
+                    clause_id=f"clause_{clause_counter:03d}",
+                    clause_number=block["number"] or str(clause_counter),
+                    title=clean_title,
                     text=clause_text,
                     start_line=block["start_line"],
                     end_line=block["end_line"],
@@ -454,5 +498,6 @@ class DocumentParser:
                     metadata={"document": document_name},
                 )
             )
+            clause_counter += 1
 
         return clauses

@@ -1,0 +1,25 @@
+ENTERPRISE SAAS MASTER SERVICES AGREEMENT
+
+Section 1. Definitions and Scope of Service
+Provider shall deliver cloud-based workflow analytics and machine learning tools in accordance with the applicable Order Form. Customer may authorize designated employees to access the hosted portal subject to the terms of this Agreement.
+
+Section 2. Subscription Fees and Payment Terms
+Customer agrees to pay all undisputed subscription fees specified in the Order Form within thirty (30) days of the invoice date. Late payments shall accrue interest at the statutory rate of 1.5% per month or the legal maximum permitted by law.
+
+Section 3. Subscription Term and Renewal Notice
+This Agreement shall remain in effect for an initial twelve (12) month term. Provider must provide an electronic reminder notice at least thirty (30) days prior to any renewal date. Customer may cancel at any time via the online billing console with fifteen (15) days notice.
+
+Section 4. Termination and Notice Requirements
+Either party may terminate this Agreement without cause upon providing thirty (30) calendar days prior written notice, or immediately in the event of an uncured material breach following a thirty (30) day cure period. Upon termination, Customer shall receive a pro-rata refund for any prepaid, unearned subscription fees.
+
+Section 5. Limitation of Liability and Liability Caps
+Except for gross negligence, willful misconduct, or breaches of confidentiality, each party's aggregate maximum liability arising under or relating to this Agreement shall be strictly capped at the total amount of fees paid by Customer during the preceding twelve (12) months. Neither party shall be liable for indirect, punitive, or consequential damages.
+
+Section 6. Intellectual Property Rights and User Data Ownership
+Customer retains all right, title, and ownership interest in all Customer Data, proprietary datasets, and confidential intellectual property uploaded to the platform. Provider is granted a limited, non-exclusive license solely to process Customer Data for delivering the requested analytical services during the active term.
+
+Section 7. Amendments and Modifications
+Neither party may modify or amend this Agreement except through a written instrument signed by authorized representatives of both parties. Provider may update standard technical documentation upon thirty (30) days prior notice.
+
+Section 8. Governing Law and Dispute Resolution
+This Agreement shall be governed by and construed under the laws of the State of Delaware, without regard to conflicts of law provisions. Any dispute arising out of this Agreement shall be resolved through good faith negotiations, preserving either party's right to seek relief in a court of competent jurisdiction in Dover, Delaware.

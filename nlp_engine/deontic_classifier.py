@@ -222,16 +222,18 @@ class DeonticClassifier:
             pct = round((count / total_sentences * 100), 1) if total_sentences > 0 else 0.0
             percentages[cat] = pct
 
-        # Calculate Asymmetry Ratio
-        total_user_burdens = actor_obligation_counts["user_obligations"] + actor_obligation_counts["user_prohibitions"]
-        total_vendor_duties = actor_obligation_counts["vendor_obligations"] + actor_obligation_counts["mutual_obligations"]
+        # Calculate Asymmetry Ratio accurately
+        user_burdens = actor_obligation_counts["user_obligations"] + actor_obligation_counts["user_prohibitions"]
+        vendor_commitments = actor_obligation_counts["vendor_obligations"] + actor_obligation_counts["mutual_obligations"]
         
-        if total_vendor_duties == 0 and total_user_burdens > 0:
+        if user_burdens == 0 and vendor_commitments == 0:
+            asymmetry_index = 0.0
+        elif vendor_commitments == 0 and user_burdens > 0:
             asymmetry_index = 100.0
-        elif total_user_burdens + total_vendor_duties > 0:
-            asymmetry_index = round((total_user_burdens / (total_user_burdens + total_vendor_duties)) * 100, 1)
+        elif user_burdens == 0 and vendor_commitments > 0:
+            asymmetry_index = 0.0
         else:
-            asymmetry_index = 50.0
+            asymmetry_index = round((user_burdens / (user_burdens + vendor_commitments)) * 100, 1)
 
         return {
             "total_sentences": total_sentences,

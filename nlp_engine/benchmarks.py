@@ -22,6 +22,10 @@ class BenchmarkClause:
     fair_text: str
     key_protective_features: List[str]
 
+    @property
+    def standard_text(self) -> str:
+        return self.fair_text
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "benchmark_id": self.benchmark_id,
@@ -29,6 +33,7 @@ class BenchmarkClause:
             "standard_name": self.standard_name,
             "title": self.title,
             "fair_text": self.fair_text,
+            "standard_text": self.fair_text,
             "key_protective_features": self.key_protective_features,
         }
 
@@ -194,6 +199,16 @@ class BenchmarkMatcher:
     def match_benchmark_for_category(self, category: TrapCategory) -> Optional[BenchmarkClause]:
         """Returns the gold-standard benchmark clause for a specific trap category."""
         return self.benchmark_map.get(category)
+
+    def get_standard_clause(self, category: Any) -> Optional[BenchmarkClause]:
+        """Returns standard benchmark clause by category enum or string name."""
+        if isinstance(category, TrapCategory):
+            return self.benchmark_map.get(category)
+        cat_str = str(category).lower()
+        for cat_enum, bm in self.benchmark_map.items():
+            if cat_enum.value.lower() in cat_str or cat_str in cat_enum.value.lower() or cat_enum.name.lower() in cat_str:
+                return bm
+        return self.STANDARD_BENCHMARKS[0] if self.STANDARD_BENCHMARKS else None
 
     def calculate_clause_deviation(self, clause_text: str, category: TrapCategory) -> Dict[str, Any]:
         """

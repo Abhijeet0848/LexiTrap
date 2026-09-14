@@ -1,0 +1,22 @@
+MUTUAL NON-DISCLOSURE AND CONFIDENTIALITY AGREEMENT
+
+Section 1. Purpose and Scope
+Discloser and Recipient wish to explore a potential strategic business collaboration and may disclose confidential proprietary trade secrets and technical specifications to one another.
+
+Section 2. Definition of Confidential Information
+"Confidential Information" means all non-public technical, product, financial, and business data disclosed by one party ("Discloser") to the other ("Recipient"), marked as proprietary or reasonably understood to be confidential under the circumstances of disclosure.
+
+Section 3. Standard of Care and Non-Disclosure Obligations
+Recipient agrees to protect Discloser's Confidential Information with the same degree of reasonable care it exercises for its own confidential information, but in no event less than standard reasonable care. Recipient shall not disclose Confidential Information to any third party without prior written consent.
+
+Section 4. Exclusions from Confidentiality
+Confidential Information does not include information that: (a) becomes publicly available through no breach of Recipient; (b) was already known to Recipient prior to disclosure; (c) is independently developed without reference to Discloser's data; or (d) is rightfully received from a third party without duty of confidentiality.
+
+Section 5. Term and Duration of Obligations
+This Agreement shall remain in effect for a term of two (2) years from the Effective Date. The confidentiality and non-use obligations with respect to all disclosed Confidential Information shall survive termination for a period of three (3) years.
+
+Section 6. Return and Destruction of Materials
+Upon Discloser's written request following termination, Recipient shall promptly destroy or return all copies of Confidential Information, retaining only one archival copy strictly required for legal compliance and compliance auditing.
+
+Section 7. Remedies and Governing Law
+Each party acknowledges that unauthorized disclosure of trade secrets causes irreparable harm for which monetary damages are inadequate. Either party may seek injunctive relief in a court of competent jurisdiction located in New Delhi, India, governed by the laws of India.

@@ -33,6 +33,7 @@ class AuditReport:
     executive_summary_points: List[str]
     redlines: List[Dict[str, Any]]
     readability_profile: Dict[str, Any] = field(default_factory=dict)
+    nlp_overview: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -56,6 +57,7 @@ class AuditReport:
             "executive_summary_points": self.executive_summary_points,
             "redlines": self.redlines,
             "readability_profile": self.readability_profile,
+            "nlp_overview": self.nlp_overview,
         }
 
 
@@ -82,47 +84,40 @@ class ContractScorer:
 
     def compute_health_grade(self, health_score: float) -> tuple[str, str, str, str]:
         """Maps health score (0-100) to Letter Grade, Risk Level, Verdict Title, and Description."""
-        if health_score >= 90:
+        if health_score >= 85:
             return (
                 "A+",
                 "SAFE",
                 "Safe & Balanced Agreement",
                 "The contract adheres to standard industry norms with balanced protections and minimal legal risks."
             )
-        elif health_score >= 80:
+        elif health_score >= 70:
             return (
                 "A",
                 "LOW RISK",
                 "Standard Commercial Terms",
                 "The agreement is generally standard, with minor customary clauses that pose minimal operational concern."
             )
-        elif health_score >= 65:
+        elif health_score >= 50:
             return (
                 "B",
                 "MODERATE RISK",
-                "Proceed with Minor Caution",
+                "Proceed with Caution",
                 "Several clauses contain one-sided provisions. Request targeted redlines before execution."
             )
-        elif health_score >= 45:
+        elif health_score >= 30:
             return (
                 "C",
-                "ELEVATED RISK",
-                "Unbalanced Terms Detected",
-                "Contains material legal risks including asymmetric liability and potential IP exposure. Redlines strongly advised."
-            )
-        elif health_score >= 25:
-            return (
-                "D",
                 "HIGH RISK",
-                "Predatory Terms Identified",
-                "Significant high-risk dark patterns found (e.g. unilateral amendments, broad IP grabs). Do NOT sign without comprehensive redlines."
+                "Unbalanced / Predatory Terms",
+                "Contains material legal risks including asymmetric liability and potential IP exposure. Redlines strongly advised."
             )
         else:
             return (
                 "F",
-                "CRITICAL TOXICITY",
-                "Critical Risk - Do Not Sign",
-                "Severe predatory contract loaded with dangerous liability traps, AI data harvesting, and rights waivers."
+                "CRITICAL RISK",
+                "Critical Danger - Do Not Sign",
+                "Severe predatory contract loaded with dangerous liability traps, AI data harvesting, or harsh rights waivers."
             )
 
     def calculate_clause_risk(self, clause_traps: List[TrapMatch]) -> tuple[float, str]:
@@ -154,6 +149,7 @@ class ContractScorer:
         redlines: List[Dict[str, Any]],
         clause_details: List[Dict[str, Any]],
         readability_profile: Optional[Dict[str, Any]] = None,
+        nlp_overview: Optional[Dict[str, Any]] = None,
     ) -> AuditReport:
         """Assembles a full AuditReport with calibrated penalty bounds and asymmetry metrics."""
         total_clauses = len(clauses)
@@ -180,13 +176,6 @@ class ContractScorer:
             category_penalties[cat_name] = round(capped_p, 1)
             total_penalty += capped_p
 
-        # Factor in extreme asymmetry (>85% user burden on multi-clause contract)
-        asymmetry_index = deontic_profile.get("asymmetry_index", 50.0)
-        if asymmetry_index > 85.0 and total_clauses >= 3 and len(traps) > 0:
-            asym_penalty = 5.0
-            total_penalty += asym_penalty
-            category_penalties["Structural Duty Asymmetry"] = asym_penalty
-
         # Calibrated Proportional Health Score Calculation
         if len(traps) == 0:
             health_score = 100.0
@@ -197,9 +186,9 @@ class ContractScorer:
             safe_ratio = safe_clause_count / max(1, total_clauses)
             
             # Composite formula: 30% safe clause ratio + 70% exponential penalty decay
-            penalty_decay = math.exp(-total_penalty / 75.0)
+            penalty_decay = math.exp(-total_penalty / 65.0)
             raw_health = 100.0 * (0.30 * safe_ratio + 0.70 * penalty_decay)
-            health_score = round(max(10.0, min(92.0, raw_health)), 1)
+            health_score = round(max(5.0, min(85.0, raw_health)), 1)
             risk_score = round(100.0 - health_score, 1)
 
         letter_grade, risk_level, verdict_title, verdict_desc = self.compute_health_grade(health_score)
@@ -216,11 +205,12 @@ class ContractScorer:
         for cat, pen in sorted(category_penalties.items(), key=lambda x: x[1], reverse=True)[:3]:
             summary_points.append(f"Major risk driver: '{cat}' contributing {pen} penalty points.")
 
-        if asymmetry_index > 85.0 and total_clauses >= 3:
-            summary_points.append(f"High Contractual Asymmetry ({asymmetry_index}%): The agreement places almost all burdens on the user while giving maximum discretion to the vendor.")
+        asymmetry_index = deontic_profile.get("asymmetry_index", 0.0)
+        if asymmetry_index >= 60.0 and len(traps) > 0 and total_clauses >= 3:
+            summary_points.append(f"Contractual Duty Asymmetry ({asymmetry_index}%): The agreement places majority burdens on the user while giving wide unilateral discretion to the vendor.")
 
         if not summary_points:
-            summary_points.append("No predatory legal patterns or dark traps detected. Agreement is clean.")
+            summary_points.append("No predatory legal patterns or dark traps detected. Agreement is clean and balanced.")
 
         return AuditReport(
             document_name=document_name,
@@ -243,4 +233,5 @@ class ContractScorer:
             executive_summary_points=summary_points,
             redlines=redlines,
             readability_profile=readability_profile or {},
+            nlp_overview=nlp_overview or {},
         )

@@ -1,0 +1,22 @@
+SOFTWARE ENGINEERING EMPLOYMENT AGREEMENT
+
+Section 1. Position and Scope of Duties
+Employee is engaged as a Lead Software Architect. Employee agrees to faithfully perform duties and devote professional efforts to the advancement of Company objectives during normal working hours.
+
+Section 2. Compensation, Stock Options, and Benefits
+Company shall pay Employee an annual base salary of $160,000, payable bi-weekly in accordance with standard payroll schedules. Employee shall be entitled to standard health insurance benefits, paid annual leave of twenty (20) business days, and equity grants subject to vesting.
+
+Section 3. Intellectual Property Assignment
+Employee hereby assigns to Company all right, title, and interest in and to any software inventions, algorithms, and works of authorship created during working hours, using Company resources, or directly related to Company's business. Employee retains full personal ownership over personal open-source projects created strictly on personal time without using Company equipment.
+
+Section 4. Confidentiality of Proprietary Assets
+Employee agrees not to disclose or misappropriate any confidential trade secrets, source code, customer databases, or proprietary technical roadmaps during or following the term of employment for a duration of two (2) years.
+
+Section 5. Non-Solicitation and Reasonable Restraints
+During employment and for twelve (12) months following voluntary departure, Employee shall not directly solicit active Company employees to terminate their employment or solicit existing customers to divert business away from Company.
+
+Section 6. Termination and Severance
+Employment is at-will. Either party may terminate the employment relationship at any time by providing thirty (30) days prior written notice. If Company terminates without cause, Employee shall receive two (2) months base salary as severance pay.
+
+Section 7. Governing Law and Jurisdiction
+This Agreement shall be governed by and interpreted in accordance with the laws of the State of California, United States.

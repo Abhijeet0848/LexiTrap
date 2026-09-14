@@ -1,0 +1,22 @@
+INDEPENDENT CONTRACTOR AND FREELANCE SERVICES AGREEMENT
+
+Section 1. Statement of Work and Deliverables
+Contractor agrees to perform UI/UX design and frontend development services as detailed in the attached Statement of Work. All deliverables shall be completed in a professional and workmanlike manner adhering to agreed technical specifications.
+
+Section 2. Invoicing, Milestones, and Payment Terms
+Client shall pay Contractor the sum of $8,500 across three milestone installments. Payment for each milestone shall be remitted within fourteen (14) calendar days following Client's written approval of the milestone deliverables.
+
+Section 3. Intellectual Property and Work Made for Hire
+Upon receipt of full payment from Client, Contractor assigns all right, title, and interest in the custom deliverables to Client. Contractor retains full ownership over pre-existing code libraries, developer tools, and generic frameworks.
+
+Section 4. Independent Contractor Status
+Contractor is an independent contractor, not an employee, agent, or partner of Client. Contractor is solely responsible for payment of all federal, state, and local taxes and self-employment contributions.
+
+Section 5. Warranties and Limitation of Liability
+Contractor warrants that the deliverables do not infringe any third-party intellectual property rights. Contractor's aggregate liability under this Agreement shall not exceed the total fees received under the applicable Statement of Work.
+
+Section 6. Termination and Notice
+Either party may terminate this Agreement without cause upon providing fourteen (14) days prior written notice. Upon termination, Client shall pay Contractor for all completed milestones and approved work performed up to the termination date.
+
+Section 7. Governing Law and Arbitration
+This Agreement is governed by the laws of the State of Texas. Any controversy or claim arising out of this contract shall be settled by binding arbitration in Austin, Texas.

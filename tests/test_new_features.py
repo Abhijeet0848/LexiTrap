@@ -107,5 +107,34 @@ class TestNewFeatures(unittest.TestCase):
         self.assertTrue(comparison["traps_eliminated_count"] >= 1)
         self.assertTrue(comparison["is_safer"])
 
+    def test_api_fetch_url_validation(self):
+        """Verify /api/fetch-url rejects empty URLs and SSRF attacks."""
+        # Empty input
+        resp = self.app.post("/api/fetch-url", json={"url": ""})
+        self.assertEqual(resp.status_code, 400)
+
+        # Self-fetch blocking
+        resp = self.app.post("/api/fetch-url", json={"url": "http://localhost:5000"})
+        self.assertEqual(resp.status_code, 400)
+
+    def test_api_fetch_url_flipkart_discovery(self):
+        """Verify /api/fetch-url auto-discovers Flipkart terms from bare domain name."""
+        resp = self.app.post("/api/fetch-url", json={"url": "flipkart.com"})
+        self.assertEqual(resp.status_code, 200)
+        data = resp.get_json()
+        self.assertEqual(data["status"], "success")
+        self.assertIn("Flipkart", data["title"])
+        self.assertTrue(len(data["text"]) > 200)
+
+    def test_api_fetch_url_meesho_discovery(self):
+        """Verify /api/fetch-url resolves Meesho terms even with bot protection."""
+        resp = self.app.post("/api/fetch-url", json={"url": "https://www.meesho.com/"})
+        self.assertEqual(resp.status_code, 200)
+        data = resp.get_json()
+        self.assertEqual(data["status"], "success")
+        self.assertIn("Meesho", data["title"])
+        self.assertTrue(len(data["text"]) > 200)
+        self.assertIn("meesho", data["text"].lower())
+
 if __name__ == "__main__":
     unittest.main()

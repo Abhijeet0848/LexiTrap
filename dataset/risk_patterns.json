@@ -1,0 +1,118 @@
+{
+  "taxonomies": [
+    {
+      "id": "unilateral_modification",
+      "name": "Unilateral Modification",
+      "category": "Modification",
+      "severity": "HIGH",
+      "score_weight": 25,
+      "patterns": [
+        "modify these terms at any time",
+        "change fees at its sole discretion",
+        "without prior notice",
+        "continued use constitutes acceptance",
+        "unilateral right to alter"
+      ],
+      "reason": "Permits one party to modify prices, SLAs, or covenants unilaterally without advance consent or right of refund."
+    },
+    {
+      "id": "asymmetric_indemnity",
+      "name": "Asymmetric Indemnification",
+      "category": "Indemnification",
+      "severity": "HIGH",
+      "score_weight": 20,
+      "patterns": [
+        "customer agrees to defend, indemnify",
+        "indemnify provider from all claims",
+        "hold harmless against all losses",
+        "customer shall indemnify provider for any regulatory"
+      ],
+      "reason": "Imposes one-sided defense and indemnity obligations on the customer while providing zero IP or breach defense from the vendor."
+    },
+    {
+      "id": "forced_arbitration_waiver",
+      "name": "Forced Arbitration & Class Action Waiver",
+      "category": "Arbitration",
+      "severity": "HIGH",
+      "score_weight": 20,
+      "patterns": [
+        "waives all rights to a jury trial",
+        "class action waiver",
+        "binding individual arbitration",
+        "waive any right to participate in a class action"
+      ],
+      "reason": "Eliminates access to open judicial courts, jury trials, and class representation in disputes."
+    },
+    {
+      "id": "ai_data_harvesting",
+      "name": "AI Model Training & Data Expropriation",
+      "category": "Intellectual Property",
+      "severity": "CRITICAL",
+      "score_weight": 30,
+      "patterns": [
+        "train commercial ai models",
+        "train machine learning models on customer data",
+        "perpetual, irrevocable license to customer data",
+        "sole exclusive property of vendor"
+      ],
+      "reason": "Vendor appropriates customer proprietary code or confidential datasets to train commercial LLMs and generative systems."
+    },
+    {
+      "id": "trapped_auto_renewal",
+      "name": "Trapped Auto-Renewal",
+      "category": "Automatic Renewal",
+      "severity": "HIGH",
+      "score_weight": 20,
+      "patterns": [
+        "renews automatically perpetually",
+        "certified physical postal mail only",
+        "90 days prior written notice",
+        "renewal charges are non-refundable"
+      ],
+      "reason": "Imposes restrictive cancellation barriers (such as narrow notice windows or physical mail requirements) to lock customers into recurring billing."
+    },
+    {
+      "id": "zero_liability_cap",
+      "name": "Extreme Liability Disclaimers",
+      "category": "Liability",
+      "severity": "CRITICAL",
+      "score_weight": 25,
+      "patterns": [
+        "capped at $50",
+        "capped at $0",
+        "as is and as available with all faults",
+        "disclaims all liability for data loss",
+        "in no event shall vendor be liable for direct"
+      ],
+      "reason": "Guts remedies by capping maximum vendor damages to a nominal sum ($50) or disclaiming all essential warranties."
+    },
+    {
+      "id": "overbroad_non_compete",
+      "name": "Overbroad Restrictive Covenants",
+      "category": "Non-Compete",
+      "severity": "HIGH",
+      "score_weight": 25,
+      "patterns": [
+        "worldwide in any capacity",
+        "competing business for a period of five",
+        "period of 5 years",
+        "restraint of trade"
+      ],
+      "reason": "Imposes unreasonable multi-year or global geographic work restrictions that may violate public policy."
+    },
+    {
+      "id": "unilateral_termination",
+      "name": "Unilateral Immediate Termination",
+      "category": "Termination",
+      "severity": "HIGH",
+      "score_weight": 20,
+      "patterns": [
+        "terminate at will without notice",
+        "terminate immediately without cause",
+        "without notice, liability, or explanation",
+        "sole discretion without prior notice"
+      ],
+      "reason": "Gives one party unrestricted power to terminate services instantly with no opportunity to cure or retrieve data."
+    }
+  ]
+}

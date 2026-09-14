@@ -11,6 +11,7 @@ import ipaddress
 from urllib.parse import urlparse
 from flask import Flask, render_template, request, jsonify, Response
 from nlp_engine import ContractAuditor
+from nlp_engine.enterprise_terms import get_enterprise_terms
 from samples.sample_data import SAMPLE_CONTRACTS, load_sample_text, list_samples
 
 app = Flask(__name__)
@@ -105,17 +106,166 @@ def get_sample_content(sample_id):
     })
 
 
+KNOWN_TERMS_MAP = {
+    "flipkart.com": "https://www.flipkart.com/pages/terms",
+    "flipkart": "https://www.flipkart.com/pages/terms",
+    "amazon.com": "https://www.amazon.com/gp/help/customer/display.html?nodeId=508088",
+    "amazon.in": "https://www.amazon.com/gp/help/customer/display.html?nodeId=508088",
+    "amazon": "https://www.amazon.com/gp/help/customer/display.html?nodeId=508088",
+    "reddit.com": "https://www.redditinc.com/policies/user-agreement",
+    "reddit": "https://www.redditinc.com/policies/user-agreement",
+    "discord.com": "https://discord.com/terms",
+    "discord": "https://discord.com/terms",
+    "steampowered.com": "https://store.steampowered.com/subscriber_agreement/",
+    "steam": "https://store.steampowered.com/subscriber_agreement/",
+    "spotify.com": "https://www.spotify.com/legal/end-user-agreement/",
+    "spotify": "https://www.spotify.com/legal/end-user-agreement/",
+    "netflix.com": "https://help.netflix.com/legal/termsofuse",
+    "netflix": "https://help.netflix.com/legal/termsofuse",
+    "apple.com": "https://www.apple.com/legal/internet-services/terms/site.html",
+    "apple": "https://www.apple.com/legal/internet-services/terms/site.html",
+    "x.com": "https://x.com/en/tos",
+    "twitter.com": "https://x.com/en/tos",
+    "twitter": "https://x.com/en/tos",
+    "youtube.com": "https://www.youtube.com/t/terms",
+    "youtube": "https://www.youtube.com/t/terms",
+    "instagram.com": "https://help.instagram.com/581066165581870",
+    "instagram": "https://help.instagram.com/581066165581870",
+    "facebook.com": "https://www.facebook.com/terms.php",
+    "meta.com": "https://www.facebook.com/terms.php",
+    "facebook": "https://www.facebook.com/terms.php",
+    "meta": "https://www.facebook.com/terms.php",
+    "openai.com": "https://openai.com/policies/terms-of-use/",
+    "openai": "https://openai.com/policies/terms-of-use/",
+    "github.com": "https://github.com/site/terms",
+    "github": "https://github.com/site/terms",
+    "uber.com": "https://www.uber.com/legal/en/document/?name=general-terms-of-use",
+    "uber": "https://www.uber.com/legal/en/document/?name=general-terms-of-use",
+    "airbnb.com": "https://www.airbnb.com/help/article/2908",
+    "airbnb": "https://www.airbnb.com/help/article/2908",
+    "zomato.com": "https://www.zomato.com/policies/terms-of-service/",
+    "zomato": "https://www.zomato.com/policies/terms-of-service/",
+    "swiggy.com": "https://www.swiggy.com/terms-and-conditions",
+    "swiggy": "https://www.swiggy.com/terms-and-conditions",
+    "zepto.com": "https://www.zeptonow.com/terms-of-service",
+    "zeptonow.com": "https://www.zeptonow.com/terms-of-service",
+    "zepto": "https://www.zeptonow.com/terms-of-service",
+    "blinkit.com": "https://blinkit.com/terms",
+    "blinkit": "https://blinkit.com/terms",
+    "myntra.com": "https://www.myntra.com/tac",
+    "myntra": "https://www.myntra.com/tac",
+    "meesho.com": "https://www.meesho.com/legal/terms",
+    "meesho": "https://www.meesho.com/legal/terms",
+    "paytm.com": "https://paytm.com/terms-and-conditions",
+    "paytm": "https://paytm.com/terms-and-conditions",
+    "microsoft.com": "https://www.microsoft.com/en-us/servicesagreement",
+    "microsoft": "https://www.microsoft.com/en-us/servicesagreement",
+    "linkedin.com": "https://www.linkedin.com/legal/user-agreement",
+    "linkedin": "https://www.linkedin.com/legal/user-agreement",
+    "zoom.us": "https://explore.zoom.us/en/terms/",
+    "zoom": "https://explore.zoom.us/en/terms/",
+    "slack.com": "https://slack.com/terms-of-service",
+    "slack": "https://slack.com/terms-of-service",
+    "notion.so": "https://www.notion.so/Terms-and-Conditions-e8d4617519e54a509986341d3b04c8f0",
+    "notion": "https://www.notion.so/Terms-and-Conditions-e8d4617519e54a509986341d3b04c8f0",
+    "canva.com": "https://www.canva.com/policies/terms-of-use/",
+    "canva": "https://www.canva.com/policies/terms-of-use/",
+    "pinterest.com": "https://policy.pinterest.com/en/terms-of-service",
+    "pinterest": "https://policy.pinterest.com/en/terms-of-service",
+    "hotstar.com": "https://www.hotstar.com/terms-of-use",
+    "hotstar": "https://www.hotstar.com/terms-of-use",
+    "jiocinema.com": "https://www.jiocinema.com/terms-and-conditions",
+    "jiocinema": "https://www.jiocinema.com/terms-and-conditions",
+    "tiktok.com": "https://www.tiktok.com/legal/page/row/terms-of-service/en",
+    "tiktok": "https://www.tiktok.com/legal/page/row/terms-of-service/en",
+}
+
+COMMON_TERMS_PATHS = [
+    "/pages/terms",
+    "/terms-of-service",
+    "/terms-of-use",
+    "/terms-and-conditions",
+    "/terms",
+    "/legal/terms",
+    "/legal/terms-of-use",
+    "/policies/terms-of-service",
+    "/policies/terms",
+    "/user-agreement",
+    "/tac",
+    "/tos",
+    "/legal",
+]
+
+VOID_HTML_ELEMENTS = {
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"
+}
+
+
 @app.route("/api/fetch-url", methods=["POST"])
 def fetch_url():
-    """Fetches and extracts clean text from a live Terms of Service URL."""
+    """
+    Fetches and extracts clean legal text from any provided URL or company name.
+    If given a general company link or homepage (e.g. flipkart.com, amazon.in, discord.com),
+    it automatically discovers and navigates directly to their Terms & Conditions / Terms of Service.
+    """
     import urllib.request
     import urllib.error
     import ssl
     import gzip
     import zlib
     import re
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, urljoin
     from html.parser import HTMLParser
+
+    class LinkExtractor(HTMLParser):
+        def __init__(self, base_url):
+            super().__init__()
+            self.base_url = base_url
+            self.candidates = []
+            self.current_tag = None
+            self.current_href = ""
+            self.current_text = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag.lower() == "a":
+                self.current_tag = "a"
+                attrs_dict = dict(attrs)
+                self.current_href = attrs_dict.get("href", "").strip()
+                self.current_text = []
+
+        def handle_endtag(self, tag):
+            if tag.lower() == "a" and self.current_href:
+                link_text = " ".join("".join(self.current_text).split())
+                href_lower = self.current_href.lower()
+                text_lower = link_text.lower()
+                
+                score = 0
+                if any(k in text_lower for k in ["terms of use", "terms & conditions", "terms and conditions", "terms of service", "user agreement", "subscriber agreement", "conditions of use"]):
+                    score += 70
+                elif any(k in text_lower for k in ["terms of sale", "service terms", "general terms", "legal terms", "t&c"]):
+                    score += 45
+                elif any(k in text_lower for k in ["terms", "conditions", "legal", "policies"]):
+                    score += 20
+
+                if any(k in href_lower for k in ["terms-of-service", "terms-of-use", "terms-and-conditions", "user-agreement", "subscriber_agreement", "/pages/terms", "/legal/terms"]):
+                    score += 50
+                elif any(k in href_lower for k in ["/terms", "/tac", "/tos", "/legal", "/policy"]):
+                    score += 25
+
+                if score >= 20:
+                    try:
+                        full_url = urljoin(self.base_url, self.current_href)
+                        self.candidates.append((score, full_url, link_text))
+                    except Exception:
+                        pass
+                
+                self.current_tag = None
+                self.current_href = ""
+                self.current_text = []
+
+        def handle_data(self, data):
+            if self.current_tag == "a":
+                self.current_text.append(data)
 
     class TextExtractor(HTMLParser):
         def __init__(self):
@@ -124,11 +274,9 @@ def fetch_url():
             self.ignore_tags = {
                 "script", "style", "nav", "footer", "header", "noscript", 
                 "svg", "iframe", "head", "title", "meta", "link", "aside", 
-                "form", "button", "select", "option", "video", "canvas", "input", "textarea"
+                "button", "select", "option", "video", "canvas", "input", "textarea"
             }
             self.current_tag = None
-            self.row_cells = []
-            self.in_table_row = False
             self.ignore_depth = 0
 
         def handle_starttag(self, tag, attrs):
@@ -140,95 +288,50 @@ def fetch_url():
             role = attrs_dict.get("role", "").lower()
             aria_hidden = attrs_dict.get("aria-hidden", "").lower()
 
-            if (t in self.ignore_tags or 
-                "modal" in classes or "hidden" in classes or "camera" in classes or "popup" in classes or
-                "modal" in tag_id or "camera" in tag_id or "dialog" in tag_id or
-                role in {"dialog", "alertdialog"} or aria_hidden == "true"):
-                self.ignore_depth += 1
+            if t not in VOID_HTML_ELEMENTS:
+                if (t in self.ignore_tags or 
+                    "modal" in classes or "popup" in classes or
+                    "modal" in tag_id or "dialog" in tag_id or
+                    role in {"dialog", "alertdialog"} or aria_hidden == "true"):
+                    self.ignore_depth += 1
 
             if self.ignore_depth == 0:
-                if t == "tr":
-                    self.in_table_row = True
-                    self.row_cells = []
-                elif t in {"br", "hr"}:
+                if t in {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "section", "article", "blockquote", "br", "hr"}:
                     self.text_parts.append("\n")
 
         def handle_endtag(self, tag):
             t = tag.lower()
-            attrs_dict = {}
-            if self.ignore_depth > 0:
-                self.ignore_depth -= 1
-                return
-
-            if t == "tr":
-                self.in_table_row = False
-                if self.row_cells:
-                    row_str = " | ".join(c.strip() for c in self.row_cells if c.strip())
-                    if row_str:
-                        self.text_parts.append(f"\n• {row_str}\n")
-                    self.row_cells = []
-            elif t in {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "section", "article", "blockquote"}:
-                self.text_parts.append("\n")
+            if t not in VOID_HTML_ELEMENTS:
+                if self.ignore_depth > 0 and (t in self.ignore_tags or t in {"div", "section", "nav", "footer", "header", "aside", "dialog"}):
+                    self.ignore_depth -= 1
             
+            if self.ignore_depth == 0:
+                if t in {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "section", "article", "blockquote"}:
+                    self.text_parts.append("\n")
             self.current_tag = None
 
         def handle_data(self, data):
             if self.ignore_depth > 0 or self.current_tag in self.ignore_tags:
                 return
             clean = data.strip()
-            if not clean:
-                return
-            
-            if self.in_table_row and self.current_tag in {"td", "th"}:
-                self.row_cells.append(clean)
-            else:
+            if clean:
                 self.text_parts.append(clean + " ")
 
         def get_text(self):
             raw = "".join(self.text_parts)
-            web_noise = {
-                "explore plus", "login", "become a seller", "more", "cart", "download app", 
-                "sign in", "sign up", "register", "menu", "search", "back to top", "help center",
-                "24x7 customer care", "terms of use", "security", "privacy", "sitemap", "about us",
-                "contact us", "careers", "press", "corporate information", "copied summary to clipboard!",
-                "copy summary text", "scan contract with camera", "snap & extract text"
-            }
-            lines = [l.strip() for l in raw.split("\n")]
-            filtered = []
-            for l in lines:
-                if not l:
-                    continue
-                if re.search(r"\b(?:Store Online|Best Price in India|Flipkart\.com)\b", l, re.I):
-                    continue
-                if l.lower() in web_noise:
-                    continue
-                filtered.append(l)
-            
-            result = "\n\n".join(filtered)
-            return re.sub(r"\n{3,}", "\n\n", result).strip()
+            lines = [l.strip() for l in raw.split("\n") if l.strip()]
+            return "\n\n".join(lines)
 
-    data = request.get_json(silent=True) or {}
-    url = data.get("url", "").strip()
-
-    if not url:
-        return jsonify({"status": "error", "message": "URL cannot be empty."}), 400
-
-    if not (url.startswith("http://") or url.startswith("https://")):
-        url = "https://" + url
-
-    # Self-fetching guard: Prevent scanning LexiTrap app itself
-    parsed_input = urlparse(url)
-    target_host = (parsed_input.netloc or "").lower().split(":")[0]
-    if target_host in {"lexi-trap.vercel.app", "lexitrap.vercel.app", "lexitrap.com", "localhost", "127.0.0.1", "0.0.0.0"}:
-        return jsonify({
-            "status": "error",
-            "message": "⚠️ You entered the LexiTrap application URL itself. Please enter an external company's Terms of Service page (e.g., https://www.redditinc.com/policies/user-agreement, https://store.steampowered.com/subscriber_agreement/, or https://discord.com/terms)."
-        }), 400
-
-    # SSRF Protection: Validate target hostname and IP addresses against private networks
-    is_safe, safety_error = is_safe_url(url)
-    if not is_safe:
-        return jsonify({"status": "error", "message": safety_error}), 400
+    def is_legal_content(text: str) -> bool:
+        if len(text) < 100:
+            return False
+        legal_keywords = {
+            "terms", "agreement", "privacy", "policy", "conditions", "service", 
+            "liability", "license", "warranty", "shall", "user", "rights", "disclaimer",
+            "governing law", "termination", "indemnification", "confidential", "arbitration"
+        }
+        found_markers = [kw for kw in legal_keywords if re.search(r'\b' + re.escape(kw) + r'\b', text, re.IGNORECASE)]
+        return len(found_markers) >= 2
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -245,15 +348,19 @@ def fetch_url():
         "Upgrade-Insecure-Requests": "1",
     }
 
-    try:
-        req = urllib.request.Request(url, headers=headers)
+    def fetch_page(target_url: str, timeout: int = 10):
+        # Validate SSRF safety
+        is_safe, safety_error = is_safe_url(target_url)
+        if not is_safe:
+            return None, None, safety_error
+
+        req = urllib.request.Request(target_url, headers=headers)
         ssl_ctx = ssl.create_default_context()
         ssl_ctx.check_hostname = False
         ssl_ctx.verify_mode = ssl.CERT_NONE
 
-        # Enforce 5MB max download limit to prevent Memory Exhaustion / DoS
         MAX_FETCH_BYTES = 5 * 1024 * 1024
-        with urllib.request.urlopen(req, context=ssl_ctx, timeout=12) as response:
+        with urllib.request.urlopen(req, context=ssl_ctx, timeout=timeout) as response:
             encoding = response.headers.get("Content-Encoding", "").lower()
             raw_bytes = response.read(MAX_FETCH_BYTES)
 
@@ -273,45 +380,144 @@ def fetch_url():
         extractor = TextExtractor()
         extractor.feed(html_content)
         extracted_text = extractor.get_text()
+        return html_content, extracted_text, None
 
-        if len(extracted_text) < 50:
-            return jsonify({
-                "status": "error",
-                "message": "Could not extract sufficient text from this URL. The page may require JavaScript or CAPTCHA verification."
-            }), 400
+    data = request.get_json(silent=True) or {}
+    raw_input = data.get("url", "").strip()
 
-        # Legal relevance check: Verify the extracted page contains legal terms or policies
-        legal_keywords = {
-            "terms", "agreement", "privacy", "policy", "conditions", "service", 
-            "liability", "license", "warranty", "shall", "user", "rights", "disclaimer",
-            "governing law", "termination", "indemnification", "confidential"
-        }
-        found_markers = [kw for kw in legal_keywords if re.search(r'\b' + re.escape(kw) + r'\b', extracted_text, re.IGNORECASE)]
-        if len(found_markers) < 2:
-            return jsonify({
-                "status": "error",
-                "message": "The fetched page does not appear to contain legal Terms of Service, Privacy Policies, or contract clauses. Please make sure your URL points to a specific legal policy page (e.g. /terms, /privacy-policy, /subscriber_agreement)."
-            }), 400
+    if not raw_input:
+        return jsonify({"status": "error", "message": "Please provide a company URL or website domain."}), 400
 
-        parsed = urlparse(url)
-        doc_title = f"{parsed.netloc} Policy / Terms"
+    # Clean and normalize input
+    url = raw_input
+    if not (url.startswith("http://") or url.startswith("https://")):
+        if "." not in url and not url.startswith("localhost"):
+            url = f"https://www.{url}.com"
+        else:
+            url = "https://" + url
 
-        return jsonify({
-            "status": "success",
-            "title": doc_title,
-            "text": extracted_text,
-            "source_url": url,
-        })
-
-    except urllib.error.HTTPError as he:
+    # Self-fetching guard: Prevent scanning LexiTrap app itself
+    parsed_input = urlparse(url)
+    target_host = (parsed_input.netloc or "").lower().split(":")[0]
+    if target_host in {"lexi-trap.vercel.app", "lexitrap.vercel.app", "lexitrap.com", "localhost", "127.0.0.1", "0.0.0.0"}:
         return jsonify({
             "status": "error",
-            "message": f"Website returned HTTP {he.code}: {he.reason}. (Some websites block automated scraping; try copy-pasting the text into the editor)."
+            "message": "⚠️ You entered the LexiTrap application URL itself. Please enter a company's website (e.g. flipkart.com, amazon.in, reddit.com, or discord.com)."
         }), 400
-    except urllib.error.URLError as ue:
-        return jsonify({"status": "error", "message": f"Connection failed: {str(ue.reason)}"}), 400
-    except Exception as e:
-        return jsonify({"status": "error", "message": f"Fetch error: {str(e)}"}), 500
+
+    clean_domain = target_host.replace("www.", "")
+    company_name = clean_domain.split(".")[0].capitalize()
+
+    # Step 1: Check known high-profile terms mappings
+    known_terms_url = None
+    for k, v in KNOWN_TERMS_MAP.items():
+        if clean_domain == k or clean_domain.endswith("." + k) or (len(clean_domain.split(".")) >= 2 and clean_domain.split(".")[0] == k):
+            known_terms_url = v
+            break
+
+    candidate_urls = []
+    if known_terms_url:
+        candidate_urls.append(known_terms_url)
+    candidate_urls.append(url)
+
+    last_error = None
+    primary_html = None
+
+    # Step 2: Attempt to fetch direct candidate URLs
+    for c_url in candidate_urls:
+        try:
+            html_content, extracted_text, err = fetch_page(c_url, timeout=6)
+            if err:
+                last_error = err
+                continue
+            if primary_html is None and html_content:
+                primary_html = html_content
+
+            if extracted_text and is_legal_content(extracted_text):
+                doc_title = f"{company_name} Terms & Conditions"
+                return jsonify({
+                    "status": "success",
+                    "title": doc_title,
+                    "text": extracted_text,
+                    "source_url": c_url,
+                    "auto_discovered": c_url != url,
+                })
+        except Exception as e:
+            last_error = str(e)
+            continue
+
+    # Step 2.5: Fast-path fallback for known enterprise platforms (Meesho, Amazon, Flipkart, Swiggy, Zomato, etc.)
+    ent_data = get_enterprise_terms(clean_domain) or get_enterprise_terms(raw_input)
+    if ent_data:
+        return jsonify({
+            "status": "success",
+            "title": ent_data.get("title", f"{company_name} Terms & Conditions"),
+            "text": ent_data["text"].strip(),
+            "source_url": ent_data.get("source_url", url),
+            "auto_discovered": True,
+        })
+
+    # Step 3: If initial page wasn't a direct terms page, auto-discover links from HTML
+    if primary_html:
+        try:
+            link_extractor = LinkExtractor(url)
+            link_extractor.feed(primary_html)
+            link_extractor.candidates.sort(key=lambda x: x[0], reverse=True)
+
+            tested_urls = set(candidate_urls)
+            for score, discovered_url, link_text in link_extractor.candidates[:5]:
+                if discovered_url in tested_urls:
+                    continue
+                tested_urls.add(discovered_url)
+
+                try:
+                    _, extracted_text, err = fetch_page(discovered_url, timeout=6)
+                    if err or not extracted_text:
+                        continue
+                    if is_legal_content(extracted_text):
+                        doc_title = f"{company_name} Terms & Conditions"
+                        return jsonify({
+                            "status": "success",
+                            "title": doc_title,
+                            "text": extracted_text,
+                            "source_url": discovered_url,
+                            "auto_discovered": True,
+                        })
+                except Exception:
+                    continue
+        except Exception as e:
+            last_error = str(e)
+
+    # Step 4: Fallback probing across standard common terms paths
+    base_origin = f"{parsed_input.scheme}://{parsed_input.netloc}"
+    tested_probes = set(candidate_urls)
+    for path in COMMON_TERMS_PATHS:
+        probe_url = base_origin + path
+        if probe_url in tested_probes:
+            continue
+        tested_probes.add(probe_url)
+        try:
+            _, extracted_text, err = fetch_page(probe_url, timeout=4)
+            if err or not extracted_text:
+                continue
+            if is_legal_content(extracted_text):
+                doc_title = f"{company_name} Terms & Conditions"
+                return jsonify({
+                    "status": "success",
+                    "title": doc_title,
+                    "text": extracted_text,
+                    "source_url": probe_url,
+                    "auto_discovered": True,
+                })
+        except Exception:
+            continue
+
+    # If still not found
+    error_msg = f"Could not automatically locate legal Terms of Service for {clean_domain}. (Website might be blocking automated crawlers; you can copy-paste the contract text directly into the editor)."
+    if last_error and "prohibited" in str(last_error).lower():
+        error_msg = str(last_error)
+
+    return jsonify({"status": "error", "message": error_msg}), 400
 
 
 

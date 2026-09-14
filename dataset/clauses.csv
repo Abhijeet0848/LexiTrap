@@ -1,0 +1,89 @@
+text,category,risk_level
+"Either party may terminate this Agreement upon thirty (30) days prior written notice to the other party for any reason.",Termination,Low
+"The Provider may immediately terminate this Agreement at any time in its sole discretion without prior notice to Customer.",Termination,High
+"In the event of a material breach, the non-breaching party may terminate this Agreement if such breach remains uncured for thirty (30) days.",Termination,Low
+"Company reserves the right to suspend or terminate user accounts immediately without cause and without refund.",Termination,High
+"Upon expiration of the initial term, this Agreement shall terminate unless mutually extended in writing by both parties.",Termination,Low
+"We may terminate your access to the Service at will, effective immediately, with or without notice, liability, or explanation.",Termination,Critical
+"Customer may terminate this agreement if Provider fails to maintain 99.9% uptime over two consecutive calendar months.",Termination,Low
+"Either party may terminate immediately upon written notice if the other party becomes insolvent or enters bankruptcy.",Termination,Low
+"Customer shall pay all undisputed invoiced amounts within thirty (30) calendar days of invoice date.",Payment,Low
+"All fees are strictly non-refundable under any circumstances and must be paid in advance via automatic recurring debit.",Payment,High
+"Undisputed late payments shall accrue interest at the lower of 1.5% per month or the maximum rate permitted by applicable law.",Payment,Medium
+"Company reserves the unilateral right to increase subscription fees at any time without prior notification.",Payment,Critical
+"Payment terms are net 45 days upon receipt of a valid and correct invoice detailing delivered milestones.",Payment,Low
+"Vendor shall invoice Customer monthly in arrears, and payment shall be remitted via standard electronic transfer within 30 days.",Payment,Low
+"Fees must be remitted in USD via wire transfer within 15 days of invoice date.",Payment,Low
+"In no event shall either party's aggregate cumulative liability under this Agreement exceed the total fees paid by Customer in the preceding twelve (12) months.",Liability,Low
+"To the maximum extent permitted by law, Provider's total aggregate liability for all claims shall be capped at $50.00.",Liability,Critical
+"Neither party shall be liable for indirect, incidental, consequential, special, or punitive damages arising out of this Agreement.",Liability,Low
+"Provider disclaims all liability for data loss, service interruption, security breaches, or system downtime under all legal theories.",Liability,High
+"Each party's total liability for gross negligence, willful misconduct, or breach of confidentiality shall be uncapped.",Liability,Low
+"In no event shall vendor be liable for any direct or indirect damages, regardless of whether advised of the possibility thereof.",Liability,High
+"Liability under this section shall be capped at three times the annual contract value.",Liability,Low
+"Provider shall defend, indemnify, and hold harmless Customer against any third-party claim alleging that the Software infringes any valid patent or copyright.",Indemnification,Low
+"Customer agrees to defend, indemnify, and hold harmless Provider and its affiliates against all third-party claims, losses, and legal costs arising from any use of the platform.",Indemnification,High
+"Each party shall mutually indemnify and defend the other party against third-party claims arising from gross negligence or material breach.",Indemnification,Low
+"Customer shall indemnify Provider for any regulatory fine, loss of revenue, or third-party claim connected to Customer's data or operations.",Indemnification,High
+"The indemnified party must provide prompt written notice of any indemnifiable claim and grant reasonable cooperation in defense.",Indemnification,Low
+"Vendor provides mutual indemnity against third-party intellectual property infringement claims up to standard liability limits.",Indemnification,Low
+"Each party agrees to hold the other party's Confidential Information in strict confidence and use the same degree of care as for its own proprietary information.",Confidentiality,Low
+"Confidential Information shall not include information that is publicly known, already known to recipient, or independently developed.",Confidentiality,Low
+"Recipient shall use Confidential Information solely for the purpose of evaluating and performing obligations under this Agreement.",Confidentiality,Low
+"Provider may disclose confidential customer data to third-party marketing partners and affiliates at its sole discretion.",Confidentiality,High
+"All confidentiality obligations shall survive the expiration or termination of this Agreement for a period of three (3) years.",Confidentiality,Low
+"Both parties agree that non-disclosure obligations shall endure indefinitely for trade secrets.",Confidentiality,Low
+"Provider collects and processes personal data strictly in compliance with applicable data protection laws (including GDPR and CCPA).",Privacy,Low
+"Provider reserves the perpetual right to collect, sell, monetize, and transfer all user personal data to third-party data brokers.",Privacy,Critical
+"Customer retains ownership of all personal data submitted to the service, and Provider acts strictly as a data processor.",Privacy,Low
+"We track user activities across external websites and share behavioural profiles with advertisers without explicit opt-in consent.",Privacy,High
+"Data subjects may request deletion, rectification, or export of their personal data at any time via the privacy dashboard.",Privacy,Low
+"Provider processes personal data solely in accordance with Customer's documented instructions.",Privacy,Low
+"Customer retains all right, title, and interest, including all Intellectual Property rights, in and to the Customer Data and Work Product.",Intellectual Property,Low
+"Customer grants Provider a perpetual, irrevocable, worldwide, royalty-free license to use, reproduce, modify, and train commercial AI models on all Customer Data.",Intellectual Property,Critical
+"Provider grants Customer a non-exclusive, non-transferable, revocable license to access and use the SaaS application during the Term.",Intellectual Property,Low
+"All feedback, modifications, suggestions, and derivative works created by user shall become the sole exclusive property of Vendor.",Intellectual Property,High
+"Nothing in this Agreement transfers ownership of either party's pre-existing Intellectual Property rights.",Intellectual Property,Low
+"Provider retains all patent and copyright ownership over the core underlying technology and application code.",Intellectual Property,Low
+"This Agreement shall automatically renew for successive one-year terms unless either party gives written notice of non-renewal at least 30 days prior to term expiration.",Automatic Renewal,Low
+"This subscription automatically renews perpetually. Cancellation requires 90 days prior written notice via certified physical postal mail only.",Automatic Renewal,Critical
+"The contract term shall renew automatically for identical periods unless cancelled through the online account settings before the renewal date.",Automatic Renewal,Low
+"Subscriptions renew automatically at the then-current standard rates without notice, and all renewal charges are non-refundable.",Automatic Renewal,High
+"Subscription terms shall extend on a month-to-month basis upon expiration unless 15 days notice of termination is given.",Automatic Renewal,Low
+"Any dispute arising out of or relating to this Agreement shall be resolved through good-faith executive negotiation followed by binding arbitration under AAA rules.",Arbitration,Low
+"Customer agrees that all disputes must be resolved solely through confidential binding individual arbitration, and explicitly waives all rights to a jury trial or class action.",Arbitration,High
+"Disputes shall be submitted to the competent civil courts having jurisdiction, with both parties preserving all statutory appeal rights.",Arbitration,Low
+"You hereby waive any right to participate in a class action lawsuit, representative proceeding, or private attorney general claim against company.",Arbitration,Critical
+"Arbitration proceedings shall be conducted by a single neutral arbitrator selected jointly by both parties.",Arbitration,Low
+"This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to conflicts of law principles.",Governing Law,Low
+"Any legal proceeding arising under this Agreement must be brought exclusively in the state or federal courts located in Wilmington, Delaware.",Governing Law,Low
+"This Agreement shall be governed exclusively by the laws of Provider's offshore jurisdiction, and Customer consents to foreign venue.",Governing Law,Medium
+"The parties agree that the United Nations Convention on Contracts for the International Sale of Goods shall not apply to this Agreement.",Governing Law,Low
+"This Agreement is governed by the laws of England and Wales, and the courts of London shall have jurisdiction.",Governing Law,Low
+"Employee agrees not to engage in or establish any competing business within a 10-mile radius for six (6) months following termination.",Non-Compete,Medium
+"Contractor agrees not to engage in any technology business worldwide in any capacity for a period of five (5) years after termination.",Non-Compete,Critical
+"During the term and for one (1) year thereafter, neither party shall solicit or recruit the key technical employees of the other party.",Non-Compete,Low
+"Employee shall not solicit existing customers of the company for competitive services for twelve months following separation.",Non-Compete,Low
+"Non-competition restrictions shall apply only within the specific geographical territory where employee provided direct sales coverage.",Non-Compete,Low
+"Provider warrants that the Software will perform substantially in accordance with the published specifications during the 90-day warranty period.",Warranty,Low
+"The Service is provided strictly 'AS IS' and 'AS AVAILABLE', with all faults, and Provider disclaims all express or implied warranties including merchantability.",Warranty,High
+"Provider warrants that it has the full legal right, power, and authority to enter into and perform this Agreement.",Warranty,Low
+"Vendor warrants that the cloud platform will be free from known viruses, malware, and intentional backdoors.",Warranty,Low
+"Provider disclaims all statutory warranties to the furthest extent permissible under governing commercial statutes.",Warranty,High
+"Customer may cancel subscription at any time via account dashboard, with access continuing until the end of the current billing cycle.",Cancellation,Low
+"Cancellation of services requires six months advance written notice and payment of a 50% early termination liquidation penalty.",Cancellation,High
+"Customer has the right to cancel this contract within fourteen (14) days of signing without penalty or reason.",Cancellation,Low
+"Users may terminate active subscriptions immediately from the self-service web interface.",Cancellation,Low
+"In the event of service discontinuation by Provider, Customer shall receive a pro-rata refund of any prepaid, unearned fees.",Refund,Low
+"All payments and fees are strictly non-refundable, including in cases of provider downtime, service discontinuation, or termination.",Refund,High
+"If Customer terminates for cause due to uncured material breach, Provider shall promptly issue a pro-rata refund of prepaid fees.",Refund,Low
+"Refunds are not available for partial subscription months or unused user seats.",Refund,Medium
+"Company may modify these Terms at any time by posting revised terms on the website; continued use constitutes binding acceptance.",Modification,High
+"No modification or amendment to this Agreement shall be effective unless made in writing and signed by authorized representatives of both parties.",Modification,Low
+"Provider reserves the right to change fees, features, and contract terms unilaterally at its sole discretion without notice.",Modification,Critical
+"Vendor may update product documentation and technical user guides periodically without altering fundamental terms.",Modification,Low
+"This Agreement constitutes the entire understanding between the parties regarding the subject matter hereof and supersedes prior discussions.",Other,Low
+"If any provision of this Agreement is held to be invalid or unenforceable, the remaining provisions shall remain in full force and effect.",Other,Low
+"Neither party shall be held liable for failure or delay in performance caused by circumstances beyond reasonable control (Force Majeure).",Other,Low
+"Notices under this Agreement must be delivered in writing via confirmed electronic mail or registered courier.",Other,Low
+"Neither party may assign its rights or delegate obligations without the prior written consent of the other party.",Other,Low

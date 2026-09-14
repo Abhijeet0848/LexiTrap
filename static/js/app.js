@@ -23,9 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const riskSeverityBadge = document.getElementById("risk-severity-badge");
     const verdictTitle = document.getElementById("verdict-title");
     const verdictDesc = document.getElementById("verdict-desc");
-    const statTrapsCount = document.getElementById("stat-traps-count");
     const statCriticalCount = document.getElementById("stat-critical-count");
     const statHighCount = document.getElementById("stat-high-count");
+    const statLowCount = document.getElementById("stat-low-count");
     const statClausesCount = document.getElementById("stat-clauses-count");
     const deonticBarsContainer = document.getElementById("deontic-bars-container");
     const executivePointsList = document.getElementById("executive-points-list");
@@ -55,23 +55,79 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let currentAuditReport = null;
     let activeFilter = "ALL";
+    let isUserManuallyEditingDocName = false;
 
-    // Text counters
+    if (docNameInput) {
+        docNameInput.addEventListener("input", () => {
+            isUserManuallyEditingDocName = (docNameInput.value.trim().length > 0);
+        });
+    }
+
+    // Smart Auto-Detect Contract Title
     function autoDetectContractTitle(text) {
         if (!text || !text.trim()) return "";
-        if (!docNameInput.value || docNameInput.value.trim() === "" || docNameInput.value.trim() === "Contract Agreement" || docNameInput.value.trim() === "Submitted Contract") {
-            const lines = text.trim().split("\n");
-            for (let line of lines.slice(0, 5)) {
-                const clean = line.replace(/^[#*`_\s]+|[#*`_\s]+$/g, "").trim();
-                if (clean && clean.length >= 3 && clean.length <= 80 && !clean.toLowerCase().startsWith("last updated") && !clean.toLowerCase().startsWith("dated:") && !clean.toLowerCase().startsWith("version") && !clean.toLowerCase().startsWith("this is an agreement")) {
+        
+        // If user manually edited the contract name and it's meaningful, respect it
+        const current = (docNameInput.value || "").trim();
+        if (isUserManuallyEditingDocName && current && current.length >= 3) {
+            return current;
+        }
+
+        const lines = text.trim().split("\n").map(l => l.trim()).filter(Boolean);
+        if (lines.length === 0) return "";
+
+        // 1. Check for explicit heading / title in the first 3 lines
+        for (let line of lines.slice(0, 3)) {
+            const clean = line.replace(/^[#*`_\s\d.:\-–—]+|[#*`_\s]+$/g, "").trim();
+            if (clean && clean.length >= 4 && clean.length <= 55 && !clean.includes(";") && !clean.endsWith(".")) {
+                if (!/^(last updated|dated:|version|effective date|between|whereas|this is an agreement|the provider may|the user shall)/i.test(clean)) {
                     docNameInput.value = clean;
                     return clean;
                 }
             }
         }
-        return docNameInput.value.trim();
+
+        // 2. Intent-based Legal Topic Classification from text content
+        const lower = text.toLowerCase();
+        let inferredTitle = "";
+
+        if (/\b(?:terminate|termination|cancellation|cancel\s+this\s+agreement)\b/i.test(lower)) {
+            inferredTitle = "Termination Agreement / Clause";
+        } else if (/\b(?:non-disclosure|confidentiality|proprietary\s+information|trade\s+secrets?)\b/i.test(lower)) {
+            inferredTitle = "Non-Disclosure Agreement (NDA)";
+        } else if (/\b(?:employment|employee|employer|salary|job\s+title|work\s+for\s+hire)\b/i.test(lower)) {
+            inferredTitle = "Employment Agreement";
+        } else if (/\b(?:freelance|independent\s+contractor|consultant|scope\s+of\s+work|deliverables)\b/i.test(lower)) {
+            inferredTitle = "Freelance & Contractor Agreement";
+        } else if (/\b(?:terms\s+of\s+(?:service|use)|user\s+agreement|platform\s+rules|acceptable\s+use)\b/i.test(lower)) {
+            inferredTitle = "Terms of Service Agreement";
+        } else if (/\b(?:privacy\s+policy|gdpr|personal\s+data|data\s+processing)\b/i.test(lower)) {
+            inferredTitle = "Privacy Policy";
+        } else if (/\b(?:intellectual\s+property|inventions?|patent|copyright|assigns?\s+all\s+rights)\b/i.test(lower)) {
+            inferredTitle = "IP & Inventions Assignment";
+        } else if (/\b(?:indemnif\w+|hold\s+harmless|defend\s+and\s+indemnify)\b/i.test(lower)) {
+            inferredTitle = "Indemnification Agreement";
+        } else if (/\b(?:liability|disclaim\w+|damages|limitation\s+of\s+liability)\b/i.test(lower)) {
+            inferredTitle = "Limitation of Liability Clause";
+        } else if (/\b(?:non-compete|non-solicitation|restrictive\s+covenant)\b/i.test(lower)) {
+            inferredTitle = "Non-Compete Agreement";
+        } else if (/\b(?:arbitration|dispute\s+resolution|governing\s+law|jurisdiction)\b/i.test(lower)) {
+            inferredTitle = "Dispute Resolution & Arbitration Clause";
+        } else if (/\b(?:payment\s+terms|invoicing|fees|pricing|billing\s+cycle)\b/i.test(lower)) {
+            inferredTitle = "Payment & Billing Agreement";
+        } else if (/\b(?:automatically\s+renew|auto-renews?|successive\s+(?:one|two|multi|\d+)?\s*-?\s*year|renewal\s+term)\b/i.test(lower)) {
+            inferredTitle = "Automatic Renewal Clause";
+        } else if (/\b(?:software\s+as\s+a\s+service|saas|subscription\s+agreement)\b/i.test(lower)) {
+            inferredTitle = "SaaS Subscription Agreement";
+        } else {
+            inferredTitle = "Contract Agreement";
+        }
+
+        docNameInput.value = inferredTitle;
+        return inferredTitle;
     }
 
+    let statsDebounceTimer = null;
     function updateTextStats() {
         const text = contractTextarea.value;
         charCountEl.textContent = text.length.toLocaleString();
@@ -82,15 +138,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const clauses = (text.match(/(?:Section|Article|Clause|\b\d+\.)/gi) || []).length || Math.max(1, Math.floor(words / 60));
         estClausesEl.textContent = text.trim() ? clauses : 0;
 
-        if (text.trim().length > 5) {
-            autoDetectContractTitle(text);
-        }
+        clearTimeout(statsDebounceTimer);
+        statsDebounceTimer = setTimeout(() => {
+            if (text.trim().length >= 10 && !isUserManuallyEditingDocName) {
+                autoDetectContractTitle(text);
+            }
+        }, 150);
     }
 
     contractTextarea.addEventListener("input", updateTextStats);
     contractTextarea.addEventListener("paste", () => {
         setTimeout(updateTextStats, 50);
     });
+    contractTextarea.addEventListener("change", updateTextStats);
 
     // Number Counting Animation (Fast 250ms)
     function animateValue(element, start, end, duration = 250) {
@@ -111,8 +171,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Load Sample Contract
     async function loadSample(sampleId) {
+        isUserManuallyEditingDocName = false;
         loadSampleBtns.forEach(b => b.classList.remove("active"));
-        const activeCard = document.querySelector(`.example-card[data-id="${sampleId}"]`);
+        const activeCard = document.querySelector(`.load-sample-btn[data-id="${sampleId}"]`);
         if (activeCard) activeCard.classList.add("active");
 
         try {
@@ -137,12 +198,12 @@ document.addEventListener("DOMContentLoaded", () => {
     async function handleFetchUrl() {
         const url = urlInput.value.trim();
         if (!url) {
-            alert("Please paste a valid Terms of Service URL.");
+            alert("Please paste a company website or URL (e.g. flipkart.com, amazon.in, or discord.com).");
             return;
         }
 
         const originalText = fetchUrlBtn.textContent;
-        fetchUrlBtn.textContent = "Fetching...";
+        fetchUrlBtn.textContent = "🔍 Finding & Fetching Terms...";
         fetchUrlBtn.disabled = true;
 
         try {
@@ -158,7 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateTextStats();
                 await runAudit();
             } else {
-                alert("Could not fetch URL: " + (data.message || "Unknown error"));
+                alert("Could not fetch Terms: " + (data.message || "Unknown error"));
             }
         } catch (err) {
             console.error("Fetch URL error:", err);
@@ -508,6 +569,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Clear Button
     clearBtn.addEventListener("click", () => {
+        isUserManuallyEditingDocName = false;
         contractTextarea.value = "";
         docNameInput.value = "";
         updateTextStats();
@@ -521,7 +583,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Run Audit (Instant execution)
     async function runAudit() {
         const text = contractTextarea.value.trim();
-        const docName = docNameInput.value.trim() || "Contract Agreement";
+        let docName = (docNameInput.value || "").trim();
+        if (!docName || docName === "Contract Agreement" || docName === "Submitted Contract") {
+            docName = autoDetectContractTitle(text) || "Contract Agreement";
+            docNameInput.value = docName;
+        }
 
         if (!text) {
             alert("Please paste contract text or select an example above.");
@@ -646,50 +712,57 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Fast animate stats
-        animateValue(statTrapsCount, 0, report.total_traps_found, 250);
-        animateValue(statCriticalCount, 0, report.critical_traps_count, 250);
-        animateValue(statHighCount, 0, report.high_traps_count, 250);
-        animateValue(statClausesCount, 0, report.total_clauses, 250);
+        // Fast animate stats for Risk Tiers (High, Medium, Low, Total Sections)
+        const clausesListAll = report.clause_audit_details || [];
+        const highRiskClauses = clausesListAll.filter(c => c.heat_level === "CRITICAL" || c.heat_level === "HIGH").length;
+        const medRiskClauses = clausesListAll.filter(c => c.heat_level === "MEDIUM").length;
+        const lowRiskClauses = Math.max(0, (report.total_clauses || clausesListAll.length) - highRiskClauses - medRiskClauses);
+
+        animateValue(statCriticalCount, 0, highRiskClauses, 250);
+        animateValue(statHighCount, 0, medRiskClauses, 250);
+        animateValue(statLowCount, 0, lowRiskClauses, 250);
+        animateValue(statClausesCount, 0, report.total_clauses || clausesListAll.length, 250);
 
         // Render Interactive Contract DNA Heatmap Strip
         renderContractDnaStrip(report.clause_audit_details || []);
 
-        // Rule Breakdown
-        deonticBarsContainer.innerHTML = "";
-        const deonticPcts = report.deontic_profile.distribution_percentages || {};
-        
-        const friendlyNames = {
-            "Obligation": "Must-Do Duties (Shall)",
-            "Prohibition": "Forbidden Actions (Shall Not)",
-            "Permission": "Allowed Rights (May)",
-            "Warranty": "Promises & Guarantees",
-            "Disclaimer": "Disclaimers (No Liability)",
-            "Informational / Declarative": "General Information"
-        };
+        // Rule Breakdown (if container is present)
+        if (deonticBarsContainer) {
+            deonticBarsContainer.innerHTML = "";
+            const deonticPcts = (report.deontic_profile && report.deontic_profile.distribution_percentages) ? report.deontic_profile.distribution_percentages : {};
+            
+            const friendlyNames = {
+                "Obligation": "Must-Do Duties (Shall)",
+                "Prohibition": "Forbidden Actions (Shall Not)",
+                "Permission": "Allowed Rights (May)",
+                "Warranty": "Promises & Guarantees",
+                "Disclaimer": "Disclaimers (No Liability)",
+                "Informational / Declarative": "General Information"
+            };
 
-        const colors = {
-            "Obligation": "#dc2626",
-            "Prohibition": "#d97706",
-            "Permission": "#2563eb",
-            "Warranty": "#4f46e5",
-            "Disclaimer": "#7c3aed",
-            "Informational / Declarative": "#94a3b8"
-        };
+            const colors = {
+                "Obligation": "#dc2626",
+                "Prohibition": "#d97706",
+                "Permission": "#2563eb",
+                "Warranty": "#4f46e5",
+                "Disclaimer": "#7c3aed",
+                "Informational / Declarative": "#94a3b8"
+            };
 
-        for (const [cat, pct] of Object.entries(deonticPcts)) {
-            const displayName = friendlyNames[cat] || cat;
-            const row = document.createElement("div");
-            row.className = "rule-row";
-            const color = colors[cat] || "#2563eb";
-            row.innerHTML = `
-                <span class="rule-name">${escapeHtml(displayName)}</span>
-                <div class="rule-track">
-                    <div class="rule-fill" style="width: ${encodeURIComponent(pct)}%; background-color: ${escapeHtml(color)};"></div>
-                </div>
-                <span class="rule-pct">${escapeHtml(String(pct))}%</span>
-            `;
-            deonticBarsContainer.appendChild(row);
+            for (const [cat, pct] of Object.entries(deonticPcts)) {
+                const displayName = friendlyNames[cat] || cat;
+                const row = document.createElement("div");
+                row.className = "rule-row";
+                const color = colors[cat] || "#2563eb";
+                row.innerHTML = `
+                    <span class="rule-name">${escapeHtml(displayName)}</span>
+                    <div class="rule-track">
+                        <div class="rule-fill" style="width: ${encodeURIComponent(pct)}%; background-color: ${escapeHtml(color)};"></div>
+                    </div>
+                    <span class="rule-pct">${escapeHtml(String(pct))}%</span>
+                `;
+                deonticBarsContainer.appendChild(row);
+            }
         }
 
         // Executive Findings
@@ -700,6 +773,9 @@ document.addEventListener("DOMContentLoaded", () => {
             executivePointsList.appendChild(li);
         });
 
+        // Render Academic NLP Inspector
+        renderNlpInspector(report.nlp_overview || {});
+
         // Filter Counts
         const clauses = report.clause_audit_details || [];
         countAllEl.textContent = clauses.length;
@@ -708,6 +784,145 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Render Clauses
         renderClausesList();
+    }
+
+    // Render Academic NLP Pipeline & ML Benchmark Inspector
+    function renderNlpInspector(nlp) {
+        if (!nlp) return;
+
+        // Token & Lemma stats
+        const tokenStats = nlp.token_stats || {};
+        const statTokensEl = document.getElementById("nlp-stat-tokens");
+        const statVocabEl = document.getElementById("nlp-stat-vocab");
+        const statStopwordEl = document.getElementById("nlp-stat-stopword-pct");
+        if (statTokensEl) statTokensEl.textContent = (tokenStats.total_tokens || 0).toLocaleString();
+        if (statVocabEl) statVocabEl.textContent = (tokenStats.unique_vocab_count || 0).toLocaleString();
+        if (statStopwordEl) statStopwordEl.textContent = `${tokenStats.stopword_ratio_pct || 0}%`;
+
+        // Sample lemmas
+        const lemmasBox = document.getElementById("nlp-lemmas-sample");
+        if (lemmasBox) {
+            lemmasBox.innerHTML = "";
+            const sampleLemmas = (nlp.lemmas && nlp.lemmas.sample_transformations) ? nlp.lemmas.sample_transformations : [];
+            if (sampleLemmas.length > 0) {
+                sampleLemmas.slice(0, 6).forEach(item => {
+                    const pill = document.createElement("span");
+                    pill.className = "nlp-tag-pill";
+                    pill.innerHTML = `<code>${escapeHtml(item.original)}</code> → <strong>${escapeHtml(item.lemma)}</strong>`;
+                    lemmasBox.appendChild(pill);
+                });
+            } else {
+                lemmasBox.innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted);">Standard morphological base forms</span>`;
+            }
+        }
+
+        // Modals & POS mini-bars
+        const modalsEl = document.getElementById("nlp-stat-modals");
+        if (modalsEl) {
+            const modals = nlp.modal_verbs || [];
+            modalsEl.textContent = modals.length > 0 ? modals.join(", ") : "None detected";
+        }
+
+        const posBarsBox = document.getElementById("nlp-pos-bars");
+        if (posBarsBox) {
+            posBarsBox.innerHTML = "";
+            const posDist = nlp.pos_distribution || {};
+            const posColors = {
+                "Modal Verbs (Deontic)": "#2563eb",
+                "Nouns (Entities/Objects)": "#059669",
+                "Verbs (Actions)": "#d97706",
+                "Adjectives (Qualifiers)": "#7c3aed",
+                "Adverbs (Modifiers)": "#dc2626",
+                "Other / Particles": "#94a3b8"
+            };
+
+            for (const [posLabel, pData] of Object.entries(posDist)) {
+                const count = (typeof pData === "object") ? pData.count : pData;
+                const pct = (typeof pData === "object") ? pData.pct : 0;
+                const row = document.createElement("div");
+                row.className = "nlp-mini-bar-row";
+                row.innerHTML = `
+                    <span class="nlp-mini-bar-label">${escapeHtml(posLabel.split(" ")[0])} (${pct}%):</span>
+                    <div class="nlp-mini-bar-track">
+                        <div class="nlp-mini-bar-fill" style="width:${encodeURIComponent(pct)}%; background-color:${posColors[posLabel] || '#2563eb'};"></div>
+                    </div>
+                `;
+                posBarsBox.appendChild(row);
+            }
+        }
+
+        // Named Entities (NER)
+        const nerContainer = document.getElementById("nlp-ner-entities-list");
+        if (nerContainer) {
+            nerContainer.innerHTML = "";
+            const entitiesByType = nlp.entities_by_type || {};
+            let hasEntities = false;
+
+            for (const [entType, entList] of Object.entries(entitiesByType)) {
+                if (!entList || entList.length === 0) continue;
+                hasEntities = true;
+                const group = document.createElement("div");
+                group.className = "nlp-entity-group";
+                
+                let pillClass = "entity-org";
+                if (entType.includes("MONEY")) pillClass = "entity-money";
+                else if (entType.includes("DATE")) pillClass = "entity-date";
+                else if (entType.includes("GPE")) pillClass = "entity-gpe";
+                else if (entType.includes("LAW")) pillClass = "entity-law";
+
+                const pillsHtml = entList.slice(0, 4).map(e => `<span class="nlp-tag-pill ${pillClass}">${escapeHtml(e)}</span>`).join(" ");
+                group.innerHTML = `
+                    <strong>${escapeHtml(entType)} (${entList.length}):</strong>
+                    <div class="nlp-tags-wrap">${pillsHtml}</div>
+                `;
+                nerContainer.appendChild(group);
+            }
+
+            if (!hasEntities) {
+                nerContainer.innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted);">No specific jurisdictional entities or statutory citations detected.</span>`;
+            }
+        }
+
+        // Top TF-IDF Terms
+        const tfidfContainer = document.getElementById("nlp-tfidf-terms-list");
+        if (tfidfContainer) {
+            tfidfContainer.innerHTML = "";
+            const tfidfTerms = nlp.top_tfidf_terms || [];
+            if (tfidfTerms.length > 0) {
+                tfidfTerms.slice(0, 8).forEach(t => {
+                    const pill = document.createElement("span");
+                    pill.className = "nlp-tag-pill tfidf";
+                    pill.textContent = `${t.term} (${t.tfidf_score})`;
+                    tfidfContainer.appendChild(pill);
+                });
+            } else {
+                tfidfContainer.innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted);">TF-IDF vector extracted across document vocabulary.</span>`;
+            }
+        }
+
+        // ML Model Benchmark Metrics
+        const mlMetrics = nlp.ml_model_metrics || {};
+        const lrMetrics = mlMetrics.logistic_regression || {};
+        const svmMetrics = mlMetrics.linear_svm || {};
+
+        const lrAccEl = document.getElementById("ml-stat-lr-acc");
+        const lrF1El = document.getElementById("ml-stat-lr-f1");
+        const svmAccEl = document.getElementById("ml-stat-svm-acc");
+        const svmF1El = document.getElementById("ml-stat-svm-f1");
+
+        if (lrAccEl) lrAccEl.textContent = `${Math.round((lrMetrics.accuracy || 1.0) * 1000) / 10}%`;
+        if (lrF1El) lrF1El.textContent = (lrMetrics.macro_f1 || 1.0).toFixed(4);
+        if (svmAccEl) svmAccEl.textContent = `${Math.round((svmMetrics.accuracy || 1.0) * 1000) / 10}%`;
+        if (svmF1El) svmF1El.textContent = (svmMetrics.macro_f1 || 1.0).toFixed(4);
+    }
+
+    // Toggle NLP Details Button
+    const toggleNlpDetailsBtn = document.getElementById("toggle-nlp-details-btn");
+    const nlpInspectorBody = document.getElementById("nlp-inspector-body");
+    if (toggleNlpDetailsBtn && nlpInspectorBody) {
+        toggleNlpDetailsBtn.addEventListener("click", () => {
+            nlpInspectorBody.classList.toggle("hidden");
+        });
     }
 
     // Render Contract DNA Strip
@@ -767,7 +982,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Render Clause Cards
+    // Render Clause Cards with Expandable Academic NLP Inspection
     function renderClausesList() {
         if (!currentAuditReport) return;
         clausesList.innerHTML = "";
@@ -808,31 +1023,121 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
+            // Academic NLP Inspection Drawer for this clause
+            const nlpData = clause.nlp_analysis || {};
+            const mlData = clause.ml_classification || {};
+            const predCat = mlData.predicted_category || "General";
+            const confPct = mlData.confidence_pct || 0;
+            const svmPred = mlData.svm_prediction || predCat;
+            const topProbs = mlData.top_probabilities || [];
+            
+            const tokenStats = nlpData.token_stats || {};
+            const modals = nlpData.modal_verbs || [];
+            const lemmasSample = (nlpData.lemmas && nlpData.lemmas.sample_transformations) ? nlpData.lemmas.sample_transformations : [];
+            const nerEntities = nlpData.named_entities || [];
+            const tfidfTerms = nlpData.tfidf_salient_terms || [];
+            const simScore = clause.benchmark_similarity !== undefined ? clause.benchmark_similarity : 0.0;
+
+            const nlpAccordionHtml = `
+                <details class="clause-nlp-details">
+                    <summary class="clause-nlp-summary-bar">
+                        <span>🔬 NLP Pipeline & ML Classification Inspector</span>
+                        <span style="font-size: 0.72rem; color: var(--primary);">ML Class: <strong>${escapeHtml(predCat)}</strong> (${confPct}%) ▾</span>
+                    </summary>
+                    <div class="clause-nlp-content">
+                        <!-- ML Prediction Box -->
+                        <div class="clause-nlp-block">
+                            <span class="clause-nlp-block-title">⚡ Supervised ML Classifier</span>
+                            <div><strong>Predicted Category:</strong> <span class="badge-ml">${escapeHtml(predCat)}</span></div>
+                            <div style="margin-top: 4px;"><strong>LogReg Confidence:</strong> ${confPct}%</div>
+                            <div style="margin-top: 2px;"><strong>Linear SVM Class:</strong> ${escapeHtml(svmPred)}</div>
+                            <div style="margin-top: 6px; font-size: 0.72rem; color: var(--text-muted);">
+                                <strong>Top Probabilities:</strong>
+                                ${topProbs.slice(0, 3).map(p => `<div>• ${escapeHtml(p.category)}: ${p.pct}%</div>`).join("")}
+                            </div>
+                        </div>
+
+                        <!-- Linguistic & POS Box -->
+                        <div class="clause-nlp-block">
+                            <span class="clause-nlp-block-title">📝 Syntactic & POS Tags</span>
+                            <div><strong>Tokens:</strong> ${tokenStats.total_tokens || 0} (${tokenStats.stopword_ratio_pct || 0}% Stopwords)</div>
+                            <div style="margin-top: 4px;"><strong>Modal Verbs:</strong> ${modals.length > 0 ? modals.join(", ") : "None"}</div>
+                            <div style="margin-top: 6px;">
+                                <strong>Sample Lemmas:</strong>
+                                <div class="nlp-tags-wrap" style="margin-top: 3px;">
+                                    ${lemmasSample.slice(0, 3).map(l => `<span class="nlp-tag-pill">${escapeHtml(l.original)} → ${escapeHtml(l.lemma)}</span>`).join(" ")}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Named Entities (NER) -->
+                        <div class="clause-nlp-block">
+                            <span class="clause-nlp-block-title">🏷️ Legal Named Entities (NER)</span>
+                            <div class="nlp-tags-wrap">
+                                ${nerEntities.length > 0 ? nerEntities.slice(0, 5).map(e => `<span class="nlp-tag-pill entity-${e.label.toLowerCase().includes('money') ? 'money' : (e.label.toLowerCase().includes('date') ? 'date' : 'org')}">${escapeHtml(e.entity)} <small>(${escapeHtml(e.label)})</small></span>`).join(" ") : '<span style="color:var(--text-muted);">No specific legal entities extracted.</span>'}
+                            </div>
+                        </div>
+
+                        <!-- TF-IDF & Semantic Similarity -->
+                        <div class="clause-nlp-block">
+                            <span class="clause-nlp-block-title">📊 TF-IDF & Semantic Similarity</span>
+                            <div><strong>Market Benchmark Cosine Similarity:</strong> <span class="text-primary" style="font-weight: 700;">${simScore}</span></div>
+                            <div style="margin-top: 6px;">
+                                <strong>Top Salient Terms:</strong>
+                                <div class="nlp-tags-wrap" style="margin-top: 3px;">
+                                    ${tfidfTerms.slice(0, 4).map(t => `<span class="nlp-tag-pill tfidf">${escapeHtml(t.term)}</span>`).join(" ")}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            `;
+
             let trapsHtml = "";
             if (clause.traps && clause.traps.length > 0) {
                 clause.traps.forEach(trap => {
                     const redline = (currentAuditReport.redlines || []).find(r => r.clause_id === clause.clause_id && r.trap_category === trap.category);
 
+                    let trapCategoryName = trap.category || '';
+                    if (trapCategoryName.toLowerCase().includes("unilateral") && /terminate|cancell?ation/i.test(clause.text)) {
+                        trapCategoryName = "Unilateral Termination Risk";
+                    } else if (trapCategoryName.toLowerCase().includes("indemnif") && /liable\s+for\s+all\s+losses|without\s+limitation|unlimited\s+liability/i.test(clause.text)) {
+                        trapCategoryName = "Unlimited Customer Liability Trap";
+                    }
+
+                    // Deduplicate and filter trigger pills (keep only 1 short, clean keyword if available)
+                    const rawPats = trap.matched_patterns || [];
+                    const shortTags = rawPats
+                        .map(p => p.trim())
+                        .filter(p => p.length > 2 && p.length <= 40 && !p.toLowerCase().startsWith("machine learning"))
+                        .filter((p, idx, arr) => arr.indexOf(p) === idx)
+                        .slice(0, 1);
+
                     trapsHtml += `
                         <div class="trap-box">
                             <div class="trap-head">
-                                <span class="trap-name">⚠️ Trap Detected: ${escapeHtml(trap.category || '')}</span>
+                                <span class="trap-name">⚠️ Trap Detected: ${escapeHtml(trapCategoryName)}</span>
                                 <span class="badge ${trap.severity === 'CRITICAL' ? 'badge-danger' : 'badge-warning'}">${trap.severity === 'CRITICAL' ? 'High Risk' : 'Medium Risk'}</span>
                             </div>
-                            <p class="trap-desc"><strong>What is the risk:</strong> ${escapeHtml(trap.legal_danger || '')}</p>
-                            <p class="trap-impact"><strong>Impact on you:</strong> ${escapeHtml(trap.business_impact || '')}</p>
+                            <p class="trap-desc">${escapeHtml(trap.legal_danger || '')}</p>
+                            ${shortTags.length > 0 ? `
                             <div class="trap-keywords">
-                                <strong>Trigger words:</strong> 
-                                ${(trap.matched_patterns || []).map(p => `<span>${escapeHtml(p)}</span>`).join(" ")}
+                                <strong>Trigger phrase:</strong> 
+                                ${shortTags.map(p => `<span>${escapeHtml(p)}</span>`).join(" ")}
                             </div>
+                            ` : ''}
 
                             ${redline ? `
                             <div class="redline-box">
                                 <div class="redline-title">✏️ Suggested Fair Replacement:</div>
-                                <div class="diff-view">${redline.diff_html}</div>
-                                <div class="talking-point-box">
-                                    <strong>What to say when negotiating:</strong> ${escapeHtml(redline.negotiation_talking_point || '')}
+                                <div class="redline-clean-text">
+                                    ${escapeHtml(redline.recommended_text || '')}
                                 </div>
+                                ${redline.negotiation_talking_point ? `
+                                <div class="talking-point-box">
+                                    <strong>💬 Negotiation Tip:</strong> ${escapeHtml(redline.negotiation_talking_point)}
+                                </div>
+                                ` : ''}
                             </div>
                             ` : ''}
                         </div>
@@ -850,11 +1155,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
+            let displayTitle = (clause.title || '').trim();
+            if (/liable\s+for\s+all\s+losses|without\s+limitation|unlimited\s+liability/i.test(clause.text)) {
+                displayTitle = "Limitation of Liability";
+            } else if ((!displayTitle || displayTitle.toLowerCase().includes("preamble") || /^clause\s+\d+$/i.test(displayTitle) || /^section\s+\d+$/i.test(displayTitle)) && predCat && predCat !== "General" && predCat !== "Other") {
+                displayTitle = predCat;
+            }
+
             card.innerHTML = `
                 <div class="clause-card-header">
                     <div class="clause-title-group">
                         <span class="clause-id">${escapeHtml(clause.clause_id || '')}</span>
-                        <h4 class="clause-heading">${escapeHtml(clause.title || '')}</h4>
+                        <h4 class="clause-heading">${escapeHtml(displayTitle)}</h4>
                         ${readabilityBadgeHtml}
                     </div>
                     <div class="clause-badge-group">
@@ -864,6 +1176,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 ${tldrHtml}
                 <div class="clause-body-text">${highlightClauseDangerText(clause)}</div>
+                ${nlpAccordionHtml}
                 ${trapsHtml}
             `;
 

@@ -1016,6 +1016,7 @@ input, button, textarea, select {
 }
 .stat-count.text-danger { color: var(--danger); }
 .stat-count.text-warning { color: var(--warning); }
+.stat-count.text-success { color: var(--success); }
 .stat-count.text-primary { color: var(--primary); }
 
 .stat-name {
@@ -1044,7 +1045,8 @@ input, button, textarea, select {
     }
 }
 
-.insight-card {
+.insight-card,
+.insight-card-full {
     background-color: #ffffff;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
@@ -1435,6 +1437,18 @@ input, button, textarea, select {
     font-weight: 800;
     color: var(--success-text);
     margin-bottom: 6px;
+}
+
+.redline-clean-text {
+    font-size: clamp(0.82rem, 1.6vw, 0.88rem);
+    line-height: 1.6;
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    color: #14532d;
+    margin-bottom: 8px;
+    font-weight: 500;
 }
 
 .diff-view {
@@ -2574,4 +2588,435 @@ input, button, textarea, select {
         border: 1px solid #999 !important;
     }
 }
+
+/* ==========================================================================
+   Academic NLP Pipeline & Machine Learning Inspector Styles
+   ========================================================================== */
+.nlp-inspector-card {
+    display: none !important;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: clamp(20px, 3.5vw, 28px);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.nlp-inspector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: clamp(14px, 2.5vw, 20px) clamp(16px, 3vw, 24px);
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.nlp-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nlp-badge-icon {
+    font-size: 1.5rem;
+    background-color: var(--primary-subtle);
+    border: 1px solid var(--primary-border);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.nlp-title {
+    font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+    font-weight: 800;
+    color: var(--text-heading);
+    margin-bottom: 2px;
+}
+
+.nlp-subtitle {
+    font-size: clamp(0.75rem, 1.5vw, 0.82rem);
+    color: var(--text-muted);
+}
+
+.nlp-inspector-body {
+    padding: clamp(16px, 3vw, 24px);
+}
+
+.nlp-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.nlp-feature-box {
+    background-color: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.nlp-box-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.nlp-step-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background-color: var(--primary);
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.nlp-stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.84rem;
+    padding: 4px 0;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.nlp-stat-row:last-child {
+    border-bottom: none;
+}
+
+.nlp-tags-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.nlp-tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background-color: #ffffff;
+    border: 1px solid var(--border);
+    color: var(--text-body);
+}
+
+.nlp-tag-pill.tfidf {
+    background-color: var(--primary-subtle);
+    border-color: var(--primary-border);
+    color: var(--primary);
+    font-family: var(--font-mono);
+}
+
+.nlp-tag-pill.entity-org { background-color: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+.nlp-tag-pill.entity-money { background-color: #ecfdf5; border-color: #a7f3d0; color: #065f46; font-weight: 700; }
+.nlp-tag-pill.entity-date { background-color: #fffbeb; border-color: #fde68a; color: #92400e; }
+.nlp-tag-pill.entity-gpe { background-color: #f5f3ff; border-color: #ddd6fe; color: #5b21b6; }
+.nlp-tag-pill.entity-law { background-color: #fef2f2; border-color: #fecaca; color: #991b1b; }
+
+.nlp-entities-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nlp-entity-group {
+    font-size: 0.78rem;
+}
+
+.nlp-entity-group strong {
+    display: block;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+}
+
+.nlp-mini-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nlp-mini-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+}
+
+.nlp-mini-bar-label {
+    width: 95px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 0.74rem;
+}
+
+.nlp-mini-bar-track {
+    flex: 1;
+    height: 6px;
+    background-color: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.nlp-mini-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* ML Benchmark Section */
+.ml-benchmark-section {
+    background-color: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    margin-top: 16px;
+}
+
+.ml-benchmark-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ml-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-heading);
+}
+
+.ml-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.ml-models-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.badge-ml {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background-color: var(--primary-subtle);
+    border: 1px solid var(--primary-border);
+    color: var(--primary);
+}
+
+.ml-metrics-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.ml-score-card {
+    background-color: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    text-align: center;
+}
+
+.ml-metric-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.ml-metric-val {
+    font-size: 1.35rem;
+    font-weight: 800;
+    display: block;
+    line-height: 1.2;
+}
+
+.ml-metric-sub {
+    font-size: 0.68rem;
+    color: var(--text-light);
+    display: block;
+    margin-top: 2px;
+}
+
+/* Readability formula */
+.readability-formula-box {
+    background-color: #f1f5f9;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    border-left: 4px solid var(--primary);
+}
+
+.readability-formula-header {
+    font-size: 0.85rem;
+    color: var(--text-heading);
+    margin-bottom: 8px;
+}
+
+.formula-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.formula-item {
+    font-size: 0.8rem;
+}
+
+.formula-title {
+    font-weight: 700;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.formula-item code {
+    display: block;
+    background-color: #ffffff;
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    margin: 4px 0;
+    color: var(--primary);
+}
+
+.formula-note {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* Sleek Example Pills Row */
+.examples-section-simple {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.examples-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.example-pills-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.example-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    border: 1px solid var(--border);
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.example-pill-btn:hover {
+    background-color: #f1f5f9;
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.example-pill-btn.active {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.example-pill-btn.pill-danger:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.example-pill-btn.pill-warning:hover {
+    border-color: #f59e0b;
+    color: #d97706;
+}
+
+/* Clause-level expandable NLP inspection (Hidden for ultra-simple UI) */
+.clause-nlp-details {
+    display: none !important;
+    margin-top: 14px;
+    background-color: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.clause-nlp-summary-bar {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    background-color: #eff6ff;
+    border-bottom: 1px solid var(--primary-border);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.clause-nlp-content {
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    font-size: 0.8rem;
+}
+
+.clause-nlp-block {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-sm);
+    padding: 10px;
+}
+
+
+.clause-nlp-block-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    display: block;
+}
+
 
