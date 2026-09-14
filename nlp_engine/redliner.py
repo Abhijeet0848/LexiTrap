@@ -147,8 +147,8 @@ class RedlineGenerator:
                 "punitive, or consequential damages."
             ),
             "rationale": "Establishes a realistic mutual liability ceiling (12 months of fees paid) with vital carve-outs for data breaches and gross misconduct.",
-            "negotiation": "State: 'A $50 or $0 liability cap is uninsurable and commercially unacceptable; 12 months fees paid is standard.'",
-            "strikes": ["liability shall not exceed $50", "total liability of $0", "as is with no warranty"],
+            "negotiation": "State: 'A nominal or zero liability cap is uninsurable and commercially unacceptable; 12 months fees paid is standard.'",
+            "strikes": ["liability shall not exceed nominal amounts", "total liability of zero", "as is with no warranty"],
             "adds": ["12-month fees paid aggregate cap", "Carve-outs for confidentiality and data breach", "Mutual balanced liability"],
         },
     }

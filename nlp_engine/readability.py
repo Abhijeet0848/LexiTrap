@@ -54,7 +54,7 @@ class ReadabilityAnalyzer:
         (re.compile(r"\b(?:shall\s+be\s+liable\s+for\s+all\s+losses|liable\s+for\s+all\s+losses|without\s+limitation|unlimited\s+liability)\b", re.I),
          "You are held financially responsible for all losses, damages, and costs with potentially unlimited liability."),
         (re.compile(r"\b(?:provided\s+strictly\s+[\"']as\s+is[\"']|liability\s+(?:shall\s+not\s+exceed|exceed)\s+(?:\$0|\$50|\$100|fifty\s+dollars))\b", re.I),
-         "If the service crashes or loses your data, the company disclaims all liability and refuses to pay more than $50."),
+         "If the service crashes or loses your data, the company disclaims all liability and refuses to pay any meaningful damages."),
         (re.compile(r"\b(?:capped\s+at\s+total\s+fees\s+paid\s+in\s+the\s+preceding\s+12\s+months|capped\s+at\s+12\s+months)\b", re.I),
          "Each party's financial liability is capped at the total amount of fees paid over the last 12 months."),
         

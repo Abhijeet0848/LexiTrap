@@ -708,7 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     decisionPill.textContent = "🚫 CRITICAL RISK / PREDATORY TRAPS";
                 }
                 if (decisionTitle) decisionTitle.textContent = "Predatory Terms Detected — Do Not Agree Blindly";
-                if (decisionAdvice) decisionAdvice.innerHTML = "Critical dark patterns found (e.g. $50 liability cap, silent unilateral amendments, immediate access termination, or forced arbitration). Redlines strongly recommended.";
+                if (decisionAdvice) decisionAdvice.innerHTML = "Critical dark patterns found (e.g. nominal liability cap, silent unilateral amendments, immediate access termination, or forced arbitration). Redlines strongly recommended.";
             }
         }
 
