@@ -681,7 +681,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 decisionBox.className = "verdict-decision-box decision-success";
                 if (decisionPill) {
                     decisionPill.className = "decision-pill pill-success";
-                    decisionPill.textContent = "🛡️ BALANCED & FAIR";
+                    decisionPill.textContent = "🛡️ FAIR & BALANCED";
                 }
                 if (decisionTitle) decisionTitle.textContent = "Standard Commercial Terms (Low Risk)";
                 if (decisionAdvice) decisionAdvice.innerHTML = "This document aligns with industry standard protections and contains no aggressive unilateral trap clauses.";
@@ -689,7 +689,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 decisionBox.className = "verdict-decision-box decision-warning";
                 if (decisionPill) {
                     decisionPill.className = "decision-pill pill-warning";
-                    decisionPill.textContent = "⚠️ PROCEED WITH CAUTION";
+                    decisionPill.textContent = "⚠️ MODERATE RISK";
                 }
                 if (decisionTitle) decisionTitle.textContent = "Customary Disclaimers / Telemetry Detected";
                 if (decisionAdvice) decisionAdvice.innerHTML = "Contains typical big-tech clauses (e.g. cloud diagnostic telemetry or standard liability waivers). Review account privacy preferences before consenting.";
@@ -705,7 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 decisionBox.className = "verdict-decision-box decision-danger";
                 if (decisionPill) {
                     decisionPill.className = "decision-pill pill-danger";
-                    decisionPill.textContent = "🚫 CRITICAL RISK / PREDATORY TRAPS";
+                    decisionPill.textContent = "🚫 CRITICAL RISK";
                 }
                 if (decisionTitle) decisionTitle.textContent = "Predatory Terms Detected — Do Not Agree Blindly";
                 if (decisionAdvice) decisionAdvice.innerHTML = "Critical dark patterns found (e.g. nominal liability cap, silent unilateral amendments, immediate access termination, or forced arbitration). Redlines strongly recommended.";
