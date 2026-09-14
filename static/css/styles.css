@@ -210,13 +210,41 @@ input, button, textarea, select {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+    .navbar {
+        padding: 8px 0;
+    }
+    .nav-container {
+        padding: 0 10px;
+        gap: 6px;
+    }
+    .brand-icon-wrapper {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+    }
+    .brand-icon {
+        font-size: 1.05rem;
+    }
+    .brand-name {
+        font-size: 1.05rem;
+    }
     .brand-tag {
         display: none;
     }
+    .nav-actions {
+        gap: 5px;
+    }
     .nav-link-btn {
-        padding: 5px 8px;
-        font-size: 0.75rem;
+        padding: 4px 8px;
+        font-size: 0.72rem;
+        gap: 3px;
+    }
+    .nav-cta-btn {
+        padding: 4px 9px;
+        font-size: 0.73rem;
+        gap: 3px;
+        white-space: nowrap;
     }
 }
 
@@ -292,6 +320,24 @@ input, button, textarea, select {
     gap: clamp(8px, 2vw, 18px);
     flex-wrap: wrap;
     margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+    .hero-highlights {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        width: 100%;
+        max-width: 360px;
+        margin: 6px auto 0 auto;
+    }
+    .hero-highlight-item {
+        justify-content: center;
+        font-size: 0.72rem;
+        padding: 4px 6px;
+        white-space: nowrap;
+        text-align: center;
+    }
 }
 
 .hero-highlight-item {
@@ -524,6 +570,29 @@ input, button, textarea, select {
     font-weight: 400;
 }
 
+@media (max-width: 600px) {
+    .url-fetch-bar {
+        padding: 4px 8px;
+        gap: 6px;
+    }
+    .url-icon {
+        font-size: 1rem;
+    }
+    .url-input {
+        font-size: 0.78rem;
+    }
+    .url-input::placeholder {
+        font-size: 0.75rem;
+    }
+    .url-fetch-bar .btn {
+        padding: 5px 8px;
+        font-size: 0.72rem;
+        gap: 3px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+}
+
 .upload-actions-bar {
     display: flex;
     align-items: center;
@@ -536,6 +605,19 @@ input, button, textarea, select {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .upload-actions-bar {
+        gap: 4px;
+    }
+    .upload-actions-bar .btn {
+        padding: 6px 3px !important;
+        font-size: 0.7rem !important;
+        gap: 2px !important;
+        border-radius: 6px;
+        min-width: 0;
     }
 }
 
@@ -602,6 +684,20 @@ input, button, textarea, select {
     color: #1d4ed8;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(37, 99, 235, 0.12);
+}
+
+@media (max-width: 600px) {
+    .url-quick-pills-row {
+        gap: 5px;
+    }
+    .quick-pill-label {
+        font-size: 0.68rem;
+    }
+    .url-quick-pill {
+        font-size: 0.68rem;
+        padding: 2px 7px;
+        gap: 2px;
+    }
 }
 
 /* ==========================================================================
