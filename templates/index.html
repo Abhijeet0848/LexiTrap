@@ -69,17 +69,40 @@
 
         <!-- Input & Editor Area -->
         <section class="editor-card">
-            <!-- Source Input Toolbar (URL, Photo OCR, PDF Upload) -->
-            <div class="input-toolbar-grid">
-                <!-- URL Fetcher Bar & Quick Live Links -->
-                <div class="url-fetch-container">
+            <!-- Source Input Hub: URL Scanner, Upload Options, Direct Test Links -->
+            <div class="input-hub-container">
+                <div class="url-fetch-row">
+                    <!-- URL Fetcher Bar (Wide & Sleek) -->
                     <div class="url-fetch-bar">
                         <span class="url-icon">🌐</span>
-                        <input type="text" id="url-input" class="url-input" placeholder="Paste company link or website (e.g. flipkart.com, amazon.in, discord.com, reddit.com, or any URL)">
-                        <button id="fetch-url-btn" class="btn btn-secondary btn-sm">Auto-Fetch Terms</button>
+                        <input type="text" id="url-input" class="url-input" placeholder="Paste company website or legal link (e.g. spotify.com, flipkart.com, hotstar.com, discord.com, reddit.com)">
+                        <button id="fetch-url-btn" class="btn btn-secondary btn-sm">
+                            <span>🔍</span> Auto-Fetch Terms
+                        </button>
                     </div>
-                    <div class="url-quick-pills">
-                        <span class="quick-pill-label">⚡ Direct Test Links:</span>
+
+                    <!-- Upload Action Buttons -->
+                    <div class="upload-actions-bar">
+                        <input type="file" id="camera-capture-input" accept="image/*" capture="environment" style="display:none;">
+                        <input type="file" id="gallery-upload-input" accept="image/*" style="display:none;">
+                        <input type="file" id="pdf-upload-input" accept=".pdf,.txt,.md" style="display:none;">
+                        
+                        <button type="button" id="btn-camera-scan" class="btn btn-outline btn-sm" title="Take a photo of physical document">
+                            <span>📸</span> Take Photo
+                        </button>
+                        <button type="button" id="btn-gallery-upload" class="btn btn-outline btn-sm" title="Upload contract image from gallery">
+                            <span>🖼️</span> Upload Photo
+                        </button>
+                        <button type="button" id="upload-pdf-btn" class="btn btn-outline btn-sm" title="Upload PDF or text contract">
+                            <span>📄</span> Upload PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Direct Test Links Quick Bar -->
+                <div class="url-quick-pills-row">
+                    <span class="quick-pill-label">⚡ Direct Test Links:</span>
+                    <div class="url-quick-pills-scroll">
                         <button type="button" class="url-quick-pill" data-url="spotify.com">🎵 Spotify</button>
                         <button type="button" class="url-quick-pill" data-url="hotstar.com">🎬 Hotstar</button>
                         <button type="button" class="url-quick-pill" data-url="flipkart.com">🛍️ Flipkart</button>
@@ -94,26 +117,6 @@
                         <button type="button" class="url-quick-pill" data-url="jiocinema.com">📺 JioCinema</button>
                         <button type="button" class="url-quick-pill" data-url="uber.com">🚗 Uber</button>
                     </div>
-                </div>
-
-                <!-- Document & Photo Upload Options (Direct Standalone Buttons) -->
-                <div class="upload-actions-bar">
-                    <!-- Camera Direct Input (capture) -->
-                    <input type="file" id="camera-capture-input" accept="image/*" capture="environment" style="display:none;">
-                    <!-- Media Gallery Input -->
-                    <input type="file" id="gallery-upload-input" accept="image/*" style="display:none;">
-                    <!-- PDF/Doc Input -->
-                    <input type="file" id="pdf-upload-input" accept=".pdf,.txt,.md" style="display:none;">
-                    
-                    <button type="button" id="btn-camera-scan" class="btn btn-outline btn-sm" title="Take a picture using camera">
-                        <span>📸</span> Take Photo
-                    </button>
-                    <button type="button" id="btn-gallery-upload" class="btn btn-outline btn-sm" title="Choose photo from files or gallery">
-                        <span>🖼️</span> Upload Photo
-                    </button>
-                    <button type="button" id="upload-pdf-btn" class="btn btn-outline btn-sm" title="Upload PDF or text document">
-                        <span>📄</span> Upload PDF
-                    </button>
                 </div>
             </div>
 
